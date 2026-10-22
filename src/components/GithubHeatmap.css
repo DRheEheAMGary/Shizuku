@@ -71,3 +71,26 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ---------- 未绑定：整年空格子 + 上层提示 ---------- */
+.heat {
+  position: relative;
+}
+
+.heat__veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+
+  font-size: var(--fs-sm);
+  color: var(--text-soft);
+  text-align: center;
+  letter-spacing: 0.02em;
+
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}

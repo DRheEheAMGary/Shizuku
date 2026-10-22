@@ -13,7 +13,6 @@
 
 import { PageShell } from '@/components/PageShell'
 import { GlassCard } from '@/components/GlassCard'
-
 export function Home() {
   return (
     <PageShell marginText="しずく" wide>

@@ -33,6 +33,8 @@ export interface SsoUser {
   email?: string
   email_verified?: boolean
   updated_at?: number
+  /** 已绑定的 GitHub 身份（未绑定则没有这个字段） */
+  github?: { login: string }
 }
 
 interface PkceState {

@@ -21,8 +21,10 @@
   /*  未登录只放一个主按钮，尺寸收紧；已登录多两行，另给一套 */
   --dock-w: 200px;
   --dock-h: 116px;
-  --dock-w-in: 272px;
-  --dock-h-in: 236px;
+  --dock-w-in: 340px;      /* 已登录 · 默认显示最近半年 */
+  --dock-h-in: 286px;
+  --dock-w-half: 560px;    /* 热力图展开 · 最近一年 */
+  --dock-h-half: 286px;
   /*  展开时头行内边距从 3px 变成 8/10px，会把头像推走 (7,5)。
    *  让面板反向挪同样多，头像在屏幕上就一动不动。 */
   --dock-lift-x: 7px;
@@ -64,6 +66,12 @@
 .auth-dock[data-auth='in'][data-open='true'] .auth-dock__panel {
   width: var(--dock-w-in);
   height: var(--dock-h-in);
+}
+
+/* 热力图展开半年：横向加宽，格子不换行 */
+.auth-dock[data-auth='in'][data-heat='year'][data-open='true'] .auth-dock__panel {
+  width: var(--dock-w-half);
+  height: var(--dock-h-half);
 }
 
 .auth-dock[data-open='true'] .auth-dock__panel {
@@ -157,6 +165,9 @@
 
 /* 主题开关：收起态整个藏起来 */
 .auth-dock__head-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   opacity: 0;
   pointer-events: none;
   transform: translateX(6px);
@@ -349,4 +360,178 @@
   .auth-dock__spin {
     animation: none;
   }
+}
+
+/* ---------- 已登录：时间与天气 ---------- */
+.auth-dock__clock {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0 2px 10px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.auth-dock__clock strong {
+  font-family: var(--font-sans);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.auth-dock__clock span {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.auth-dock__weather {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 10px;
+  font-size: var(--fs-sm);
+  color: var(--text-soft);
+}
+
+.auth-dock__wicon {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+.auth-dock__weather strong {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-dock__wlabel {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.auth-dock__wcity {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* 退出：顶行一枚小圆钮，和主题开关并排 */
+.auth-dock__logout {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  margin-left: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  background: var(--hairline);
+  color: var(--text-soft);
+  cursor: pointer;
+
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__logout:hover {
+  color: var(--appdanger, #c0563f);
+  background: var(--hairline-strong);
+}
+
+/* ---------- 坞内热力图 ---------- */
+.auth-dock__heat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 2px 0;
+}
+
+.auth-dock__heat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.auth-dock__heat-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+.auth-dock__heat-title svg {
+  color: var(--primary);
+}
+
+.auth-dock__heat-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--hairline);
+  color: var(--text-faint);
+  cursor: pointer;
+
+  transition:
+    transform var(--dur-base) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__heat-toggle:hover {
+  background: var(--hairline-strong);
+  color: var(--text);
+}
+
+.auth-dock__heat-toggle.is-open {
+  transform: rotate(180deg);
+}
+
+/* 坞里的热力图：格子小一号，不占满面板宽度 */
+.auth-dock__heat .heat {
+  gap: 6px;
+}
+
+.auth-dock__heat .heat__grid {
+  gap: 2px;
+  overflow-x: hidden;
+}
+
+/* 让周与周之间的间距自动摊开，铺满面板宽度 */
+.auth-dock__heat .heat__grid {
+  justify-content: space-between;
+}
+
+.auth-dock__heat .heat__week {
+  gap: 2px;
+}
+
+.auth-dock__heat .heat__day {
+  width: 8px;
+  height: 8px;
+  border-radius: 1.5px;
+}
+
+/* 展开半年时格子略大，填满加宽后的面板 */
+.auth-dock[data-heat='year'] .auth-dock__heat .heat__day {
+  width: 9px;
+  height: 9px;
+}
+
+/* 未绑定的蒙层在坞里更轻，避免压住面板的玻璃质感 */
+.auth-dock__heat .heat__veil {
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs, 11px);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
 }
