@@ -41,13 +41,14 @@
   /* 垂直居中：用 translate 属性，与拨动用的 transform 分开 */
   translate: 0 -50%;
 
+  /*  不加 backdrop-filter：滑块同时挂了 view-transition-name，
+   *  浏览器拍快照时会丢掉圆角裁切，退化成一块实心矩形色块，
+   *  正好落在滑块的「目标位置」上。22px 的圆上模糊本来看不出多少，
+   *  玻璃感由半透明底 + 描边 + 投影表达就够了。 */
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(12px) saturate(170%);
-  -webkit-backdrop-filter: blur(12px) saturate(170%);
   border: 1px solid var(--hairline-strong);
-  /* 极轻的浮起感 —— 浅色下白玻璃压白玻璃，靠这道投影才分得出层次。
-   * 快照容器是顶栏（有 backdrop-filter），投影放得下，不会被裁。 */
-  box-shadow: 0 2px 8px rgba(31, 45, 61, 0.16);
+  /*  不加 box-shadow：滑块的快照会连投影一起拍进去，
+   *  在逐帧重采样时投影边缘会出现残缺。层次改由描边表达。 */
   color: var(--text);
 }
 

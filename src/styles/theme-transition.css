@@ -44,43 +44,16 @@
 }
 
 /* ---------- 拨动滑块 ---------- */
-/*  滑块有自己的快照组，抬到揭示层之上，全程可见 */
+/*  滑块不单独成组，跟着整页一起过渡。
+ *
+ *  试过给它 view-transition-name 让它「在揭示过程中滑动」，但这条路走不通：
+ *  浏览器把快照组的盒子取成「旧位置到新位置的并集」，
+ *  22px 的快照被拉伸去填满 48px 宽的组盒，画面上就是滑块旁边
+ *  多出一个放大的圆。自己用 keyframe 平移同样会撞上这个并集盒子。
+ *  三种干预都会引入新瑕疵，所以这里选择干净优先。
+ */
 .theme-switch__knob {
-  view-transition-name: theme-switch-knob;
-}
-
-::view-transition-group(theme-switch-knob) {
-  z-index: 10;
-  /* 浏览器默认会让「组」从旧位置移动到新位置（250ms），
-   * 那和下面的 keyframe 会叠加 —— 滑块就到不了终点，
-   * 旧快照还会被拖到一边变成多余的图标。这里关掉它，
-   * 位移完全交给 keyframe 控制。 */
-  animation: none;
-}
-
-/*  旧快照直接隐藏。
- *  旧快照在深色主题下是「深色圆 + 亮太阳图标」——深色圆会融进深色轨道，
- *  只剩太阳图标露在轨道里，像个残留。两张快照对齐播放反而容易出这种问题，
- *  不如只留新的那张从另一端滑进来。 */
-::view-transition-old(theme-switch-knob) {
-  animation: none;
-  opacity: 0;
-  mix-blend-mode: normal;
-}
-
-/*  新快照从起点滑到终点 —— 与揭示同时长、同时缓动 */
-::view-transition-new(theme-switch-knob) {
-  animation: theme-switch-slide-in var(--dur-reveal) var(--ease-reveal) forwards;
-  mix-blend-mode: normal;
-}
-
-@keyframes theme-switch-slide-in {
-  from {
-    transform: translateX(calc(var(--knob-dir, 1) * -1 * var(--switch-travel)));
-  }
-  to {
-    transform: translateX(0);
-  }
+  view-transition-name: none;
 }
 
 /* ---------- 兜底 ---------- */

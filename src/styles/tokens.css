@@ -85,11 +85,11 @@ html {
   --glass-sat: 180%;
 
   /* 主题拨动开关 */
-  --switch-w: 70px;
+  --switch-w: 60px;
   --switch-h: 34px;
   --switch-knob: 22px;
   --switch-pad: 6px;
-  --switch-travel: 36px;    /* 轨道宽 - 滑块宽 - 左右各 6px */
+  --switch-travel: 26px;    /* 轨道宽 - 滑块宽 - 左右各 6px */
   /* 轨道也是磨砂玻璃，只是比滑块淡一点，两层压出层次 */
   --switch-track: rgba(255, 255, 255, 0.42);
 
