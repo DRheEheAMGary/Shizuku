@@ -34,7 +34,12 @@
   position: relative;
   width: var(--dock-size);
   height: var(--dock-size);
-  border-radius: var(--r-full);
+  /*  圆角固定成面板圆角，不做过渡。
+   *  46×46 时浏览器会把 28px 夹紧到 23px —— 正好是正圆；
+   *  长大后自然变成圆角矩形。
+   *  如果从 999px 插值到 28px，中间每一步的形状都被「夹紧」重新定义，
+   *  观感上像先缩了一下再张开。 */
+  border-radius: var(--r-xl);
   overflow: hidden;
 
   background: var(--glass-bg-menu);
@@ -52,7 +57,6 @@
     width var(--dur-dock) var(--ease-dock),
     height var(--dur-dock) var(--ease-dock),
     translate var(--dur-dock) var(--ease-dock),
-    border-radius 200ms var(--ease-dock),
     box-shadow var(--dur-dock) var(--ease-dock);
 }
 
@@ -65,7 +69,6 @@
   height: var(--dock-h);
   /* 反向挪动：抵消头行内边距变化，头像留在原位 */
   translate: calc(-1 * var(--dock-lift-x)) calc(-1 * var(--dock-lift-y));
-  border-radius: var(--r-xl);
   box-shadow:
     0 18px 48px rgba(31, 45, 61, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
