@@ -7,28 +7,26 @@
  *  主题在 React 挂载前就写入 <html data-theme>，避免首屏亮暗闪烁 ——
  *  脚本内联在 index.html 中。
  *
- *  切换用 View Transitions API 做圆形揭示：从开关位置扩散开一个新主题的
- *  圆形裁切，旧快照垫在下面不动。拨动滑块有自己的快照组，全程可见。
+ *  切换动画：一枚「旧主题的圆形遮罩」从开关位置收缩到无，
+ *  露出已经切好的新主题。
+ *
+ *  为什么不用 View Transitions：滑块要「在揭示过程中滑动」，
+ *  但浏览器给具名元素生成的快照组，盒子取的是「旧位置到新位置的并集」，
+ *  22px 的快照会被拉伸去填满它（画面上就是滑块旁多出一个放大的圆或方块）。
+ *  试过平移快照、关组动画、钉死快照尺寸，都会引入新瑕疵。
+ *
+ *  改用手搓遮罩后，滑块是普通 DOM + CSS 过渡，滑动全程可见且零瑕疵。
  * ========================================================================== */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { flushSync } from 'react-dom'
 
 export type ThemeMode = 'light' | 'dark'
 
 const STORAGE_KEY = 'shizuku-theme'
 const MODES: ThemeMode[] = ['light', 'dark']
-/** 兜底颜色渐变的时长，和 CSS 里的 transition 对齐 */
-const FALLBACK_MS = 500
-
-interface ViewTransition {
-  finished?: Promise<void>
-}
-
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (cb: () => void | Promise<void>) => ViewTransition
-}
+/** 动画时长，与 CSS 里的 --dur-reveal 保持一致 */
+export const TRANSITION_MS = 500
 
 function systemPrefersDark(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -57,25 +55,30 @@ export function applyTheme(mode: ThemeMode) {
   root.dataset.themeMode = mode
 }
 
-function clearTransitionVars() {
-  const root = document.documentElement
-  root.style.removeProperty('--vt-x')
-  root.style.removeProperty('--vt-y')
-  root.style.removeProperty('--vt-r')
-  root.style.removeProperty('--knob-dir')
+/** 遮罩状态：显示「旧主题」的背景，从圆心收缩到无 */
+export interface VeilState {
+  x: number
+  y: number
+  r: number
+  /** 遮罩要呈现的主题 —— 也就是切换前的那一态 */
+  theme: ThemeMode
 }
 
 interface ThemeApi {
   mode: ThemeMode
   setMode: (mode: ThemeMode) => void
-  /** 带揭示动画的切换。origin 是触发元素，决定圆形揭示的圆心。 */
+  /** 带遮罩动画的切换。origin 是触发元素，决定遮罩的圆心。 */
   toggle: (origin?: HTMLElement | null) => void
+  /** 当前遮罩状态（由 ThemeVeil 渲染） */
+  veil: VeilState | null
 }
 
 const ThemeContext = createContext<ThemeApi | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(getStoredMode)
+  const [veil, setVeil] = useState<VeilState | null>(null)
+  const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     applyTheme(mode)
@@ -84,62 +87,52 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(
     (origin?: HTMLElement | null) => {
-      const doc = document as ViewTransitionDocument
       const next: ThemeMode = mode === 'dark' ? 'light' : 'dark'
       const root = document.documentElement
 
-      // 系统里关掉了动画：不介入
+      // 系统里关掉了动画：直接切
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         setMode(next)
         return
       }
 
-      // 不支持 View Transitions：退化成颜色渐变，滑块用 CSS 过渡拨动
-      if (typeof doc.startViewTransition !== 'function') {
-        root.classList.add('theme-transition')
-        setMode(next)
-        window.setTimeout(() => root.classList.remove('theme-transition'), FALLBACK_MS)
-        return
-      }
+      // 动画进行中：忽略重复点击
+      if (timer.current) return
 
       // 圆心 = 触发开关中心，半径要能盖住整个视口
+      let x = window.innerWidth / 2
+      let y = 0
       if (origin) {
         const rect = origin.getBoundingClientRect()
-        const x = rect.left + rect.width / 2
-        const y = rect.top + rect.height / 2
-        const radius = Math.hypot(
-          Math.max(x, window.innerWidth - x),
-          Math.max(y, window.innerHeight - y),
-        )
-        root.style.setProperty('--vt-x', `${x}px`)
-        root.style.setProperty('--vt-y', `${y}px`)
-        root.style.setProperty('--vt-r', `${radius}px`)
+        x = rect.left + rect.width / 2
+        y = rect.top + rect.height / 2
       }
+      const r = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      )
 
-      // 滑块拨动的方向：浅→深往右，深→浅往左。
-      // 新旧两张快照都按这个方向平移，两者始终重合，旧的被新的完全盖住。
-      root.style.setProperty('--knob-dir', next === 'dark' ? '1' : '-1')
+      // 遮罩先铺满（呈现旧主题），主题立刻切到新的；
+      // 再让遮罩收缩到无，露出新主题。
+      setVeil({ x, y, r, theme: mode })
+      root.classList.add('theme-transition')
+      setMode(next)
 
-      try {
-        const vt = doc.startViewTransition(() => {
-          // applyTheme 同步改 DOM，浏览器才能拍到新状态的快照；
-          // flushSync 让 React 的状态也同步跟上，图标才不会慢半拍。
-          applyTheme(next)
-          flushSync(() => setMode(next))
-        })
-
-        if (vt.finished) vt.finished.finally(clearTransitionVars)
-        else clearTransitionVars()
-      } catch {
-        // 出任何问题都退化成直接切换，绝不把开关点坏
-        setMode(next)
-        clearTransitionVars()
-      }
+      timer.current = window.setTimeout(() => {
+        setVeil(null)
+        root.classList.remove('theme-transition')
+        timer.current = undefined
+      }, TRANSITION_MS)
     },
     [mode, setMode],
   )
 
-  const value = useMemo<ThemeApi>(() => ({ mode, setMode, toggle }), [mode, setMode, toggle])
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  const value = useMemo<ThemeApi>(
+    () => ({ mode, setMode, toggle, veil }),
+    [mode, setMode, toggle, veil],
+  )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

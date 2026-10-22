@@ -1,14 +1,12 @@
 /* ============================================================================
  *  Shizuku · 主题切换动画
  * ----------------------------------------------------------------------------
- *  用 View Transitions API 做圆形揭示：
- *  浏览器在切换时拍下「旧状态」和「新状态」两张快照，
- *  旧快照垫在下面不动，新快照用圆形裁切从开关位置铺开。
+ *  不用 View Transitions。原因见 hooks/useTheme.tsx 顶部注释：
+ *  具名快照组的盒��是「旧位置到新位置的并集」，滑块快照会被拉伸，
+ *  无论怎么调都会在滑块旁留下一块放大的色块。
  *
- *  拨动滑块单独处理：
- *  它有自己的 view-transition-name，图层抬到揭示层之上，
- *  于是既不进快照（不会被圆形裁切吞掉），又能独立播放拨动动画。
- *  拨动时长与揭示时长都是 --dur-reveal，两者严格同步。
+ *  现在是一枚「旧主题遮罩」从开关位置收缩到无（见 ThemeVeil.css），
+ *  同时页面所有颜色属性在 --dur-reveal 内平滑过渡。
  * ========================================================================== */
 
 :root {
@@ -16,80 +14,43 @@
   --ease-reveal: cubic-bezier(0.35, 0, 0.25, 1);
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* 旧快照压在下面，不淡出 */
-::view-transition-old(root) {
-  z-index: 1;
-}
-
-/* 新快照在上面做圆形揭示 */
-::view-transition-new(root) {
-  z-index: 2;
-  clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
-  animation: theme-reveal var(--dur-reveal) var(--ease-reveal) forwards;
-}
-
-@keyframes theme-reveal {
-  from {
-    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
-  }
-  to {
-    clip-path: circle(var(--vt-r, 100vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
-  }
-}
-
-/* ---------- 拨动滑块 ---------- */
-/*  滑块不单独成组，跟着整页一起过渡。
- *
- *  试过给它 view-transition-name 让它「在揭示过程中滑动」，但这条路走不通：
- *  浏览器把快照组的盒子取成「旧位置到新位置的并集」，
- *  22px 的快照被拉伸去填满 48px 宽的组盒，画面上就是滑块旁边
- *  多出一个放大的圆。自己用 keyframe 平移同样会撞上这个并集盒子。
- *  三种干预都会引入新瑕疵，所以这里选择干净优先。
- */
-.theme-switch__knob {
-  view-transition-name: none;
-}
-
-/* ---------- 兜底 ---------- */
-/*  不支持 View Transitions 时，颜色平滑过渡，滑块用 CSS 过渡拨动。
- *  只在切换的这半秒内挂上，避免污染其它常态过渡。 */
+/*  切换的这半秒内，所有颜色属性走平滑过渡 ——
+ *  顶栏、文字、玻璃都在遮罩收缩的同时完成变色，不会在遮罩结束时跳一下。
+ *  只在切换期间挂上，避免污染其它常态过渡。 */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
   transition:
-    background-color 0.5s ease,
-    border-color 0.5s ease,
-    color 0.5s ease,
-    fill 0.5s ease,
-    stroke 0.5s ease !important;
+    background-color var(--dur-reveal) var(--ease-reveal),
+    background var(--dur-reveal) var(--ease-reveal),
+    border-color var(--dur-reveal) var(--ease-reveal),
+    color var(--dur-reveal) var(--ease-reveal),
+    fill var(--dur-reveal) var(--ease-reveal),
+    stroke var(--dur-reveal) var(--ease-reveal),
+    box-shadow var(--dur-reveal) var(--ease-reveal) !important;
 }
 
-/*  滑块平时由 CSS 过渡拨动；有 View Transitions 时改由快照动画接管，
- *  否则 DOM 会在动画途中被拍进快照，起点就不对了。 */
+/*  滑块是普通 DOM，用 CSS 过渡拨动 —— 与遮罩同长同缓动。
+ *  选择器必须带上 html.theme-transition：
+ *  上面那条 `html.theme-transition *` 的优先级更高，
+ *  且它的 transition 列表里没有 transform，会把这条整个覆盖掉，
+ *  滑块就会瞬跳。 */
 html.theme-transition .theme-switch__knob {
   transition: transform var(--dur-reveal) var(--ease-reveal) !important;
 }
 
-/* 系统关掉动画时，两种方案都不生效 */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root),
-  ::view-transition-old(theme-switch-knob),
-  ::view-transition-new(theme-switch-knob) {
-    animation: none !important;
-  }
-
   html.theme-transition,
   html.theme-transition *,
   html.theme-transition *::before,
-  html.theme-transition *::after {
+  html.theme-transition *::after,
+  html.theme-transition .theme-switch__knob {
     transition: none !important;
+  }
+
+  .theme-veil {
+    animation: none !important;
+    display: none;
   }
 }

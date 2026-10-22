@@ -8,7 +8,11 @@
  *  动效方向：Apple 缓动（cubic-bezier .32,.72,0,1）+ 克制的位移
  * ========================================================================== */
 
-html {
+/*  浅色变量同时挂在 html 和 [data-theme='light'] 上 ——
+ *  后者让任意元素（比如主题切换的遮罩层）能显式取到浅色那一套，
+ *  否则它只会继承 html 当前的深浅，遮罩就跟背景同色、看不见了。 */
+html,
+[data-theme='light'] {
   /* ---------- 排版 ---------- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
     'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
