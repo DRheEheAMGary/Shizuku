@@ -1,5 +1,12 @@
 /* ============================================================================
  *  Shizuku · 主题拨动开关样式
+ * ----------------------------------------------------------------------------
+ *  轨道本身是「实底 + 半透明描边」，不叠 backdrop-filter：
+ *  它已经在一个带 backdrop-filter 的顶栏胶囊里，再嵌一层会出现
+ *  合成毛刺（滑块底部闪色）。
+ *
+ *  滑块的所有颜色属性都带过渡：主题切换的瞬间 DOM 变量会突变，
+ *  过渡能把任何一帧的硬跳抹成渐变。
  * ========================================================================== */
 
 .theme-switch {
@@ -9,21 +16,18 @@
   height: var(--switch-h);
   padding: 0;
   border-radius: var(--r-full);
-  background: var(--glass-bg-strong);
+  background: var(--switch-track);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px) saturate(160%);
-  -webkit-backdrop-filter: blur(10px) saturate(160%);
-  box-shadow:
-    var(--glass-shadow),
-    var(--glass-inner);
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-apple);
+  transition:
+    background-color var(--dur-switch) var(--ease-apple),
+    border-color var(--dur-switch) var(--ease-apple);
 }
 
 .theme-switch__knob {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 3px;
+  left: 3px;
   width: var(--switch-knob);
   height: var(--switch-knob);
   border-radius: var(--r-full);
@@ -31,7 +35,11 @@
   place-items: center;
   background: var(--text);
   color: var(--bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+  /* 不用 box-shadow：投影会被快照容器裁掉，切口在逐帧重采样时会闪色。
+   * 深度改由轨道自身的描边表达。 */
+  transition:
+    background-color var(--dur-switch) var(--ease-apple),
+    color var(--dur-switch) var(--ease-apple);
 }
 
 /* 深色：滑块拨到右边 */

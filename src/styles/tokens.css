@@ -88,7 +88,9 @@ html {
   --switch-w: 54px;
   --switch-h: 28px;
   --switch-knob: 22px;
-  --switch-travel: 28px;   /* 轨道宽 - 滑块宽 - 左右各 2px */
+  --switch-travel: 28px;   /* 轨道宽 - 滑块宽 - 左右各 3px */
+  --switch-track: rgba(255, 255, 255, 0.5);
+  --dur-switch: 300ms;      /* 开关自身颜色过渡，抹平硬跳 */
 
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);
@@ -157,6 +159,7 @@ html {
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --switch-track: rgba(255, 255, 255, 0.1);
 
 
   /* 暗色下换成深色遮罩，同一张图压成夜色 */
