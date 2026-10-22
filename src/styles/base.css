@@ -53,7 +53,7 @@ body::before {
   z-index: -2;
   background:
     linear-gradient(var(--bg-veil), var(--bg-veil)),
-    url('/bg.jpg') center / cover no-repeat;
+    url('/bg.webp') center / cover no-repeat;
   pointer-events: none;
 }
 
