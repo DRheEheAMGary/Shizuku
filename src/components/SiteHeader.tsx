@@ -6,8 +6,7 @@
  *  页面下滚后只折叠署名，Shizuku / 个人主页 两行的相对位置始终不变。
  * ========================================================================== */
 
-import { NavLink } from 'react-router'
-import { nav, profile, site } from '@/content/site'
+import { profile, site } from '@/content/site'
 import { Icon } from './Icon'
 import { useTheme } from '@/hooks/useTheme'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
@@ -29,7 +28,7 @@ export function SiteHeader() {
 
       <header className="site-header glass">
         <div className="site-header__inner">
-          <NavLink to="/" className="brand" aria-label="返回首页">
+          <a href="#top" className="brand" aria-label="回到顶部">
             {/* 署名：连笔手写体，主题色，始终保留 */}
             <span className="brand__sig">
               <span>{profile.signature}</span>
@@ -42,24 +41,7 @@ export function SiteHeader() {
                 <span className="brand__sub">{site.title}</span>
               </span>
             </span>
-          </NavLink>
-
-          <span className="site-header__rule" aria-hidden="true" />
-
-          <nav className="site-nav" aria-label="主导航">
-            {nav.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.id === 'home' ? '/' : `/${item.id}`}
-                className={({ isActive }) => `site-nav__item${isActive ? ' is-active' : ''}`}
-              >
-                <span className="site-nav__label">{item.label}</span>
-                <span className="site-nav__kana" lang="ja">
-                  {item.kana}
-                </span>
-              </NavLink>
-            ))}
-          </nav>
+          </a>
 
           <span className="site-header__rule" aria-hidden="true" />
 

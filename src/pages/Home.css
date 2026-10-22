@@ -76,6 +76,89 @@
   color: var(--text-muted);
 }
 
+/* ---------- 锚点定位 ---------- */
+/*  sticky 顶栏会盖住目标，给锚点留出上边距 */
+.section[id] {
+  scroll-margin-top: 7rem;
+}
+
+/* ---------- 关于 ---------- */
+.prose .quote {
+  margin-top: var(--sp-5);
+}
+
+.facts {
+  margin-top: var(--sp-6);
+}
+
+/* ---------- 贡献热力图 ---------- */
+.works-heat {
+  margin-top: var(--sp-5);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.works-heat__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-2);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  list-style: none;
+  transition: color var(--dur-fast) var(--ease-apple);
+}
+
+.works-heat__summary:hover {
+  color: var(--text);
+}
+
+.works-heat__summary::-webkit-details-marker {
+  display: none;
+}
+
+.works-heat__hint {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.works-heat__box[open] .works-heat__hint,
+.works-heat[open] .works-heat__hint {
+  opacity: 0;
+}
+
+.works-heat__body {
+  padding: var(--sp-2) var(--sp-2) var(--sp-5);
+  overflow-x: auto;
+}
+
+/* ---------- 复制按钮 ---------- */
+.contact-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  border: 1px solid var(--hairline);
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.contact-copy:hover {
+  color: var(--primary);
+  border-color: var(--primary-ring);
+  transform: translateY(-1px);
+}
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 720px) {
   .hero {

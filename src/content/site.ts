@@ -49,13 +49,3 @@ export const profile = {
   lyric: 'ここに いちぎょう の うた',
 } as const
 
-/** 导航结构 —— 页面 id 与路由一一对应 */
-export const nav = [
-  { id: 'home', label: '首页', kana: 'ホーム' },
-  { id: 'about', label: '关于', kana: 'について' },
-  { id: 'links', label: '链接', kana: 'リンク' },
-  { id: 'works', label: '项目', kana: '作品' },
-  { id: 'contact', label: '联系', kana: '連絡先' },
-] as const
-
-export type NavItem = (typeof nav)[number]

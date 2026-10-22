@@ -98,12 +98,19 @@
   align-items: center;
   gap: var(--sp-3);
   padding: 0.5rem 0.5rem 0.5rem var(--sp-5);
-  transition: padding var(--dur-base) var(--ease-apple), gap var(--dur-base) var(--ease-apple);
+  /* 高度固定住：导航去掉后内容变矮，若不管它，
+   * 胶囊会和背后的磨砂圆不等高。 */
+  min-height: 54px;   /* + 上下 1px 边框 = 56px，与磨砂圆等高 */
+  transition:
+    min-height var(--dur-base) var(--ease-apple),
+    padding var(--dur-base) var(--ease-apple),
+    gap var(--dur-base) var(--ease-apple);
 }
 
 .site-header-wrap.is-collapsed .site-header__inner {
   padding: 0.375rem 0.375rem 0.375rem var(--sp-4);
   gap: var(--sp-2);
+  min-height: 44px;   /* + 边框 = 46px */
 }
 
 /* ---------- 品牌 ---------- */
@@ -209,82 +216,6 @@
   opacity: 0;
 }
 
-/* ---------- 导航 ---------- */
-.site-nav {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.site-nav__item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--r-full);
-  color: var(--text-secondary);
-  transition:
-    color var(--dur-fast) var(--ease-apple),
-    background-color var(--dur-fast) var(--ease-apple),
-    padding var(--dur-base) var(--ease-apple);
-}
-
-.site-header-wrap.is-collapsed .site-nav__item {
-  padding: 0.375rem 0.5rem;
-}
-
-.site-nav__item:hover {
-  color: var(--text);
-  background: var(--primary-soft);
-}
-
-.site-nav__item.is-active {
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-
-.site-nav__label {
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-/* 假名副标：收起时折掉 */
-.site-nav__kana {
-  font-size: 0.5625rem;
-  line-height: 1.1;
-  letter-spacing: var(--tracking-jp);
-  opacity: 0;
-  max-height: 0;
-  transform: translateY(-2px);
-  overflow: hidden;
-  transition:
-    opacity var(--dur-fast) var(--ease-apple),
-    max-height var(--dur-base) var(--ease-apple),
-    transform var(--dur-fast) var(--ease-apple);
-}
-
-.site-nav__item:hover .site-nav__kana,
-.site-nav__item.is-active .site-nav__kana {
-  opacity: 0.7;
-  max-height: 1rem;
-  transform: translateY(0);
-}
-
-.site-nav__item.is-active .site-nav__kana {
-  opacity: 1;
-}
-
-/* 收起时连当前页的副标也不占位 */
-.site-header-wrap.is-collapsed .site-nav__kana,
-.site-header-wrap.is-collapsed .site-nav__item:hover .site-nav__kana,
-.site-header-wrap.is-collapsed .site-nav__item.is-active .site-nav__kana {
-  opacity: 0;
-  max-height: 0;
-}
-
 /* ---------- 主题切换 ---------- */
 .theme-toggle {
   display: grid;
@@ -330,13 +261,5 @@
   .brand__sig,
   .site-header__rule {
     display: none;
-  }
-
-  .site-nav {
-    gap: 0;
-  }
-
-  .site-nav__item {
-    padding: 0.375rem 0.5rem;
   }
 }

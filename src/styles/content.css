@@ -87,9 +87,19 @@ a.row:hover,
 }
 
 .row__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   font-size: var(--fs-base);
   font-weight: 500;
   line-height: 1.35;
+}
+
+/* 等级标签跟在标题后面 —— 若放在行尾，uid 的右边缘会随行参差 */
+.row__level {
+  font-size: 0.625rem;
+  padding: 0.1rem 0.45rem;
+  font-weight: 500;
 }
 
 .row__sub {

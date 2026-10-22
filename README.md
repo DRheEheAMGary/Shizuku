@@ -3,8 +3,9 @@
 > 一个留白优先的个人主页。磨砂玻璃、Apple 式动效、日式排印气质。
 
 - **Vite 8 + React 19 + TypeScript**
-- 无后端、无数据库、无 UI 框架，构建产物是纯静态文件
-- 全站只依赖 `react` / `react-dom` / `react-router`
+- 无后端、无数据库、无 UI 框架、无路由库，构建产物是纯静态文件
+- 全站只依赖 `react` / `react-dom`
+- 单页长滚动，一个页面讲完所有事
 - 亮 / 暗双主题，跟随系统或手动切换
 - 正文不用卡片，层次靠留白、细线、字重
 
@@ -57,7 +58,7 @@ Shizuku/
     │   ├── content.css     # 正文版式：行列表、文本列、引用
     │   └── glass.css       # 玻璃材质、按钮、胶囊标签
     ├── components/         # SiteHeader / PageShell / Icon / GithubHeatmap
-    ├── pages/              # Home / About / Links / Works / Contact
+    ├── pages/              # Home（唯一的页面，所有区块都在里面）
     └── hooks/              # useTheme / useReveal / useScrollCollapse
 ```
 
@@ -103,8 +104,8 @@ export const links: LinkItem[] = [
 结构是**一枚独立悬浮的圆形头像 + 一枚居中胶囊**：
 
 ```
-(头像) │  DRheEheAM_Gary   Shizuku   │  首页 关于 链接 项目 联系  │  ☀
-        │  个人主页                    │                            │
+(头像) │  DRheEheAM_Gary   Shizuku   │  ☀
+        │  个人主页                    │
 ```
 
 - 头像在胶囊**外面**，是一个单独的圆，带一圈细边和投影
@@ -112,19 +113,17 @@ export const links: LinkItem[] = [
 - 署名用**连笔手写体 Pacifico**（旧站首页同款），与站名并排
 - `Shizuku` / `个人主页` 两行的相对位置**始终不变**
 
-页面下滚过 32px 后收窄，只折叠署名：
+页面下滚过 32px 后收窄，折起「Shizuku / 个人主页」那块（宽高同时归零），签名保留：
 
 | | 展开 | 收起 |
 |---|---|---|
-| 胶囊宽度 | ~635px | ~415px |
 | 胶囊高度 | 56px | 46px |
-| 署名 | 显示（154px） | 折叠为 0 |
-| Shizuku / 个人主页 | 两行 | 两行（位置不动） |
+| 署名 | 显示（154px，主题蓝） | 保留 |
+| Shizuku / 个人主页 | 两行 | 整块折起（宽高同时归零） |
 
 折叠用 `grid-template-columns: 1fr → 0fr`（比动画 `width` 稳），假名副标用 `max-height`。
 
-窄屏（< 720px）下署名会隐藏：实测 390px 宽时，署名 + 五个导航标签会把导航压到 129px，
-标签必然被裁切。若要在移动端也显示署名，需要先把导航换成折叠菜单。
+窄屏（< 720px）下署名会隐藏：实测 390px 宽时，署名会把胶囊挤到放不下。
 
 `src/hooks/useScrollCollapse.ts` 里有两个关键处理：
 
@@ -171,8 +170,11 @@ body::before {
 
 ## 技术取舍
 
-**为什么不用 Next/Astro**：站点只有五页静态内容，框架的约定成本大于收益。
+**为什么不用 Next/Astro**：站点只有一页静态内容，框架的约定成本大于收益。
 预渲染的收益（首屏、分享预览）用 `index.html` 里的 OG 标签 + 静态背景层就能覆盖大半。
+
+**为什么不用路由库**：全站是一个长页面，没有分页，也就没有路由。
+去掉 react-router 后包体从 89KB 降到 75KB（gzip）。
 
 **为什么不用 Tailwind**：磨砂玻璃是 `backdrop-filter` + 多层背景 + 发丝边的组合，
 写成工具类可读性很差，且设计 token 会被稀释成散落的类名。
