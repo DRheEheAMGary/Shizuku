@@ -22,6 +22,10 @@
   /*  高度按内容分两档：未登录只有主按钮，已登录多两行 */
   --dock-h: 172px;
   --dock-h-in: 236px;
+  /*  展开时头行内边距从 3px 变成 8/10px，会把头像推走 (7,5)。
+   *  让面板反向挪同样多，头像在屏幕上就一动不动。 */
+  --dock-lift-x: 7px;
+  --dock-lift-y: 5px;
   --dur-dock: 420ms;
   --ease-dock: cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -47,6 +51,7 @@
   transition:
     width var(--dur-dock) var(--ease-dock),
     height var(--dur-dock) var(--ease-dock),
+    translate var(--dur-dock) var(--ease-dock),
     border-radius 200ms var(--ease-dock),
     box-shadow var(--dur-dock) var(--ease-dock);
 }
@@ -58,6 +63,8 @@
 .auth-dock[data-open='true'] .auth-dock__panel {
   width: var(--dock-w);
   height: var(--dock-h);
+  /* 反向挪动：抵消头行内边距变化，头像留在原位 */
+  translate: calc(-1 * var(--dock-lift-x)) calc(-1 * var(--dock-lift-y));
   border-radius: var(--r-xl);
   box-shadow:
     0 18px 48px rgba(31, 45, 61, 0.2),
@@ -70,11 +77,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 3px;
+  /*  过渡写在基础规则上，展开和收起都生效。
+   *  只写在展开态的话，收起那一瞬间内边距会瞬跳，头像被甩一下。 */
+  transition: padding var(--dur-dock) var(--ease-dock);
 }
 
 .auth-dock[data-open='true'] .auth-dock__head {
   padding: 8px 10px 6px;
-  transition: padding var(--dur-dock) var(--ease-dock);
 }
 
 /* 收起态就是那枚圆：40 + 3×2 内边距 = 46 */
