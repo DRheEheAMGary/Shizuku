@@ -1,0 +1,163 @@
+/* ============================================================================
+ *  Shizuku · 基础样式
+ * ----------------------------------------------------------------------------
+ *  reset + 排版基线 + 全局背景层
+ * ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-base);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition:
+    background-color var(--dur-base) var(--ease-apple),
+    color var(--dur-base) var(--ease-apple);
+}
+
+/* ---------- 背景层 1：背景图 + 遮罩 ---------- */
+/*  遮罩是关键：原图对比度约 78，直接用会让玻璃卡片背后的明暗乱跳。
+ *  白色遮罩按 (1 - α) 等比压缩对比度，62% ≈ 降到 30，足够安静。
+ *  暗色模式换深色遮罩，同一张图变成夜色。 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background:
+    var(--bg-focus),
+    var(--bg-scrim),
+    linear-gradient(var(--bg-mask), var(--bg-mask)),
+    url('/bg.jpg') center / cover no-repeat;
+  opacity: var(--bg-image-opacity);
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-apple);
+}
+
+/* ---------- 背景层 2：氛围光斑 ---------- */
+/*  浮在背景图之上，负责把画面统一到「浅葱 + 琥珀」的调子上 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
+    radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%);
+  pointer-events: none;
+}
+
+/*  竖屏用裁切更聚焦的版本，避免外套大面积留白 */
+@media (max-aspect-ratio: 3/4) {
+  body::before {
+    background:
+      var(--bg-focus),
+      var(--bg-scrim),
+      linear-gradient(var(--bg-mask), var(--bg-mask)),
+      url('/bg-portrait.jpg') center / cover no-repeat;
+  }
+}
+
+/* ---------- 排版 ---------- */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-apple);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: var(--r-full);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+  background-clip: content-box;
+}
+
+/* ---------- 焦点可见性（键盘导航） ---------- */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: var(--r-xs);
+}

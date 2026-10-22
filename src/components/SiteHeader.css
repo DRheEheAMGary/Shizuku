@@ -1,0 +1,181 @@
+/* ============================================================================
+ *  Shizuku · 顶部栏样式
+ * ========================================================================== */
+
+.site-header {
+  position: sticky;
+  top: var(--sp-4);
+  z-index: 50;
+  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
+  margin: var(--sp-4) auto 0;
+  border-radius: var(--r-full);
+  background: var(--glass-bg-strong);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-5);
+}
+
+/* ---------- 品牌 ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.brand:hover {
+  color: var(--text);
+}
+
+.brand__mark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: 1;
+  color: var(--primary);
+  /* 滴落的水珠：轻微的垂直偏移，视觉上像悬挂着 */
+  transform: translateY(-1px);
+  transition: transform var(--dur-base) var(--ease-apple);
+}
+
+.brand:hover .brand__mark {
+  transform: translateY(-3px);
+}
+
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+}
+
+.brand__sub {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ---------- 导航 ---------- */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-inline: auto;
+}
+
+.site-nav__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple);
+}
+
+.site-nav__item:hover {
+  color: var(--text);
+  background: var(--primary-soft);
+}
+
+.site-nav__item.is-active {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.site-nav__label {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.site-nav__kana {
+  font-size: 0.5625rem;
+  letter-spacing: var(--tracking-jp);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.site-nav__item:hover .site-nav__kana,
+.site-nav__item.is-active .site-nav__kana {
+  opacity: 0.7;
+  transform: translateY(0);
+}
+
+.site-nav__item.is-active .site-nav__kana {
+  opacity: 1;
+}
+
+/* ---------- 主题切换 ---------- */
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  border: 1px solid var(--hairline);
+  transition:
+    transform var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple);
+}
+
+.theme-toggle:hover {
+  color: var(--primary);
+  background: var(--primary-soft);
+  transform: rotate(15deg);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .site-header {
+    top: var(--sp-3);
+    margin-top: var(--sp-3);
+  }
+
+  .site-header__inner {
+    padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+    gap: var(--sp-2);
+  }
+
+  .brand__text {
+    display: none;
+  }
+
+  .site-nav {
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav__item {
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .site-nav__kana {
+    display: none;
+  }
+}

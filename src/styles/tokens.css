@@ -1,0 +1,185 @@
+/* ============================================================================
+ *  Shizuku · 设计 Token
+ * ----------------------------------------------------------------------------
+ *  全部设计决策集中在这里。改这一个文件 = 改整个站点的气质。
+ *
+ *  配色方向：浅葱（蓝绿）为主 + 琥珀橙黄为点缀
+ *  材质方向：磨砂玻璃（毛玻璃）为主 + 极细分隔线
+ *  动效方向：Apple 缓动（cubic-bezier .32,.72,0,1）+ 克制的位移
+ * ========================================================================== */
+
+:root {
+  /* ---------- 排版 ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+    'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans SC', 'Noto Sans JP', sans-serif;
+
+  /* 标题字体：与正文同一套无衬线，靠字重与字距建立层级（Apple 的做法）。
+   * 和风不靠明朝体，靠假名、竖排、宽字距与留白。 */
+  --font-display: var(--font-sans);
+
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* 流体字号 —— clamp(最小, 视口比例, 最大) */
+  --fs-xs:   0.75rem;    /* 12px 辅助文字 */
+  --fs-sm:   0.8125rem;  /* 13px 次要说明 */
+  --fs-base: 0.9375rem;  /* 15px 正文 */
+  --fs-md:   1.0625rem;  /* 17px 强调正文 */
+  --fs-lg:   clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  --fs-xl:   clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  --fs-2xl:  clamp(2.5rem, 1.8rem + 3.4vw, 4.5rem);
+  --fs-3xl:  clamp(3rem, 2rem + 4.4vw, 5.5rem);
+
+  /* 日式排版：行高比西式更松 */
+  --lh-tight: 1.2;
+  --lh-snug:  1.45;
+  --lh-base:  1.75;   /* 正文行高 —— 日式的呼吸感来源 */
+  --lh-loose: 2;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.14em;   /* 小标签字距，日式排印惯例 */
+  --tracking-jp: 0.22em;      /* 假名标签，拉得很开 */
+
+  /* ---------- 间距（8pt 基准，但偏大，符合留白理念） ---------- */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  /* 页面左右留白 —— 桌面端给足 */
+  --page-gutter: clamp(1.25rem, 5vw, 8rem);
+  --page-max: 76rem;
+
+  /* ---------- 圆角 ---------- */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;    /* 卡片 */
+  --r-xl: 28px;
+  --r-full: 999px; /* 胶囊按钮 */
+
+  /* ---------- 动效 ---------- */
+  --ease-apple: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --dur-fast: 200ms;
+  --dur-base: 350ms;
+  --dur-slow: 500ms;
+  --dur-slower: 800ms;
+
+  /* ---------- 玻璃材质 ---------- */
+  --glass-blur: 24px;
+  --glass-sat: 180%;
+
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-bg-strong: rgba(255, 255, 255, 0.84);
+  --glass-border: rgba(28, 37, 48, 0.07);
+  --glass-shadow: 0 8px 32px rgba(31, 45, 61, 0.06);
+  --glass-shadow-hover: 0 12px 40px rgba(31, 45, 61, 0.1);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+  /* ---------- 色彩 · 亮色（默认） ---------- */
+  --bg: #f7f9fa;
+  --bg-tint: #eef4f6;
+
+  --text: #1c2530;
+  --text-secondary: #5b6b7a;
+  --text-muted: #93a3b0;
+
+  /* 主色：浅葱（蓝绿） */
+  --primary: #3f7d8c;
+  --primary-hover: #33697a;
+  --primary-soft: rgba(63, 125, 140, 0.1);
+  --primary-ring: rgba(63, 125, 140, 0.28);
+
+  /* 点缀：琥珀橙黄 */
+  --accent: #d99429;
+  --accent-hover: #c07f1c;
+  --accent-soft: rgba(217, 148, 41, 0.12);
+
+  --hairline: rgba(28, 37, 48, 0.08);
+  --hairline-strong: rgba(28, 37, 48, 0.14);
+
+  /* 背景光斑（氛围层） */
+  --glow-primary: rgba(63, 125, 140, 0.18);
+  --glow-accent: rgba(217, 148, 41, 0.14);
+
+  /* 背景图遮罩 —— 白色，压掉原图对比度 */
+  --bg-mask: rgba(247, 249, 250, 0.34);
+  /* 内容侧的方向性遮罩：左侧（文字区）擦干净，右侧（画面区）留给图 */
+  --bg-scrim: linear-gradient(
+    100deg,
+    rgba(247, 249, 250, 0.86) 0%,
+    rgba(247, 249, 250, 0.62) 30%,
+    rgba(247, 249, 250, 0.28) 58%,
+    rgba(247, 249, 250, 0.1) 100%
+  );
+  --bg-image-opacity: 1;
+  /* 文字区的焦点遮罩：在内容列位置擦出一池干净的白 */
+  --bg-focus: radial-gradient(
+    58% 54% at 14% 40%,
+    rgba(247, 249, 250, 0.9) 0%,
+    rgba(247, 249, 250, 0.55) 45%,
+    rgba(247, 249, 250, 0) 78%
+  );
+}
+
+/* ============================================================================
+ *  暗色
+ * ========================================================================== */
+:root[data-theme='dark'] {
+  --bg: #0e1418;
+  --bg-tint: #131b20;
+
+  --text: #e6edf2;
+  --text-secondary: #9fb0bd;
+  --text-muted: #64788a;
+
+  --primary: #6fb3c2;
+  --primary-hover: #8ac6d3;
+  --primary-soft: rgba(111, 179, 194, 0.14);
+  --primary-ring: rgba(111, 179, 194, 0.32);
+
+  --accent: #e8a33d;
+  --accent-hover: #f2b458;
+  --accent-soft: rgba(232, 163, 61, 0.14);
+
+  --hairline: rgba(230, 237, 242, 0.09);
+  --hairline-strong: rgba(230, 237, 242, 0.16);
+
+  --glass-bg: rgba(255, 255, 255, 0.075);
+  --glass-bg-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.13);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --glow-primary: rgba(63, 125, 140, 0.28);
+  --glow-accent: rgba(217, 148, 41, 0.16);
+
+  /* 暗色下换成深色遮罩，同一张图压成夜色 */
+  --bg-mask: rgba(12, 18, 22, 0.42);
+  --bg-scrim: linear-gradient(
+    100deg,
+    rgba(12, 18, 22, 0.92) 0%,
+    rgba(12, 18, 22, 0.74) 30%,
+    rgba(12, 18, 22, 0.5) 58%,
+    rgba(12, 18, 22, 0.3) 100%
+  );
+  --bg-image-opacity: 0.85;
+  --bg-focus: radial-gradient(
+    58% 54% at 14% 40%,
+    rgba(12, 18, 22, 0.82) 0%,
+    rgba(12, 18, 22, 0.45) 45%,
+    rgba(12, 18, 22, 0) 78%
+  );
+}

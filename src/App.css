@@ -1,0 +1,19 @@
+/* ============================================================================
+ *  Shizuku · 全局布局
+ * ========================================================================== */
+
+/* 路由切换的淡入 —— 退场不做，避免闪烁 */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main > * {
+  animation: page-in var(--dur-slow) var(--ease-apple);
+}

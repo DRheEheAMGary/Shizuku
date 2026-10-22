@@ -1,0 +1,112 @@
+/* ============================================================================
+ *  Shizuku · 内联 SVG 图标
+ * ----------------------------------------------------------------------------
+ *  取代 FontAwesome 图标字体：省掉约 60KB 的字体文件与一次额外请求，
+ *  且图标颜色可直接跟随 currentColor。
+ * ========================================================================== */
+
+export type IconName =
+  | 'blog'
+  | 'folder'
+  | 'chess'
+  | 'bilibili'
+  | 'headphones'
+  | 'cube'
+  | 'gamepad'
+  | 'mail'
+  | 'qq'
+  | 'phone'
+  | 'mic'
+  | 'wind'
+  | 'water'
+  | 'star'
+  | 'wheat'
+  | 'github'
+  | 'user-graduate'
+  | 'laptop-code'
+  | 'heart'
+  | 'sun'
+  | 'moon'
+  | 'monitor'
+  | 'arrow-up-right'
+  | 'copy'
+  | 'check'
+
+/** 需要实心渲染的标志类图标（描边版在小尺寸下会糊成一团） */
+const SOLID_PATHS: Partial<Record<IconName, string>> = {
+  github:
+    'M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12',
+}
+
+/** 24×24 视框，统一 stroke 风格（1.6px），与极简线条感一致 */
+const PATHS: Partial<Record<IconName, string>> = {
+  blog: 'M4 5h16v14H4zM4 9h16M8 5v14',
+  folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  chess: 'M8 21h8M12 17v4M7 4h10l-2 5 2 4H7l2-4z',
+  bilibili: 'M7 4v3M17 4v3M4.5 9h15a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-7A1.5 1.5 0 0 1 4.5 9zM9 13v2M15 13v2',
+  headphones: 'M4 15v-3a8 8 0 0 1 16 0v3M4 15a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4zM20 15a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h0z',
+  cube: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 3v18M4 7.5l8 4.5 8-4.5',
+  gamepad: 'M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.5 1.7L14 13h-4l-1.5 1.7A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4zM7 11v3M5.5 12.5h3M16 11.5h.01M18 13.5h.01',
+  mail: 'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 8l9 6 9-6',
+  qq: 'M12 3c-3.9 0-7 2.6-7 5.9 0 1.9 1 3.6 2.6 4.7-.4.7-.9 1.5-1.6 2.2-.5.5-.2 1.4.5 1.5 1.5.2 3-.2 4.3-1 .9.3 1.9.4 2.9.4 3.9 0 7-2.6 7-5.8S15.9 3 12 3zM9.5 9h.01M14.5 9h.01',
+  phone: 'M6 3h3l1.5 4-2 1.5a12 12 0 0 0 5 5L15 11.5 19 13v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4 5.2 2 2 0 0 1 6 3z',
+  mic: 'M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3M9 21h6',
+  wind: 'M3 8h9a3 3 0 1 0-3-3M3 12h13a3 3 0 1 1-3 3M3 16h7a2.5 2.5 0 1 1-2.5 2.5',
+  water: 'M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3z',
+  star: 'M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.4l6-.8z',
+  wheat: 'M12 21V9M12 9c0-2 1.5-3.5 3.5-3.5 0 2-1.5 3.5-3.5 3.5zM12 9C12 7 10.5 5.5 8.5 5.5 8.5 7.5 10 9 12 9zM12 14c0-2 1.5-3.5 3.5-3.5 0 2-1.5 3.5-3.5 3.5zM12 14c0-2-1.5-3.5-3.5-3.5-0 2 1.5 3.5 3.5 3.5z',
+  'user-graduate': 'M12 4L2 9l10 5 10-5zM6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5M22 9v6',
+  'laptop-code': 'M4 5h16v11H4zM2 19h20M9 9l-1.5 1.5L9 12M12 12h3',
+  heart: 'M12 20s-7-4.5-7-9.5A4 4 0 0 1 12 7a4 4 0 0 1 7 3.5C19 15.5 12 20 12 20z',
+  sun: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z',
+  monitor: 'M3 4h18v12H3zM9 20h6M12 16v4',
+  'arrow-up-right': 'M7 17L17 7M8 7h9v9',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  check: 'M5 13l4 4L19 7',
+}
+
+interface IconProps {
+  name: IconName
+  size?: number
+  className?: string
+  /** 实心填充（用于 heart / star 这类实心图标） */
+  filled?: boolean
+}
+
+export function Icon({ name, size = 18, className, filled = false }: IconProps) {
+  const solid = SOLID_PATHS[name]
+  if (solid) {
+    return (
+      <svg
+        className={className}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d={solid} fillRule="evenodd" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke={filled ? 'none' : 'currentColor'}
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={PATHS[name] ?? ''} />
+    </svg>
+  )
+}

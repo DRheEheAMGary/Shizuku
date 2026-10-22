@@ -1,0 +1,115 @@
+/* ============================================================================
+ *  Shizuku · 页面骨架样式
+ * ========================================================================== */
+
+.page-shell {
+  position: relative;
+  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
+  margin: 0 auto;
+  padding: var(--sp-8) 0 var(--sp-7);
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 8rem);
+}
+
+/* ---------- 页边竖排小字 ---------- */
+.page-shell__margin {
+  position: fixed;
+  top: 50%;
+  right: var(--sp-5);
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: var(--text-secondary);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+
+.page-shell__main {
+  flex: 1;
+}
+
+/* ---------- 页头 ---------- */
+.page-head {
+  margin-bottom: var(--sp-7);
+}
+
+.page-head__title {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--sp-2);
+}
+
+.page-head__subtitle {
+  color: var(--text-secondary);
+  font-size: var(--fs-base);
+  max-width: 34em;
+}
+
+/* ---------- 页脚 ---------- */
+.site-footer {
+  margin-top: var(--sp-9);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--hairline);
+}
+
+.site-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.site-footer__quote {
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-jp);
+  color: var(--text-secondary);
+}
+
+.site-footer__meta a {
+  color: var(--text-muted);
+}
+
+.site-footer__meta a:hover {
+  color: var(--primary);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1024px) {
+  .page-shell__margin {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    padding-top: var(--sp-6);
+  }
+
+  .site-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-2);
+  }
+}
+
+/* 竖排标记上方的细线，让它读起来是设计元素而不是残留物 */
+.page-shell__margin::before {
+  content: '';
+  position: absolute;
+  top: -2.75rem;
+  left: 50%;
+  width: 1px;
+  height: 1.75rem;
+  background: var(--hairline-strong);
+  transform: translateX(-50%);
+}

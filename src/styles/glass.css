@@ -1,0 +1,157 @@
+/* ============================================================================
+ *  Shizuku · 玻璃材质
+ * ----------------------------------------------------------------------------
+ *  全站的主材质。层次靠模糊与微光，不靠重阴影。
+ * ========================================================================== */
+
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    var(--glass-inner);
+  border-radius: var(--r-lg);
+}
+
+/* 强玻璃：悬浮的主卡片 */
+.glass--strong {
+  background: var(--glass-bg-strong);
+}
+
+/* 内嵌玻璃：卡片里再套一层，比外层更淡 */
+.glass--inset {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: var(--hairline);
+  box-shadow: none;
+  border-radius: var(--r-md);
+}
+
+:root[data-theme='dark'] .glass--inset {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+/* 玻璃上的高光描边 —— 顶部一条亮线，制造厚度 */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0) 40%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+:root[data-theme='dark'] .glass::before {
+  opacity: 0.35;
+}
+
+/* ---------- 悬停态：轻微上浮 + 阴影加深 ---------- */
+.glass--hover {
+  transition:
+    transform var(--dur-base) var(--ease-apple),
+    box-shadow var(--dur-base) var(--ease-apple),
+    background-color var(--dur-base) var(--ease-apple);
+}
+
+.glass--hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    var(--glass-shadow-hover),
+    var(--glass-inner);
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: var(--tracking-normal);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple),
+    box-shadow var(--dur-fast) var(--ease-apple);
+}
+
+.btn:hover {
+  transform: scale(1.02);
+  color: var(--text);
+  box-shadow: var(--glass-shadow-hover);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--primary {
+  background: var(--primary);
+  border-color: transparent;
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--primary-hover);
+  color: #fff;
+}
+
+/* ---------- 胶囊标签 ---------- */
+/*  底色用「实心玻璃 + 色调叠加」：单层半透明色在花背景上会发灰 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--primary);
+  background:
+    linear-gradient(var(--primary-soft), var(--primary-soft)),
+    var(--glass-bg-strong);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.chip--accent {
+  color: var(--accent);
+  background:
+    linear-gradient(var(--accent-soft), var(--accent-soft)),
+    var(--glass-bg-strong);
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+}
+
+/* ---------- 细分割线 ---------- */
+.hairline {
+  height: 1px;
+  background: var(--hairline);
+  border: none;
+}

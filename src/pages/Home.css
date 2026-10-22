@@ -1,0 +1,144 @@
+/* ============================================================================
+ *  Shizuku · 首页样式
+ * ========================================================================== */
+
+/* 首屏入场：只用 opacity + transform，按 --i 依次错开 */
+@keyframes intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro {
+  animation: intro-in 700ms var(--ease-apple) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    animation: none;
+  }
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-7) 0 var(--sp-8);
+  max-width: 44rem;
+}
+
+.hero__avatar-wrap {
+  margin-bottom: var(--sp-2);
+}
+
+.hero__avatar {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: var(--r-full);
+  padding: 6px;
+  background: var(--glass-bg-strong);
+}
+
+.hero__avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-full);
+  object-fit: cover;
+}
+
+.hero__name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.35em;
+  font-size: var(--fs-3xl);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: var(--tracking-tight);
+}
+
+.hero__name-part {
+  display: inline-block;
+}
+
+.hero__desc {
+  font-size: var(--fs-md);
+  color: var(--text-secondary);
+  line-height: var(--lh-base);
+  max-width: 30em;
+}
+
+.hero__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.hero__lyric {
+  margin-top: var(--sp-4);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-jp);
+  color: var(--text-muted);
+}
+
+/* ---------- 通用小节 ---------- */
+.home-section {
+  margin-bottom: var(--sp-7);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.section-head__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-normal);
+}
+
+.section-head__kana {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wider);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .hero {
+    padding: var(--sp-5) 0 var(--sp-6);
+  }
+
+  .hero__avatar {
+    width: 88px;
+    height: 88px;
+  }
+}

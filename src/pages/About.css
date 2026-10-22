@@ -1,0 +1,184 @@
+/* ============================================================================
+ *  Shizuku · 关于页样式
+ * ========================================================================== */
+
+.about-card {
+  padding: var(--sp-6);
+  margin-bottom: var(--sp-5);
+}
+
+.about-card__line {
+  color: var(--text-secondary);
+  line-height: var(--lh-loose);
+}
+
+.about-card__line + .about-card__line {
+  margin-top: var(--sp-1);
+}
+
+.about-card__quote {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ---------- 基本信息三栏 ---------- */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-7);
+}
+
+.about-grid__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.about-grid__label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.about-grid__value {
+  font-size: var(--fs-md);
+  font-weight: 500;
+}
+
+/* ---------- 小节 ---------- */
+.about-section {
+  margin-bottom: var(--sp-7);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.section-head__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-normal);
+}
+
+.section-head__kana {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wider);
+}
+
+/* ---------- 成分表 ---------- */
+.about-composition {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.about-composition__col {
+  padding: var(--sp-5);
+}
+
+.about-composition__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--sp-3);
+}
+
+.about-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.about-list__item {
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
+}
+
+/* ---------- 游戏账号表 ---------- */
+.about-table {
+  padding: var(--sp-2) var(--sp-5);
+}
+
+.about-table__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+}
+
+.about-table__row + .about-table__row {
+  border-top: 1px solid var(--hairline);
+}
+
+.about-table__game {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.about-table__uid {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  margin-right: auto;
+}
+
+/* ---------- 推し ---------- */
+.about-oshi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.about-oshi__group {
+  padding: var(--sp-5);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+a.chip:hover {
+  color: var(--primary-hover);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-card {
+    padding: var(--sp-5);
+  }
+
+  .about-table__row {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .about-table__uid {
+    margin-right: 0;
+    width: 100%;
+    order: 3;
+  }
+}

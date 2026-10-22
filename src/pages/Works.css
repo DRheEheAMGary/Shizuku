@@ -1,0 +1,103 @@
+/* ============================================================================
+ *  Shizuku · 项目页样式
+ * ========================================================================== */
+
+.works-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.work-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  color: var(--text);
+}
+
+.work-item:hover {
+  color: var(--text);
+}
+
+.work-item__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.work-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.work-item__name {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-normal);
+}
+
+.work-item__desc {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.work-item__arrow {
+  color: var(--text-muted);
+  transition:
+    color var(--dur-base) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple);
+}
+
+.work-item:hover .work-item__arrow {
+  color: var(--primary);
+  transform: translate(2px, -2px);
+}
+
+/* ---------- 热力图 ---------- */
+.works-heat__box {
+  padding: var(--sp-2) var(--sp-5);
+}
+
+.works-heat__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  cursor: pointer;
+  font-size: var(--fs-base);
+  font-weight: 500;
+  list-style: none;
+}
+
+.works-heat__summary::-webkit-details-marker {
+  display: none;
+}
+
+.works-heat__hint {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.works-heat__summary[open] .works-heat__hint {
+  opacity: 0;
+}
+
+.works-heat__body {
+  padding: var(--sp-4) 0 var(--sp-5);
+  border-top: 1px solid var(--hairline);
+  overflow-x: auto;
+}
+

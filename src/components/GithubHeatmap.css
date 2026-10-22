@@ -1,0 +1,73 @@
+/* ============================================================================
+ *  Shizuku · GitHub 热力图样式
+ * ========================================================================== */
+
+.heat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.heat__grid {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: var(--sp-1);
+  scrollbar-width: thin;
+}
+
+.heat__week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heat__day {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--hairline);
+}
+
+/* 贡献等级：由浅到深都是主色的不同浓度，不引入额外色相 */
+.heat__day[data-level='1'] {
+  background: color-mix(in oklab, var(--primary) 28%, transparent);
+}
+.heat__day[data-level='2'] {
+  background: color-mix(in oklab, var(--primary) 48%, transparent);
+}
+.heat__day[data-level='3'] {
+  background: color-mix(in oklab, var(--primary) 70%, transparent);
+}
+.heat__day[data-level='4'] {
+  background: var(--primary);
+}
+
+.heat__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.heat__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.heat__note {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  padding: var(--sp-2) 0;
+}
+
+.heat__note a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

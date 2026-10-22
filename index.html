@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>Shizuku · DRheEheAM_Gary</title>
+    <meta name="description" content="高一生 | OIer | 二次元 — DRheEheAM_Gary 的个人主页" />
+    <meta name="keywords" content="DRheEheAM,DRheEheAM_Gary,个人主页,Shizuku,dreamgary,dreamgary.cn" />
+    <meta name="author" content="DRheEheAM_Gary" />
+    <meta name="theme-color" content="#f7f9fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e1418" media="(prefers-color-scheme: dark)" />
+
+    <!-- 分享预览：QQ / 微信 / Discord 等爬虫不执行 JS，必须写在静态 HTML 里 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Shizuku · DRheEheAM_Gary" />
+    <meta property="og:description" content="高一生 | OIer | 二次元" />
+    <meta property="og:url" content="https://dreamgary.cn" />
+    <meta property="og:image" content="https://r.dreamgary.cn/images/headround.jpg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Shizuku · DRheEheAM_Gary" />
+    <meta name="twitter:description" content="高一生 | OIer | 二次元" />
+
+    <link rel="icon" href="https://r.dreamgary.cn/images/headround.png" />
+    <link rel="preload" href="/bg.jpg" as="image" />
+
+    <script>
+      // 在任何渲染之前确定主题，避免首屏亮暗闪烁
+      ;(function () {
+        try {
+          var key = 'shizuku-theme'
+          // ?theme=dark / light / auto 用于预览与分享时强制主题
+          var q = new URLSearchParams(location.search).get('theme')
+          var mode = q || localStorage.getItem(key) || 'auto'
+          var dark =
+            mode === 'dark' ||
+            (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var root = document.documentElement
+          root.dataset.theme = dark ? 'dark' : 'light'
+          root.dataset.themeMode = mode
+        } catch (e) {
+          /* localStorage 不可用时保持默认 */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

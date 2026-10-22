@@ -1,0 +1,17 @@
+/* ============================================================================
+ *  Shizuku · 链接页样式
+ * ========================================================================== */
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.links-grid > * {
+  display: flex;
+}
+
+.links-grid > * > * {
+  flex: 1;
+}
