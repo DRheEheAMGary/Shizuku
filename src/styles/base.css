@@ -58,13 +58,6 @@ body::before {
 }
 
 /*  竖屏用裁切更聚焦的版本，避免外套大面积留白 */
-@media (max-aspect-ratio: 3/4) {
-  body::before {
-    background:
-      linear-gradient(var(--bg-veil), var(--bg-veil)),
-      url('/bg-portrait.jpg') center / cover no-repeat;
-  }
-}
 
 /* ---------- 排版 ---------- */
 h1, h2, h3, h4 {
