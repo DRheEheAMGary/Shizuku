@@ -16,35 +16,31 @@ export function Home() {
       {/* ---------- Hero ---------- */}
       <section className="hero">
         <div className="hero__avatar-wrap intro" style={{ '--i': 0 } as never}>
-          <div className="hero__avatar glass">
-            <img
-              className="hero__avatar-img"
-              src={site.avatar}
-              alt={`${site.author} 的头像`}
-              width={96}
-              height={96}
-              fetchPriority="high"
-            />
-          </div>
+          <img
+            className="hero__avatar"
+            src={site.avatar}
+            alt={`${site.author} 的头像`}
+            width={88}
+            height={88}
+            fetchPriority="high"
+          />
         </div>
 
         <h1 className="hero__name intro" style={{ '--i': 1 } as never}>
-          <span className="hero__name-part">DRheEheAM</span>
-          <span className="hero__name-part">Gary</span>
+          {profile.name}
         </h1>
 
         <p className="hero__desc intro" style={{ '--i': 2 } as never}>
-          {profile.about[1]}
+          {profile.description}
         </p>
 
-        <div className="hero__tags intro" style={{ '--i': 3 } as never}>
+        <div className="chips intro" style={{ '--i': 3 } as never}>
           {profile.tags.map((tag) => (
             <span key={tag.text} className="chip">
               <Icon name={tag.icon as never} size={12} />
               {tag.text}
             </span>
           ))}
-          <span className="chip chip--accent">MBTI {profile.mbti}</span>
         </div>
 
         <div className="hero__actions intro" style={{ '--i': 4 } as never}>
@@ -63,14 +59,14 @@ export function Home() {
       </section>
 
       {/* ---------- 最近在玩 ---------- */}
-      <Reveal className="home-section" delay={80}>
+      <Reveal>
         <div className="section-head">
           <h2 className="section-head__title">最近在玩</h2>
           <span className="section-head__kana" lang="ja">
             ゲーム
           </span>
         </div>
-        <div className="chip-row">
+        <div className="chips">
           {games.map((g) => (
             <span key={g} className="chip">
               {g}

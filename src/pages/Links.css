@@ -2,16 +2,8 @@
  *  Shizuku · 链接页样式
  * ========================================================================== */
 
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: var(--sp-3);
-}
-
-.links-grid > * {
-  display: flex;
-}
-
-.links-grid > * > * {
-  flex: 1;
+/* 版式由 content.css 里的 .rows / .row 提供，这里只做窄化，
+ * 让单列长行读起来更像一份目录，而不是铺满屏的列表。 */
+.links-rows {
+  max-width: var(--content-max);
 }

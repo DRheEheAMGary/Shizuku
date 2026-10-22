@@ -1,49 +1,50 @@
 /* ============================================================================
  *  Shizuku · 站点与个人信息
+ * ----------------------------------------------------------------------------
+ *  ⚠️ 目前全部是占位内容，仅用于观察版式。换成真实内容即可。
  * ========================================================================== */
 
 export const site = {
-  /** 站名（页边竖排小字用） */
+  /** 站名（顶栏与页边竖排用） */
   mark: '雫',
   /** 罗马字 */
   markRomaji: 'shizuku',
   /** 浏览器标题后缀 */
   title: '个人主页',
-  /** 副标题 */
-  subtitle: 'OIer & 二次元',
-  description: '高一生 | OIer | 二次元',
-  keywords: 'DRheEheAM,DRheEheAM_Gary,个人主页,Shizuku,dreamgary,dreamgary.cn',
-  author: 'DRheEheAM_Gary',
-  url: 'https://dreamgary.cn',
+  subtitle: '示例副标题',
+  description: '一句话介绍，示例文本',
+  keywords: '示例,占位,Shizuku',
+  author: 'Your Name',
+  url: 'https://example.com',
   lang: 'zh-CN',
   avatar: 'https://r.dreamgary.cn/images/headround.jpg',
   favicon: 'https://r.dreamgary.cn/images/headround.png',
   icp: {
-    text: '萌ICP备20260513号',
-    url: 'https://icp.gov.moe/?keyword=20260513',
+    text: '示例备案号',
+    url: 'https://example.com',
   },
-  footerQuote: '愛してね♡',
+  footerQuote: 'ここに いちぎょう',
 } as const
 
 export const profile = {
-  name: 'DRheEheAM_Gary',
-  mbti: 'ESFJ',
-  location: 'JX-NC',
-  description: '高一生 | OIer | 二次元',
-  quote: '爱如果太猛烈/注定是要毁灭',
+  name: 'Your Name',
+  mbti: 'XXXX',
+  location: '城市',
+  description: '身份标签 · 身份标签 · 身份标签',
+  quote: '这里放一句你喜欢的话',
   about: [
-    '欢迎来到我的主页(awa',
-    '我是一名高一生，现居 JX-NC ，是一名 OIer & 二次元',
-    '很开心与你做朋友!',
+    '第一段自我介绍。这是占位文本，用来观察正文的行高与留白节奏。',
+    '第二段。可以写你现在在做什么、在哪里、对什么感兴趣。段落之间会自动留出间距。',
+    '第三段。想写多少段都可以，版式会跟着内容走。',
   ],
-  /** 侧栏/首页的成分标签 */
+  /** 首页的成分标签 */
   tags: [
-    { icon: 'fa-user-graduate', text: '高一生' },
-    { icon: 'fa-laptop-code', text: 'OIer' },
-    { icon: 'fa-heart', text: '二次元' },
+    { icon: 'user-graduate', text: '标签一' },
+    { icon: 'laptop-code', text: '标签二' },
+    { icon: 'heart', text: '标签三' },
   ],
-  /** 页脚的一行歌词 —— 二次元气质最好的一处，压到最轻 */
-  lyric: 'せんりのみちも いっぽから',
+  /** 页脚的一行歌词 —— 压到最轻 */
+  lyric: 'ここに いちぎょう の うた',
 } as const
 
 /** 导航结构 —— 页面 id 与路由一一对应 */

@@ -1,20 +1,18 @@
 /* ============================================================================
- *  Shizuku · 兴趣 / 二次元 / 项目
+ *  Shizuku · 兴趣 / 项目
+ * ----------------------------------------------------------------------------
+ *  ⚠️ 占位内容。
  * ========================================================================== */
 
 import type { IconName } from '@/components/Icon'
 
-/** 玩的游戏 */
-export const games = ['Minecraft', '原神', '崩坏：星穹铁道', '饿殍：明末千里行']
+export const games = ['游戏一', '游戏二', '游戏三', '游戏四']
 
-/** 二次元成分 */
-export const animeGenres = ['原神', '崩坏：星穹铁道', 'vtb & Vocaloid']
+export const animeGenres = ['作品一', '作品二', '作品三']
 
-/** Minecraft 成分 */
-export const minecraft = '生存 / 冒险 / 建筑 /（微量）生电'
+export const minecraft = '玩法一 / 玩法二 / 玩法三'
 
-/** 主推（推し） */
-export const oshi = 'hanser'
+export const oshi = '推し'
 
 export interface GameAccount {
   icon: IconName
@@ -24,10 +22,10 @@ export interface GameAccount {
 }
 
 export const gameAccounts: GameAccount[] = [
-  { icon: 'gamepad', game: '原神', uid: '292261202', level: 'Lv.58' },
-  { icon: 'gamepad', game: '星穹铁道', uid: '157154425', level: 'Lv.70' },
-  { icon: 'cube', game: 'MC Java', uid: 'DRheEheAM' },
-  { icon: 'cube', game: 'MC 基岩', uid: 'DreamGary513' },
+  { icon: 'gamepad', game: '游戏一', uid: '000000000', level: 'Lv.00' },
+  { icon: 'gamepad', game: '游戏二', uid: '000000000', level: 'Lv.00' },
+  { icon: 'cube', game: '游戏三', uid: 'your-id' },
+  { icon: 'cube', game: '游戏四', uid: 'your-id' },
 ]
 
 export interface Character {
@@ -36,24 +34,20 @@ export interface Character {
   url?: string
 }
 
-/** 虚拟主播 */
 export const vtubers: Character[] = [
-  { icon: 'mic', name: 'hanser', url: 'https://space.bilibili.com/11073' },
+  { icon: 'mic', name: '示例名字', url: 'https://example.com' },
 ]
 
-/** 原神主推 */
 export const genshinChars: Character[] = [
-  { icon: 'wind', name: '温迪' },
-  { icon: 'water', name: '妮露' },
-  { icon: 'star', name: '茜特菈莉' },
+  { icon: 'wind', name: '角色一' },
+  { icon: 'water', name: '角色二' },
+  { icon: 'star', name: '角色三' },
 ]
 
-/** 副推 */
 export const subPush: Character[] = [
-  { icon: 'gamepad', name: '银狼' },
-  { icon: 'wheat', name: '满穗' },
-  { icon: 'mic', name: '泠鸢yousa', url: 'https://space.bilibili.com/282994' },
-  { icon: 'mic', name: '多多poi', url: 'https://space.bilibili.com/11253297' },
+  { icon: 'gamepad', name: '角色四' },
+  { icon: 'wheat', name: '角色五' },
+  { icon: 'mic', name: '示例名字', url: 'https://example.com' },
 ]
 
 export interface Project {
@@ -64,22 +58,7 @@ export interface Project {
 }
 
 export const projects: Project[] = [
-  {
-    icon: 'github',
-    name: 'DRheEheAMGary/OI',
-    desc: '信息学代码总结',
-    url: 'https://github.com/DRheEheAMGary/OI',
-  },
-  {
-    icon: 'github',
-    name: 'DRheEheAMGary/Gary-homepage',
-    desc: '个人主页源码（旧版）',
-    url: 'https://github.com/DRheEheAMGary/Gary-homepage',
-  },
-  {
-    icon: 'github',
-    name: 'DRheEheAMServer/HubSuite',
-    desc: 'Minecraft 大厅 + 多子服模组',
-    url: 'https://github.com/DRheEheAMServer/HubSuite',
-  },
+  { icon: 'github', name: 'owner/repo-one', desc: '一句话说明这个项目', url: 'https://github.com' },
+  { icon: 'github', name: 'owner/repo-two', desc: '一句话说明这个项目', url: 'https://github.com' },
+  { icon: 'github', name: 'owner/repo-three', desc: '一句话说明这个项目', url: 'https://github.com' },
 ]

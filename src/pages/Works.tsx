@@ -12,38 +12,39 @@ import './Works.css'
 export function Works() {
   return (
     <PageShell marginText="作品" title="项目" subtitle="写过的、做过的一些东西。">
-      <div className="works-list">
-        {projects.map((p, i) => (
-          <Reveal key={p.name} delay={i * 60}>
+      <Reveal>
+        <div className="works-rows rows">
+          {projects.map((p) => (
             <a
-              className="glass glass--hover work-item"
+              key={p.name}
+              className="row"
               href={p.url}
               target="_blank"
               rel="noreferrer noopener"
             >
-              <span className="work-item__icon">
-                <Icon name={p.icon} size={20} />
+              <span className="row__icon">
+                <Icon name={p.icon} size={18} />
               </span>
-              <span className="work-item__body">
-                <span className="work-item__name">{p.name}</span>
-                <span className="work-item__desc">{p.desc}</span>
+              <span className="row__body">
+                <span className="row__title">{p.name}</span>
+                <span className="row__sub">{p.desc}</span>
               </span>
-              <span className="work-item__arrow">
-                <Icon name="arrow-up-right" size={16} />
+              <span className="row__arrow">
+                <Icon name="arrow-up-right" size={15} />
               </span>
             </a>
-          </Reveal>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Reveal>
 
-      {/* GitHub 贡献热力图 —— 默认折叠，避免信息密度压垮首屏 */}
-      <Reveal className="works-heat" delay={120}>
-        <details className="glass works-heat__box">
+      {/* 贡献热力图：默认折叠，避免信息密度压垮页面 */}
+      <Reveal className="works-heat" delay={80}>
+        <details className="works-heat__box">
           <summary className="works-heat__summary">
             <span>GitHub 贡献热力图</span>
-            <span className="works-heat__hint">点击展开</span>
+            <span className="works-heat__hint">展开</span>
           </summary>
-          <div className="works-heat__body" id="gh-contributions">
+          <div className="works-heat__body">
             <GithubHeatmap />
           </div>
         </details>

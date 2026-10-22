@@ -1,0 +1,198 @@
+/* ============================================================================
+ *  Shizuku · 内容排版
+ * ----------------------------------------------------------------------------
+ *  正文不使用卡片。层次靠三样东西建立：留白、细线、字重。
+ *  玻璃材质只留给顶栏，正文尽量"直接落在背景上"。
+ * ========================================================================== */
+
+/* ---------- 小节 ---------- */
+.section {
+  margin-bottom: var(--sp-8);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.section-head__title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-normal);
+}
+
+.section-head__kana {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-jp);
+}
+
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+
+/* ---------- 行列表（替代卡片） ---------- */
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-2);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text);
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    padding-left var(--dur-fast) var(--ease-apple);
+}
+
+.row:first-child {
+  border-top: 1px solid var(--hairline);
+}
+
+a.row:hover,
+.row--interactive:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.32);
+  padding-left: var(--sp-3);
+}
+
+:root[data-theme='dark'] a.row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.row__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.row__title {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.row__sub {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row__meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.row__arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translate(-4px, 4px);
+  transition:
+    opacity var(--dur-base) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple);
+}
+
+a.row:hover .row__arrow {
+  opacity: 1;
+  transform: translate(0, 0);
+  color: var(--primary);
+}
+
+/* ---------- 定义行（标签 + 值） ---------- */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--sp-5) var(--sp-6);
+}
+
+.fact__label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--sp-1);
+}
+
+.fact__value {
+  font-size: var(--fs-md);
+  font-weight: 500;
+}
+
+/* ---------- 文本列 ---------- */
+.cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--sp-6);
+}
+
+.cols__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--sp-3);
+}
+
+.plain-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.plain-list li {
+  font-size: var(--fs-base);
+  color: var(--text-secondary);
+  line-height: var(--lh-snug);
+}
+
+/* ---------- 标签 ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---------- 引用 ---------- */
+.quote {
+  padding-left: var(--sp-4);
+  border-left: 2px solid var(--primary-soft);
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+}
+
+/* ---------- 正文段落 ---------- */
+.prose p {
+  color: var(--text-secondary);
+  line-height: var(--lh-base);
+  max-width: 38em;
+}
+
+.prose p + p {
+  margin-top: var(--sp-4);
+}

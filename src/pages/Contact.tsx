@@ -18,35 +18,37 @@ export function Contact() {
       setCopied(value)
       setTimeout(() => setCopied(null), 1600)
     } catch {
-      // 剪贴板不可用（如非 https 环境）时静默降级
+      // 剪贴板不可用（非 https 环境）时静默降级
     }
   }
 
   return (
     <PageShell marginText="連絡先" title="联系" subtitle="想聊点什么的话，随时来找我。">
-      <div className="contact-list">
-        {contacts.map((c, i) => (
-          <Reveal key={c.value + c.type} delay={i * 45}>
-            <div className="glass contact-item">
-              <span className="contact-item__icon">
+      <Reveal>
+        <div className="contact-rows rows">
+          {contacts.map((c) => (
+            <div key={c.value} className="row">
+              <span className="row__icon">
                 <Icon name={c.icon} size={16} />
               </span>
-              <span className="contact-item__display">{c.display}</span>
+              <span className="row__body">
+                <span className="row__title">{c.display}</span>
+              </span>
               {c.copyable && (
                 <button
                   type="button"
-                  className="contact-item__copy"
+                  className="contact-copy"
                   onClick={() => copy(c.value)}
                   aria-label={`复制 ${c.value}`}
                 >
-                  <Icon name={copied === c.value ? 'check' : 'copy'} size={14} />
+                  <Icon name={copied === c.value ? 'check' : 'copy'} size={13} />
                   <span>{copied === c.value ? '已复制' : '复制'}</span>
                 </button>
               )}
             </div>
-          </Reveal>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Reveal>
     </PageShell>
   )
 }
