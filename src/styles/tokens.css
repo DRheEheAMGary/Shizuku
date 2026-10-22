@@ -85,15 +85,13 @@ html {
   --glass-sat: 180%;
 
   /* 主题拨动开关 */
-  --switch-w: 84px;
-  --switch-h: 32px;
+  --switch-w: 70px;
+  --switch-h: 34px;
   --switch-knob: 22px;
-  --switch-pad: 4px;
-  --switch-travel: 54px;    /* 轨道宽 - 滑块宽 - 左右各 4px */
-  --switch-track: rgba(255, 255, 255, 0.72);
-  /* z 轴底座：与轨道等宽，上下各多出这么多 —— 只在上下露出两道边。
-   * 轨道 + 底座 = 32 + 14 = 46px，正好等于头像直径，左右等高。 */
-  --switch-base-bleed: 7px;
+  --switch-pad: 6px;
+  --switch-travel: 36px;    /* 轨道宽 - 滑块宽 - 左右各 6px */
+  /* 轨道也是磨砂玻璃，只是比滑块淡一点，两层压出层次 */
+  --switch-track: rgba(255, 255, 255, 0.42);
 
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);
@@ -162,7 +160,7 @@ html {
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --switch-track: rgba(255, 255, 255, 0.1);
+  --switch-track: rgba(255, 255, 255, 0.12);
 
 
   /* 暗色下换成深色遮罩，同一张图压成夜色 */

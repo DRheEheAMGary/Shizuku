@@ -1,59 +1,33 @@
 /* ============================================================================
  *  Shizuku · 主题拨动开关样式
  * ----------------------------------------------------------------------------
- *  结构与左侧头像同构：
- *    头像 = 照片圆 + 背后一圈磨砂玻璃圆（z 轴托底）
- *    开关 = 轨道 + 背后一块同宽的磨砂玻璃底座（z 轴托底）
- *  底座与轨道等宽、上下各多出 --switch-base-bleed，于是只在上下露出两道边。
- *
- *  轨道不叠 backdrop-filter：它已经在一个带 backdrop-filter 的顶栏胶囊里，
- *  再嵌一层会出现合成毛刺（滑块底部闪色）。玻璃质感交给底座。
+ *  一条浅浅的轨道 + 一枚磨砂玻璃滑块。滑块本身就是玻璃，不另垫底座。
  *
  *  滑块的垂直居中用 translate 属性、水平拨动用 transform ——
  *  两者是独立的属性，互不干扰，也不用写死偏移。
  *
- *  滑块的所有颜色都不带过渡：主题切换时 DOM 变量会突变，
- *  而快照是在突变「之后」拍的 —— 若带过渡，快照会拍到中间色，
- *  动画结束时切回实时元素就会闪一下。
+ *  滑块的颜色不带过渡：主题切换时 DOM 变量会突变，而快照是在突变
+ *  「之后」拍的 —— 若带过渡，快照会拍到中间色，动画结束切回实时
+ *  元素时就会闪一下。
  * ========================================================================== */
 
-.theme-switch-wrap {
-  position: relative;
-  display: flex;
-  flex-shrink: 0;
-}
-
-/* ---------- z 轴底座 ---------- */
-.theme-switch__base {
-  position: absolute;
-  top: calc(-1 * var(--switch-base-bleed));
-  bottom: calc(-1 * var(--switch-base-bleed));
-  left: 0;
-  right: 0;
-  border-radius: var(--r-full);
-  background: var(--glass-bg-strong);
-  backdrop-filter: blur(14px) saturate(170%);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 4px 16px rgba(31, 45, 61, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-
-/* ---------- 轨道 ---------- */
 .theme-switch {
   position: relative;
-  z-index: 1;
+  flex-shrink: 0;
   width: var(--switch-w);
   height: var(--switch-h);
   padding: 0;
   border-radius: var(--r-full);
+  /* 轨道与滑块都是磨砂玻璃：轨道淡、滑块浓，靠浓度差分出层次 */
   background: var(--switch-track);
-  /* 不加自己的边框：底座已经提供描边，两端各一圈会叠成三重描边。
-   * 与头像同构 —— 照片不描边，由背后的玻璃圈提供轮廓。 */
+  backdrop-filter: blur(14px) saturate(165%);
+  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   cursor: pointer;
 }
 
+/* ---------- 磨砂玻璃滑块 ---------- */
 .theme-switch__knob {
   position: absolute;
   top: 50%;
@@ -67,10 +41,14 @@
   /* 垂直居中：用 translate 属性，与拨动用的 transform 分开 */
   translate: 0 -50%;
 
-  background: var(--text);
-  color: var(--bg);
-  /* 不用 box-shadow：投影会被快照容器裁掉，切口在逐帧重采样时会闪色。
-   * 深度改由轨道自身的描边表达。 */
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(12px) saturate(170%);
+  -webkit-backdrop-filter: blur(12px) saturate(170%);
+  border: 1px solid var(--hairline-strong);
+  /* 极轻的浮起感 —— 浅色下白玻璃压白玻璃，靠这道投影才分得出层次。
+   * 快照容器是顶栏（有 backdrop-filter），投影放得下，不会被裁。 */
+  box-shadow: 0 2px 8px rgba(31, 45, 61, 0.16);
+  color: var(--text);
 }
 
 /* 深色：滑块拨到右边 */
