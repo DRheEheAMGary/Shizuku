@@ -1,26 +1,20 @@
 /* ============================================================================
  *  Shizuku · 链接 / 联系方式
  * ----------------------------------------------------------------------------
- *  ⚠️ 占位内容。替换为真实链接即可。
+ *  ⚠️ 内容已清空。类型保留，新布局定下来后直接往数组里加。
  * ========================================================================== */
 
 import type { IconName } from '@/components/Icon'
 
 export interface LinkItem {
+  /** 内联 SVG 图标名，见 components/Icon.tsx */
   icon: IconName
   name: string
   url: string
   desc: string
 }
 
-export const links: LinkItem[] = [
-  { icon: 'blog', name: '示例站点一', url: 'https://example.com', desc: 'example.com' },
-  { icon: 'folder', name: '示例站点二', url: 'https://example.com', desc: 'example.com' },
-  { icon: 'chess', name: '示例站点三', url: 'https://example.com', desc: 'example.com' },
-  { icon: 'bilibili', name: '示例站点四', url: 'https://example.com', desc: 'example.com' },
-  { icon: 'headphones', name: '示例站点五', url: 'https://example.com', desc: 'example.com' },
-  { icon: 'cube', name: '示例站点六', url: 'https://example.com', desc: 'example.com' },
-]
+export const links: LinkItem[] = []
 
 export interface ContactItem {
   icon: IconName
@@ -30,9 +24,4 @@ export interface ContactItem {
   copyable?: boolean
 }
 
-export const contacts: ContactItem[] = [
-  { icon: 'mail', type: 'email', value: 'hello@example.com', display: 'hello@example.com', copyable: true },
-  { icon: 'qq', type: 'text', value: '000000000', display: 'QQ: 000000000', copyable: true },
-  { icon: 'phone', type: 'text', value: '00000000000', display: '电话: 00000000000', copyable: true },
-  { icon: 'bilibili', type: 'text', value: 'your-id', display: 'B站: your-id', copyable: true },
-]
+export const contacts: ContactItem[] = []

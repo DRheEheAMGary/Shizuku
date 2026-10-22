@@ -6,6 +6,10 @@
 - 无后端、无数据库、无 UI 框架、无路由库，构建产物是纯静态文件
 - 全站只依赖 `react` / `react-dom`
 - 单页长滚动，一个页面讲完所有事
+
+> ⚠️ **正文内容已清空，当前是画布。**
+> 顶栏、页面外壳、设计系统（tokens / glass / content）全部保留，
+> `src/content/` 里的数据也清空了但类型还在 —— 新布局定下来直接往里填。
 - 亮 / 暗双主题，跟随系统或手动切换
 - 正文不用卡片，层次靠留白、细线、字重
 
@@ -58,7 +62,7 @@ Shizuku/
     │   ├── content.css     # 正文版式：行列表、文本列、引用
     │   └── glass.css       # 玻璃材质、按钮、胶囊标签
     ├── components/         # SiteHeader / PageShell / Icon / GithubHeatmap
-    ├── pages/              # Home（唯一的页面，所有区块都在里面）
+    ├── pages/              # Home（唯一的页面，⚠️ 正文已清空，是画布）
     └── hooks/              # useTheme / useReveal / useScrollCollapse
 ```
 
@@ -69,6 +73,7 @@ Shizuku/
 ## 修改内容
 
 全部内容在 `src/content/` 下的 TypeScript 文件里，有类型约束——写错字段名编辑器会直接报错。
+现在这几个文件都是空的（只留了类型），新布局定下来往里填即可。
 
 ```ts
 // src/content/links.ts
@@ -199,3 +204,26 @@ body::before {
 
 旧版基于 React 19 + Vite 的个人主页，以及由它重构出的 PHP 服务端渲染版本。
 本项目是第三次重写，视觉与结构均为全新。
+
+---
+
+## 可用的积木
+
+新布局直接在 `src/pages/Home.tsx` 里搭。这些积木都已经在设计系统里了：
+
+| 类名 / 组件 | 用途 |
+|---|---|
+| `.section` + `.section-head` | 小节与标题（`__title` 主标、`__kana` 假名副标） |
+| `.rows` > `.row` | 分行列表（`__icon` `__body` `__title` `__sub` `__meta` `__arrow`） |
+| `.cols` + `.cols__title` | 分栏 |
+| `.facts` + `.fact__label` / `.fact__value` | 键值对 |
+| `.chips` + `.chip` | 胶囊标签（`chip--accent` 是琥珀色变体） |
+| `.quote` | 引用（左侧一道主色竖线） |
+| `.prose` > `p` | 段落（行高 1.75） |
+| `.btn` / `.btn--primary` | 按钮（胶囊形） |
+| `<Reveal>` | 滚动入场（`delay` 毫秒可错开） |
+| `<Icon name="..." />` | 内联 SVG 图标，见 `components/Icon.tsx` 的 `IconName` |
+| `<GithubHeatmap />` | GitHub 贡献热力图（自带降级） |
+
+设计 token 全在 `src/styles/tokens.css`：颜色、间距、圆角、缓动、玻璃参数。
+改一个变量全站跟着变。
