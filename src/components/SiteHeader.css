@@ -119,6 +119,12 @@
   color: var(--text);
 }
 
+/* 收起时站名那块的宽度归零了，但 flex 的 gap 仍会留在原地，
+ * 于是签名和导航之间空出一段没有内容的距离 —— 一起收掉。 */
+.site-header-wrap.is-collapsed .brand {
+  gap: 0;
+}
+
 /* 连笔署名：主题色，始终保留（收起时折的是右边那两行） */
 .brand__sig {
   display: grid;
