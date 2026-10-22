@@ -86,12 +86,9 @@ export function AuthDock() {
           )}
 
           {!user ? (
-            <>
-              <p className="auth-dock__hint">登录后可同步跨站身份</p>
-              <button type="button" className="auth-dock__cta" onClick={login} disabled={loading}>
-                {loading ? '登录中…' : '登录 / 注册'}
-              </button>
-            </>
+            <button type="button" className="auth-dock__cta" onClick={login} disabled={loading}>
+              {loading ? '登录中…' : '登录 / 注册'}
+            </button>
           ) : (
             <>
               <div className="auth-dock__who">
