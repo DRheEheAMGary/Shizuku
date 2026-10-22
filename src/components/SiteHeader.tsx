@@ -8,6 +8,7 @@
 
 import { profile, site } from '@/content/site'
 import { ThemeSwitch } from './ThemeSwitch'
+import { AuthCorner } from './AuthCorner'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
@@ -16,6 +17,9 @@ export function SiteHeader() {
 
   return (
     <div className={`site-header-wrap${collapsed ? ' is-collapsed' : ''}`}>
+      {/* 左上角：登录交互（绝对定位，不参与居中布局） */}
+      <AuthCorner />
+
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar">
         <span className="site-header__avatar-halo" aria-hidden="true" />

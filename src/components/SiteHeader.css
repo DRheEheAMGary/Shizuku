@@ -20,7 +20,10 @@
   gap: 14px;
 
   margin: var(--sp-4) auto 0;
-  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
+  /*  宽度放到通栏（只留页面边距），不再受 --page-max 限制：
+   *  中间那组仍是 justify-content: center，位置不变；
+   *  只有这样左上角的登录胶囊才能贴到真正的页面左边缘。 */
+  width: calc(100% - var(--page-gutter) * 2);
 
   /* 磨砂圆直径 = 顶栏高度，头像比它小一圈，露出 --halo-bleed 的玻璃边 */
   --avatar-size: 46px;

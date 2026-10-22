@@ -1,0 +1,89 @@
+/* ============================================================================
+ *  Shizuku · 左上角登录交互样式
+ * ----------------------------------------------------------------------------
+ *  与顶栏同一行：绝对定位贴在顶栏容器最左端，垂直居中。
+ *  材质与顶栏胶囊一致（磨砂玻璃 + 细描边 + 柔和投影），
+ *  但体积更小、文字更弱，避免和中间的署名抢视线。
+ * ========================================================================== */
+
+.auth-corner {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+}
+
+.auth-corner__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.85rem 0 0.7rem;
+  border-radius: var(--r-full);
+
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-soft);
+
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    0 4px 16px rgba(31, 45, 61, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+
+  transition:
+    color var(--dur-base) var(--ease-apple),
+    background-color var(--dur-base) var(--ease-apple),
+    box-shadow var(--dur-base) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple);
+}
+
+.auth-corner__pill:hover {
+  color: var(--text);
+  box-shadow:
+    0 8px 24px rgba(31, 45, 61, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transform: translateY(-1px);
+}
+
+.auth-corner__pill:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.auth-corner__pill:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.auth-corner__icon {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+.auth-corner__label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 窄屏：顶栏胶囊会占满中间，左上角这个先藏起来，等 SSO 接通再单独设计 */
+@media (max-width: 720px) {
+  .auth-corner {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-corner__pill {
+    transition: none;
+  }
+  .auth-corner__pill:hover {
+    transform: none;
+  }
+}
