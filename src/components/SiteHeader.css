@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 14px;
 
   margin: var(--sp-4) auto 0;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
@@ -52,10 +52,10 @@
   background: var(--glass-bg-strong);
   backdrop-filter: blur(14px) saturate(170%);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--hairline-strong);
   box-shadow:
-    0 4px 16px rgba(31, 45, 61, 0.12),
-    var(--glass-inner);
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
   transition: inset var(--dur-base) var(--ease-apple);
 }
 
@@ -71,8 +71,8 @@
 
 .site-header__avatar:hover .site-header__avatar-halo {
   box-shadow:
-    0 8px 24px rgba(31, 45, 61, 0.18),
-    var(--glass-inner);
+    0 10px 28px rgba(31, 45, 61, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 /* ---------- 胶囊 ---------- */
@@ -288,7 +288,8 @@
   .site-header-wrap {
     top: var(--sp-3);
     margin-top: var(--sp-3);
-    gap: var(--sp-2);
+    /* 磨砂圆会向外探出 --halo-bleed，间隙要留够才不会贴住胶囊 */
+    gap: 10px;
 
     /* 窄屏留给导航的空间有限，头像相应收小 */
     --avatar-size: 34px;
