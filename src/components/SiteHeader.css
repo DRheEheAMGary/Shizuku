@@ -119,7 +119,7 @@
   color: var(--text);
 }
 
-/* 连笔署名：用 grid 1fr → 0fr 折叠，比动画 width 稳 */
+/* 连笔署名：主题色，始终保留（收起时折的是右边那两行） */
 .brand__sig {
   display: grid;
   grid-template-columns: 1fr;
@@ -128,11 +128,8 @@
   font-family: var(--font-hand);
   font-size: 1.0625rem;
   line-height: 1;
-  color: var(--text);
+  color: var(--primary);
   letter-spacing: 0.01em;
-  transition:
-    grid-template-columns var(--dur-base) var(--ease-apple),
-    opacity var(--dur-base) var(--ease-apple);
 
   /* Pacifico 的墨迹超出 1em 行框：下伸部 7.74px、大写字母顶部 0.48px。
    * 而横向折叠必须靠 overflow:hidden 裁切，它会连纵向一起裁掉。
@@ -142,21 +139,33 @@
   margin: -0.05em 0 -0.46em;
 }
 
-.site-header-wrap.is-collapsed .brand__sig {
-  grid-template-columns: 0fr;
-  opacity: 0;
-}
-
 .brand__sig > span {
   min-width: 0;
 }
 
-/* 站名与副标题：两行堆叠，位置固定 */
+/* 站名与副标题：两行堆叠，位置固定。
+ * 收起时整块折起 —— 用 grid-template-rows: 1fr → 0fr，
+ * 高度由内容决定，不必写死 max-height。 */
 .brand__text {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-apple),
+    opacity var(--dur-base) var(--ease-apple);
+}
+
+.brand__text-inner {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  white-space: nowrap;
+  min-height: 0;
+}
+
+.site-header-wrap.is-collapsed .brand__text {
+  grid-template-rows: 0fr;
+  opacity: 0;
 }
 
 .brand__name {

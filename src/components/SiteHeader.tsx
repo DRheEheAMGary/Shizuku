@@ -30,15 +30,17 @@ export function SiteHeader() {
       <header className="site-header glass">
         <div className="site-header__inner">
           <NavLink to="/" className="brand" aria-label="返回首页">
-            {/* 署名：连笔手写体，收起时折叠 */}
+            {/* 署名：连笔手写体，主题色，始终保留 */}
             <span className="brand__sig">
               <span>{profile.signature}</span>
             </span>
 
-            {/* 站名与副标题：两行，位置固定不动 */}
+            {/* 站名与副标题：两行，位置固定不动；滚动时整块折起 */}
             <span className="brand__text">
-              <span className="brand__name">Shizuku</span>
-              <span className="brand__sub">{site.title}</span>
+              <span className="brand__text-inner">
+                <span className="brand__name">Shizuku</span>
+                <span className="brand__sub">{site.title}</span>
+              </span>
             </span>
           </NavLink>
 
