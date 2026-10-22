@@ -21,9 +21,10 @@ export function SiteHeader() {
 
   return (
     <div className={`site-header-wrap${collapsed ? ' is-collapsed' : ''}`}>
-      {/* 独立悬浮的圆形头像 */}
+      {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar">
-        <img src={site.avatar} alt="" width={34} height={34} />
+        <span className="site-header__avatar-halo" aria-hidden="true" />
+        <img src={site.avatar} alt="" width={54} height={54} />
       </span>
 
       <header className="site-header glass">

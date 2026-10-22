@@ -7,6 +7,8 @@
  * ========================================================================== */
 
 /* ---------- 悬浮的圆形头像 ---------- */
+/*  头像直径约等于顶栏高度；后面垫一枚磨砂玻璃圆，
+ *  展开时比头像半径大 1px，折叠后只大 0.5px。 */
 .site-header-wrap {
   position: sticky;
   top: var(--sp-4);
@@ -19,36 +21,56 @@
 
   margin: var(--sp-4) auto 0;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
+
+  --avatar-size: 54px;
+  --halo-bleed: 1px;
+}
+
+.site-header-wrap.is-collapsed {
+  --avatar-size: 45px;
+  --halo-bleed: 0.5px;
 }
 
 .site-header__avatar {
-  display: block;
+  position: relative;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  transition:
+    width var(--dur-base) var(--ease-apple),
+    height var(--dur-base) var(--ease-apple);
+}
+
+/* 磨砂玻璃圆：比头像大一圈，露出一圈玻璃边 */
+.site-header__avatar-halo {
+  position: absolute;
+  inset: calc(-1 * var(--halo-bleed));
   border-radius: var(--r-full);
-  overflow: hidden;
   background: var(--glass-bg-strong);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
   border: 1px solid var(--glass-border);
   box-shadow:
-    0 4px 14px rgba(31, 45, 61, 0.14),
+    0 4px 16px rgba(31, 45, 61, 0.12),
     var(--glass-inner);
-  transition:
-    transform var(--dur-base) var(--ease-apple),
-    box-shadow var(--dur-base) var(--ease-apple);
+  transition: inset var(--dur-base) var(--ease-apple);
 }
 
 .site-header__avatar img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
+  border-radius: var(--r-full);
   object-fit: cover;
   display: block;
 }
 
-.site-header__avatar:hover {
-  transform: scale(1.06);
+.site-header__avatar:hover .site-header__avatar-halo {
   box-shadow:
-    0 6px 18px rgba(31, 45, 61, 0.2),
+    0 8px 24px rgba(31, 45, 61, 0.18),
     var(--glass-inner);
 }
 
@@ -266,6 +288,13 @@
     top: var(--sp-3);
     margin-top: var(--sp-3);
     gap: var(--sp-2);
+
+    /* 窄屏留给导航的空间有限，头像相应收小 */
+    --avatar-size: 38px;
+  }
+
+  .site-header-wrap.is-collapsed {
+    --avatar-size: 34px;
   }
 
   .site-header__inner {
