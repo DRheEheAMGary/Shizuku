@@ -51,14 +51,18 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -2;
-  background: url('/bg.jpg') center / cover no-repeat;
+  background:
+    linear-gradient(var(--bg-veil), var(--bg-veil)),
+    url('/bg.jpg') center / cover no-repeat;
   pointer-events: none;
 }
 
 /*  竖屏用裁切更聚焦的版本，避免外套大面积留白 */
 @media (max-aspect-ratio: 3/4) {
   body::before {
-    background: url('/bg-portrait.jpg') center / cover no-repeat;
+    background:
+      linear-gradient(var(--bg-veil), var(--bg-veil)),
+      url('/bg-portrait.jpg') center / cover no-repeat;
   }
 }
 
