@@ -13,7 +13,10 @@
   box-shadow:
     var(--glass-shadow),
     var(--glass-inner);
-  border-radius: var(--r-lg);
+
+  /* 圆角由使用方用 --glass-radius 指定 —— 不写成固定值，
+   * 否则组件想改成胶囊时会和这里打权重官司。 */
+  border-radius: var(--glass-radius, var(--r-lg));
 }
 
 /* 强玻璃：悬浮的主卡片 */
@@ -26,7 +29,7 @@
   background: rgba(255, 255, 255, 0.28);
   border-color: var(--hairline);
   box-shadow: none;
-  border-radius: var(--r-md);
+  --glass-radius: var(--r-md);
 }
 
 :root[data-theme='dark'] .glass--inset {

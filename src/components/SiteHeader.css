@@ -14,7 +14,7 @@
   width: fit-content;
   max-width: calc(100% - var(--page-gutter) * 2);
   margin: var(--sp-4) auto 0;
-  border-radius: var(--r-full);
+  --glass-radius: var(--r-full);   /* 正圆胶囊：圆角取到高度的一半 */
   background: var(--glass-bg-strong);
 
   transition:
