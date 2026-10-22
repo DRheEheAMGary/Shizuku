@@ -159,24 +159,21 @@ animation: theme-veil-in 620ms var(--ease-apple) forwards;
 
 ### 背景图
 
-背景是四层叠加：
+背景就是原图本身 —— 光晕、模糊、白色与黑色遮罩全部去掉了：
 
 ```css
 /* base.css */
 body::before {
-  background:
-    var(--bg-focus),                                 /* 文字区的焦点遮罩 */
-    var(--bg-scrim),                                 /* 左实右透的方向性遮罩 */
-    linear-gradient(var(--bg-mask), var(--bg-mask)), /* 整体压淡 */
-    url('/bg.jpg') center / cover no-repeat;
+  background: url('/bg.jpg') center / cover no-repeat;
 }
 ```
 
-原图对比度约 σ=79，直接铺在正文下面会让可读性随位置漂移。
-遮罩按 `新对比度 = 原对比度 × (1 - α)` 等比压缩。
+图片直接缩到 1920 宽存成 84 质量 JPEG（272KB），不额外做高斯模糊。
 
-**换图时建议**：先做 8–10px 高斯模糊再保存为 82 质量 JPEG。
-模糊后的图压缩率高得多（实测 883KB → 95KB），而且轻度模糊正是磨砂玻璃需要的前置。
+> ⚠️ 这么做的代价：原图对比度 σ≈68，浅色主题的正文对比度只有 **1.1:1**，
+> 基本读不了。深色主题反而没问题（11.7:1）。
+> 如果之后要加回可读性，往 `body::before` 的 `background` 里补一层
+> `linear-gradient(var(--bg-mask), var(--bg-mask))` 即可，遮罩色值是现成的变量位。
 
 ---
 

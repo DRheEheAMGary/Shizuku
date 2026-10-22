@@ -6,41 +6,17 @@
  *  页面下滚后只折叠署名，Shizuku / 个人主页 两行的相对位置始终不变。
  * ========================================================================== */
 
-import { useState } from 'react'
 import { profile, site } from '@/content/site'
 import { Icon } from './Icon'
-import { ThemeVeil } from './ThemeVeil'
-import type { VeilState } from './ThemeVeil'
-import { useTheme } from '@/hooks/useTheme'
+import { useThemeTransition } from '@/hooks/useTheme'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
 export function SiteHeader() {
-  const { mode, setMode } = useTheme()
+  const { mode, toggle } = useThemeTransition()
   const collapsed = useScrollCollapse()
-  const [veil, setVeil] = useState<VeilState | null>(null)
 
   const themeLabel = mode === 'dark' ? '深色' : '浅色'
-
-  /** 以按钮为圆心放出一枚遮罩，盖满整屏后再换主题 */
-  function onToggleTheme(e: React.MouseEvent<HTMLButtonElement>) {
-    if (veil) return
-
-    const btn = e.currentTarget.getBoundingClientRect()
-    const x = btn.left + btn.width / 2
-    const y = btn.top + btn.height / 2
-    // 半径取到最远的那个视口角，保证能盖满
-    const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
-
-    setVeil({ x, y, r, target: mode === 'dark' ? 'light' : 'dark' })
-  }
-
-  /** 遮罩播完：换主题，摘掉遮罩（此刻两者颜色一致，看不出接缝） */
-  function onVeilDone() {
-    if (!veil) return
-    setMode(veil.target)
-    setVeil(null)
-  }
 
   return (
     <>
@@ -73,7 +49,7 @@ export function SiteHeader() {
             <button
               type="button"
               className="theme-toggle"
-              onClick={onToggleTheme}
+              onClick={(e) => toggle(e.currentTarget)}
               aria-label={`主题：${themeLabel}，点击切换`}
               title={themeLabel}
             >
@@ -82,8 +58,6 @@ export function SiteHeader() {
           </div>
         </header>
       </div>
-
-      <ThemeVeil veil={veil} onDone={onVeilDone} />
     </>
   )
 }

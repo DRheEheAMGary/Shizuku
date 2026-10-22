@@ -10,6 +10,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './styles/glass.css'
 import './styles/content.css'
+import './styles/theme-transition.css'
 
 import { App } from './App'
 import { applyTheme, getStoredMode } from './hooks/useTheme'

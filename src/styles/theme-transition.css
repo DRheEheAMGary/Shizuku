@@ -1,0 +1,66 @@
+/* ============================================================================
+ *  Shizuku · 主题切换动画
+ * ----------------------------------------------------------------------------
+ *  用 View Transitions API 做圆形揭示：
+ *  浏览器在切换时拍下「旧状态」和「新状态」两张快照，
+ *  旧快照垫在下面不动，新快照用圆形裁切从按钮位置铺开。
+ *
+ *  整页都在过渡里 —— 文字、顶栏、背景一起变，
+ *  不像「盖一层平色」那样只是把背景换掉。
+ * ========================================================================== */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 旧快照压在下面，不淡出 */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* 新快照在上面做圆形揭示 */
+::view-transition-new(root) {
+  z-index: 2;
+  clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+  animation: theme-reveal 1.1s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--vt-r, 100vmax) at var(--vt-x, 50%) var(--vt-y, 50%));
+  }
+}
+
+/* 兜底：不支持 View Transitions 时，颜色平滑过渡。
+   只在切换的这半秒内挂上，避免污染其它常态过渡。 */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 0.5s ease,
+    border-color 0.5s ease,
+    color 0.5s ease,
+    fill 0.5s ease,
+    stroke 0.5s ease !important;
+}
+
+/* 系统关掉动画时，两种方案都不生效 */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: none !important;
+  }
+}
