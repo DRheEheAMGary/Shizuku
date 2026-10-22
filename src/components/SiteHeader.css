@@ -110,6 +110,13 @@
   transition:
     grid-template-columns var(--dur-base) var(--ease-apple),
     opacity var(--dur-base) var(--ease-apple);
+
+  /* Pacifico 的墨迹超出 1em 行框：下伸部 7.74px、大写字母顶部 0.48px。
+   * 而横向折叠必须靠 overflow:hidden 裁切，它会连纵向一起裁掉。
+   * 所以上下各留出绘制空间，再用等量负 margin 抵消，
+   * 盒子的占位高度不变，居中对齐也不受影响。 */
+  padding: 0.05em 0 0.46em;
+  margin: -0.05em 0 -0.46em;
 }
 
 .site-header-wrap.is-collapsed .brand__sig {
