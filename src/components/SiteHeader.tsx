@@ -7,8 +7,7 @@
  * ========================================================================== */
 
 import { profile, site } from '@/content/site'
-import { ThemeSwitch } from './ThemeSwitch'
-import { AuthCorner } from './AuthCorner'
+import { AuthDock } from './AuthDock'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
@@ -17,8 +16,8 @@ export function SiteHeader() {
 
   return (
     <div className={`site-header-wrap${collapsed ? ' is-collapsed' : ''}`}>
-      {/* 左上角：登录交互（绝对定位，不参与居中布局） */}
-      <AuthCorner />
+      {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
+      <AuthDock />
 
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar">
@@ -45,7 +44,11 @@ export function SiteHeader() {
         </div>
       </header>
 
-      <ThemeSwitch />
+      {/* 平衡块：左下角的坞和它是左右对称的一对占位。
+          主题开关搬进坞里之后，中间这组会变窄、整体往右挪 37px；
+          放一块与开关等宽的透明占位，头像才会停在原来的位置。 */}
+      <span className="site-header__balance" aria-hidden="true" />
+
     </div>
   )
 }

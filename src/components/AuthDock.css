@@ -1,0 +1,345 @@
+/* ============================================================================
+ *  Shizuku · 左上角登录坞
+ * ----------------------------------------------------------------------------
+ *  面板本身从 46×46 的圆长成面板尺寸（宽度 / 高度 / 圆角一起过渡），
+ *  内容随后淡入 —— 看到的就像「这枚圆形被拉开」。
+ *
+ *  尺寸写死而不是 fit-content：收起态必须是个正圆，
+ *  展开态要能容纳内容；两者之间才有一段可插值的几何。
+ * ========================================================================== */
+
+.auth-dock {
+  position: absolute;
+  left: 0;
+  /*  顶边钉住：收起态垂直居中，展开时向下生长。
+   *  用 top: 50% + translate 居中会让面板向上、向下同时长，
+   *  208px 高时直接顶出视口。 */
+  top: calc(50% - var(--dock-size) / 2);
+  z-index: 3;
+
+  --dock-size: 46px;
+  --dock-w: 272px;
+  /*  高度按内容分两档：未登录只有主按钮，已登录多两行 */
+  --dock-h: 172px;
+  --dock-h-in: 236px;
+  --dur-dock: 420ms;
+  --ease-dock: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.auth-dock__panel {
+  position: relative;
+  width: var(--dock-size);
+  height: var(--dock-size);
+  border-radius: var(--r-full);
+  overflow: hidden;
+
+  background: var(--glass-bg-menu);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    0 6px 24px rgba(31, 45, 61, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+  /*  圆角先收敛（200ms），尺寸再慢慢长（420ms）。
+   *  两者同长的话，很长一段时间里它还是个高度 46px 的胶囊 ——
+   *  看起来像一团圆球被拉长，而不是「方形面板长出来」。 */
+  transition:
+    width var(--dur-dock) var(--ease-dock),
+    height var(--dur-dock) var(--ease-dock),
+    border-radius 200ms var(--ease-dock),
+    box-shadow var(--dur-dock) var(--ease-dock);
+}
+
+.auth-dock[data-auth='in'][data-open='true'] .auth-dock__panel {
+  height: var(--dock-h-in);
+}
+
+.auth-dock[data-open='true'] .auth-dock__panel {
+  width: var(--dock-w);
+  height: var(--dock-h);
+  border-radius: var(--r-xl);
+  box-shadow:
+    0 18px 48px rgba(31, 45, 61, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- 头行 ---------- */
+.auth-dock__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px;
+}
+
+.auth-dock[data-open='true'] .auth-dock__head {
+  padding: 8px 10px 6px;
+  transition: padding var(--dur-dock) var(--ease-dock);
+}
+
+/* 收起态就是那枚圆：40 + 3×2 内边距 = 46 */
+.auth-dock__trigger {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: none;
+  color: var(--primary);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__trigger:hover {
+  background: var(--hairline);
+}
+
+.auth-dock__trigger:active {
+  transform: scale(0.94);
+}
+
+.auth-dock__trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.auth-dock__pic,
+.auth-dock__initial {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+}
+
+.auth-dock__initial {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--primary);
+}
+
+.auth-dock__spin {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hairline-strong);
+  border-top-color: var(--primary);
+  animation: auth-spin 700ms linear infinite;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 主题开关：收起态整个藏起来 */
+.auth-dock__head-right {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition:
+    opacity 160ms linear,
+    transform 240ms var(--ease-dock);
+}
+
+.auth-dock[data-open='true'] .auth-dock__head-right {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 240ms linear 160ms,
+    transform 320ms var(--ease-dock) 140ms;
+}
+
+/* ---------- 内容 ---------- */
+.auth-dock__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms linear,
+    transform 200ms var(--ease-dock);
+}
+
+.auth-dock[data-open='true'] .auth-dock__body {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition:
+    opacity 240ms linear 110ms,
+    transform 320ms var(--ease-dock) 90ms;
+}
+
+.auth-dock__hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ---------- 未登录：主按钮 ---------- */
+.auth-dock__cta {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 44px;
+  border: 0;
+  border-radius: var(--r-full);
+
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--primary);
+  cursor: pointer;
+
+  transition:
+    filter var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__cta:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.auth-dock__cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.auth-dock__cta:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* ---------- 已登录 ---------- */
+.auth-dock__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 4px 0;
+}
+
+.auth-dock__who strong {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.auth-dock__who span {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+.auth-dock__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.auth-dock__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 62px;
+  border: 0;
+  border-radius: var(--r-lg);
+
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--text-soft);
+  text-decoration: none;
+  background: var(--hairline);
+  cursor: pointer;
+
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__tile:hover {
+  background: var(--hairline-strong);
+  color: var(--text);
+}
+
+.auth-dock__wide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+
+  font-size: var(--fs-xs);
+  color: var(--text-soft);
+  text-decoration: none;
+  background: var(--hairline);
+
+  transition: background-color var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__wide:hover {
+  background: var(--hairline-strong);
+  color: var(--text);
+}
+
+/* ---------- 错误 ---------- */
+.auth-dock__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+  color: var(--text);
+  background: var(--hairline);
+  border: 1px solid var(--danger, #c0563f);
+}
+
+.auth-dock__error button {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .auth-dock {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-dock__panel,
+  .auth-dock__head,
+  .auth-dock__head-right,
+  .auth-dock__body,
+  .auth-dock__trigger,
+  .auth-dock__cta,
+  .auth-dock__tile,
+  .auth-dock__wide {
+    transition: none;
+  }
+  .auth-dock__spin {
+    animation: none;
+  }
+}
