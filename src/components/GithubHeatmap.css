@@ -30,6 +30,11 @@
   background: var(--hairline);
 }
 
+/* 首尾残缺周的补齐位：完全透明，不参与视觉 */
+.heat__day.is-blank {
+  background: none;
+}
+
 /* 贡献等级：由浅到深都是主色的不同浓度，不引入额外色相 */
 .heat__day[data-level='1'] {
   background: color-mix(in oklab, var(--primary) 28%, transparent);

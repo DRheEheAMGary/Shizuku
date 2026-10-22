@@ -109,6 +109,13 @@ export function AuthDock() {
             )}
           </button>
 
+          {user && (
+            <div className="auth-dock__ident">
+              <strong>{displayName}</strong>
+              {user.email && <span>{user.email}</span>}
+            </div>
+          )}
+
           <div className="auth-dock__head-right">
             <ThemeSwitch />
             {user && (

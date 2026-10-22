@@ -37,26 +37,43 @@ interface ApiResponse {
   contributions: Contribution[]
 }
 
-/** 把日期序列按「周」切成列 */
-function toWeeks(days: Contribution[]): Contribution[][] {
-  const weeks: Contribution[][] = []
-  let current: Contribution[] = []
+/** 空位：补齐首尾残缺周用的占位，渲染成透明格子 */
+type Slot = Contribution | null
+
+/**  把日期序列按「周」切成列，并补齐成 7 行。
+ *
+ *  不补的话首尾那一列只有 1~2 个格子，视觉上像「没渲染完的小竖条」。
+ *  补成全高之后每一列都是 7 格，右边缘齐平。 */
+function toWeeks(days: Contribution[]): Slot[][] {
+  if (days.length === 0) return []
+
+  const weeks: Slot[][] = []
+  let current: Slot[] = []
+
+  // 首列对齐到周日
+  const firstWeekday = new Date(days[0].date + 'T00:00:00').getDay()
+  for (let i = 0; i < firstWeekday; i++) current.push(null)
 
   for (const day of days) {
-    const weekday = new Date(day.date + 'T00:00:00').getDay() // 0=周日
-    if (weekday === 0 && current.length) {
+    current.push(day)
+    if (current.length === 7) {
       weeks.push(current)
       current = []
     }
-    current.push(day)
   }
-  if (current.length) weeks.push(current)
+
+  // 末列补满
+  if (current.length > 0) {
+    while (current.length < 7) current.push(null)
+    weeks.push(current)
+  }
+
   return weeks
 }
 
 /** 取最后 N 周 */
 function makeSlicer(weeks?: number) {
-  return (all: Contribution[][]) => (weeks && weeks > 0 ? all.slice(-weeks) : all)
+  return (all: Slot[][]) => (weeks && weeks > 0 ? all.slice(-weeks) : all)
 }
 
 interface HeatmapProps {
@@ -73,7 +90,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
   const [state, setState] = useState<
     | { status: 'loading' }
     | { status: 'error' }
-    | { status: 'ready'; weeks: Contribution[][]; total: number }
+    | { status: 'ready'; weeks: Slot[][]; total: number }
   >({ status: 'loading' })
 
   useEffect(() => {
@@ -103,9 +120,13 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
         <div className="heat__grid" aria-hidden="true">
           {sliceWeeks(toWeeks(emptyYear())).map((week, wi) => (
             <div className="heat__week" key={wi}>
-              {week.map((day) => (
-                <span key={day.date} className="heat__day" data-level={0} />
-              ))}
+              {week.map((day, di) =>
+                day ? (
+                  <span key={day.date} className="heat__day" data-level={0} />
+                ) : (
+                  <span key={`blank-${wi}-${di}`} className="heat__day is-blank" />
+                ),
+              )}
             </div>
           ))}
         </div>
@@ -136,12 +157,12 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
       <div className="heat__grid" role="img" aria-label={`过去一年共 ${state.total} 次贡献`}>
         {sliceWeeks(state.weeks).map((week, wi) => (
           <div className="heat__week" key={wi}>
-            {week.map((day) => (
+            {week.map((day, di) => (
               <span
-                key={day.date}
-                className="heat__day"
-                data-level={day.level}
-                title={`${day.date}：${day.count} 次`}
+                key={day?.date ?? `blank-${wi}-${di}`}
+                className={`heat__day${day ? '' : ' is-blank'}`}
+                data-level={day?.level ?? 0}
+                title={day ? `${day.date}：${day.count} 次` : undefined}
               />
             ))}
           </div>
