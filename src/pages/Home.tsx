@@ -1,34 +1,39 @@
 /* ============================================================================
  *  Shizuku · 首页
  * ----------------------------------------------------------------------------
- *  ⚠️ 正文内容已清空，这里是画布。
+ *  组件化 + 卡片化：正文由一块块玻璃卡片组成，靠 12 栅格排布。
  *
- *  顶栏、页面外壳、设计系统全部保留 —— 新布局直接在下面搭。
- *  可用的现成积木（都在 styles/content.css 与 styles/glass.css 里）：
+ *  当前是**版式样张**：卡片全空，只看间距、圆角、玻璃质感与栅格节奏。
+ *  确认版式后再往里填内容。
  *
- *    .section                    小节
- *      .section-head             小节标题
- *        .section-head__title      主标题
- *        .section-head__kana       假名副标
- *    .rows > .row                分行列表（.row__icon / __body / __title /
- *                                  __sub / __meta / __arrow）
- *    .cols > div > .cols__title  分栏
- *    .facts > div > .fact__label 键值对
- *    .chips > .chip              胶囊标签
- *    .quote                      引用
- *    .prose > p                  段落
- *    <Reveal>                    滚动入场
- *    <Icon name="..." />          内联 SVG 图标
+ *  栅格规则（见 GlassCard.css）：
+ *    桌面 12 列 · 平板 6 列 · 手机 1 列
+ *    span 是卡片跨的列数，最宽 12
  * ========================================================================== */
 
 import { PageShell } from '@/components/PageShell'
+import { GlassCard } from '@/components/GlassCard'
 
 export function Home() {
   return (
-    <PageShell marginText="しずく">
-      {/* ↓ 新布局从这里开始 ↓ */}
-      <section className="section" />
-      {/* ↑ 新布局到这里结束 ↑ */}
+    <PageShell marginText="しずく" wide>
+      <div className="card-grid">
+        {/* 第一行：主卡 + 侧卡 */}
+        <GlassCard span={8} minH={240} />
+        <GlassCard span={4} minH={240} />
+
+        {/* 第二行：三张等宽 */}
+        <GlassCard span={4} minH={180} />
+        <GlassCard span={4} minH={180} />
+        <GlassCard span={4} minH={180} />
+
+        {/* 第三行：一窄一宽 */}
+        <GlassCard span={5} minH={200} />
+        <GlassCard span={7} minH={200} />
+
+        {/* 第四行：通栏 */}
+        <GlassCard span={12} minH={160} />
+      </div>
     </PageShell>
   )
 }

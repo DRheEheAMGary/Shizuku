@@ -34,6 +34,11 @@
   max-width: var(--content-max);
 }
 
+/* 卡片栅格用的宽版：阅读型页面保持 46rem，栅格页放到 --page-max */
+.page-shell__main.is-wide {
+  max-width: var(--page-max);
+}
+
 /* ---------- 页头 ---------- */
 .page-head {
   margin-bottom: var(--sp-7);

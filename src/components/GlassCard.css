@@ -1,0 +1,85 @@
+/* ============================================================================
+ *  Shizuku · 玻璃卡片样式
+ * ----------------------------------------------------------------------------
+ *  材质沿用顶栏那套：半透明底 + 大口径模糊 + 细描边 + 柔和投影。
+ *  卡片比顶栏更"厚"一点（更大的模糊与更低的透明度），
+ *  因为卡片的面积大，太透会让下面的图透上来抢内容。
+ * ========================================================================== */
+
+.glass-card {
+  grid-column: span var(--card-span, 4);
+  display: flex;
+  flex-direction: column;
+  min-height: var(--card-min-h, 168px);
+  padding: var(--sp-4);
+
+  border-radius: var(--r-lg);
+  /*  比顶栏更实：卡片面积大，太透会让底图透上来抢内容；
+   *  但也不能太实，否则一片死白、失去玻璃感 —— 取 0.84 那档。 */
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(20px) saturate(175%);
+  -webkit-backdrop-filter: blur(20px) saturate(175%);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    0 8px 32px rgba(31, 45, 61, 0.1),
+    0 2px 8px rgba(31, 45, 61, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.glass-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.glass-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.glass-card__title svg {
+  color: var(--primary);
+}
+
+.glass-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.glass-card__body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- 栅格 ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--sp-4);
+}
+
+@media (max-width: 900px) {
+  .card-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  /* 平板上最宽占满 6 列 */
+  .glass-card {
+    grid-column: span min(var(--card-span, 4), 6);
+  }
+}
+
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  .glass-card {
+    grid-column: span 1;
+  }
+}
