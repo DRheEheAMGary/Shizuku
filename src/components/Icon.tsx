@@ -34,6 +34,7 @@ export type IconName =
   | 'user'
   | 'logout'
   | 'settings'
+  | 'chevron'
 
 /** 需要实心渲染的标志类图标（描边版在小尺寸下会糊成一团） */
 const SOLID_PATHS: Partial<Record<IconName, string>> = {
@@ -67,6 +68,7 @@ const PATHS: Partial<Record<IconName, string>> = {
   'arrow-up-right': 'M7 17L17 7M8 7h9v9',
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
   check: 'M5 13l4 4L19 7',
+  chevron: 'M6 9.5l6 6 6-6',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5a7.5 7.5 0 0 1 15 0',
   logout: 'M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10',
   settings:

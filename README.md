@@ -17,6 +17,37 @@
 
 ---
 
+## 登录（SSO）
+
+左上角胶囊接的是独立身份提供方 **sso.dreamgary.cn**（标准 OIDC）。
+Shizuku 是纯前端 SPA，走 **Authorization Code + PKCE**，不持有 client_secret。
+
+```
+点登录 → /authorize（带 code_challenge）
+       → SSO 完成登录 → 302 回 /auth/callback?code=&state=
+       → 校验 state → POST /token（带 code_verifier）
+       → GET /userinfo → 存本地快照 → 清掉 URL 参数
+```
+
+| 文件 | 职责 |
+|---|---|
+| `src/auth/config.ts` | issuer、client_id、回调、端点 —— 换环境只改这里 |
+| `src/auth/pkce.ts` | verifier 生成、S256 challenge |
+| `src/auth/client.ts` | 发起登录、消费回调、登出 |
+| `src/hooks/useAuth.tsx` | 状态与回调消费（**只消费一次**，见下） |
+| `src/components/AuthCorner.tsx` | 左上角胶囊与下拉菜单 |
+
+**两个坑**：
+
+1. `redirect_uri` 必须与 SSO 后台登记的完全一致，`localhost` 与 `127.0.0.1`
+   是两个不同的 origin —— 开发时要统一用 `localhost`。
+2. React `StrictMode` 会把 effect 跑两遍，而 OAuth 回调是一次性的：
+   第一次已用掉 code 与 PKCE 中间态，第二次必然报「会话已过期」。
+   所以 `useAuth` 用模块级标记保证只消费一次。
+
+登录态只缓存 `sub / name / picture / email` 这类公开字段，**不存任何令牌** ——
+access_token 仅在回调内用一次拿 userinfo，随后丢弃。
+
 ## 快速开始
 
 ```bash

@@ -102,6 +102,7 @@ html,
 
   --glass-bg: rgba(255, 255, 255, 0.68);
   --glass-bg-strong: rgba(255, 255, 255, 0.84);
+  --glass-bg-menu: rgba(252, 253, 254, 0.92);   /* 浮层菜单：更实，保证可读 */
   --glass-border: rgba(28, 37, 48, 0.07);
   --glass-shadow: 0 8px 32px rgba(31, 45, 61, 0.06);
   --glass-shadow-hover: 0 12px 40px rgba(31, 45, 61, 0.1);
@@ -160,6 +161,7 @@ html,
   --bg-veil: rgba(14, 20, 24, 0.35);
   --glass-bg: rgba(10, 15, 19, 0.45);
   --glass-bg-strong: rgba(10, 15, 19, 0.58);
+  --glass-bg-menu: rgba(16, 23, 29, 0.92);
   --glass-border: rgba(255, 255, 255, 0.13);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);

@@ -14,6 +14,7 @@ import './styles/theme-transition.css'
 
 import { App } from './App'
 import { applyTheme, getStoredMode, ThemeProvider } from './hooks/useTheme'
+import { AuthProvider } from './hooks/useAuth'
 
 // React 挂载前先把主题定下来，避免首屏亮暗闪烁
 applyTheme(getStoredMode())
@@ -24,7 +25,9 @@ if (root) {
   createRoot(root).render(
     <StrictMode>
       <ThemeProvider>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </ThemeProvider>
     </StrictMode>,
   )
