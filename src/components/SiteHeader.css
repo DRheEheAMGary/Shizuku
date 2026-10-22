@@ -97,7 +97,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: 0.5rem 0.5rem 0.5rem var(--sp-5);
+  padding: 0.5rem var(--sp-5);
   /* 高度固定住：导航去掉后内容变矮，若不管它，
    * 胶囊会和背后的磨砂圆不等高。 */
   min-height: 54px;   /* + 上下 1px 边框 = 56px，与磨砂圆等高 */
@@ -108,7 +108,7 @@
 }
 
 .site-header-wrap.is-collapsed .site-header__inner {
-  padding: 0.375rem 0.375rem 0.375rem var(--sp-4);
+  padding: 0.375rem var(--sp-4);
   gap: var(--sp-2);
   min-height: 44px;   /* + 边框 = 46px */
 }
@@ -203,40 +203,6 @@
   line-height: 1.2;
 }
 
-/* ---------- 分隔细线 ---------- */
-.site-header__rule {
-  width: 1px;
-  height: 1.125rem;
-  flex-shrink: 0;
-  background: var(--hairline);
-  transition: opacity var(--dur-base) var(--ease-apple);
-}
-
-.site-header-wrap.is-collapsed .site-header__rule {
-  opacity: 0;
-}
-
-/* ---------- 主题切换 ---------- */
-.theme-toggle {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: var(--r-full);
-  color: var(--text-secondary);
-  transition:
-    transform var(--dur-fast) var(--ease-apple),
-    color var(--dur-fast) var(--ease-apple),
-    background-color var(--dur-fast) var(--ease-apple);
-}
-
-.theme-toggle:hover {
-  color: var(--primary);
-  background: var(--primary-soft);
-  transform: rotate(15deg);
-}
-
 /* ---------- 响应式 ---------- */
 @media (max-width: 720px) {
   .site-header-wrap {
@@ -258,8 +224,7 @@
     gap: var(--sp-1);
   }
 
-  .brand__sig,
-  .site-header__rule {
+  .brand__sig {
     display: none;
   }
 }

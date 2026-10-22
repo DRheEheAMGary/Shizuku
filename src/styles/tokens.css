@@ -85,12 +85,12 @@ html {
   --glass-sat: 180%;
 
   /* 主题拨动开关 */
-  --switch-w: 54px;
-  --switch-h: 28px;
-  --switch-knob: 22px;
-  --switch-travel: 28px;   /* 轨道宽 - 滑块宽 - 左右各 3px */
+  --switch-w: 84px;
+  --switch-h: 46px;
+  --switch-knob: 34px;
+  --switch-pad: 6px;
+  --switch-travel: 38px;    /* 轨道宽 - 滑块宽 - 左右各 6px */
   --switch-track: rgba(255, 255, 255, 0.5);
-  --dur-switch: 300ms;      /* 开关自身颜色过渡，抹平硬跳 */
 
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);
