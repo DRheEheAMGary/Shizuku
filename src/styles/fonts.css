@@ -1,0 +1,18 @@
+/* ============================================================================
+ *  Shizuku · 字体声明
+ * ----------------------------------------------------------------------------
+ *  Pacifico —— 连笔手写体（Google Fonts）。旧站首页也用它做标题。
+ *
+ *  这里自托管而不是引 Google Fonts CDN：
+ *  国内访问 fonts.googleapis.com 不可靠，而 gstatic 的 woff2 又只有 22KB，
+ *  一次请求就能拿到，直接放进 public/ 最省事。
+ *  latin 子集（224 字形）已足够覆盖拉丁署名。
+ * ========================================================================== */
+
+@font-face {
+  font-family: 'Pacifico';
+  src: url('/fonts/pacifico.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

@@ -20,6 +20,9 @@
 
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
 
+  /* 连笔手写体：Pacifico，给顶栏的署名用 */
+  --font-hand: 'Pacifico', var(--font-sans);
+
   /* 流体字号 —— clamp(最小, 视口比例, 最大) */
   --fs-xs:   0.75rem;    /* 12px 辅助文字 */
   --fs-sm:   0.8125rem;  /* 13px 次要说明 */

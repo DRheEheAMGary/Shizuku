@@ -43,13 +43,15 @@ Shizuku/
 ├── index.html              # 入口：主题预设脚本 + OG 标签
 ├── public/
 │   ├── bg.jpg              # 背景图（横屏）
-│   └── bg-portrait.jpg     # 背景图（竖屏裁切）
+│   ├── bg-portrait.jpg     # 背景图（竖屏裁切）
+│   └── fonts/pacifico.woff2   # 连笔手写体（22KB，自托管）
 └── src/
     ├── content/            # ★ 所有文案与数据（当前为占位内容）
     │   ├── site.ts         #   站点信息、导航、个人简介
     │   ├── links.ts        #   站点链接、联系方式
     │   └── interests.ts    #   兴趣 / 游戏 / 项目
     ├── styles/
+    │   ├── fonts.css       # Pacifico 声明
     │   ├── tokens.css      # ★ 设计 token：颜色、间距、圆角、缓动
     │   ├── base.css        # reset、排版基线、背景层
     │   ├── content.css     # 正文版式：行列表、文本列、引用
@@ -98,15 +100,31 @@ export const links: LinkItem[] = [
 
 ### 顶栏
 
-顶栏是一枚**居中悬浮胶囊**，两端为完整半圆。页面下滚过 32px 后收窄：
+结构是**一枚独立悬浮的圆形头像 + 一枚居中胶囊**：
+
+```
+(头像) │  DRheEheAM_Gary   Shizuku   │  首页 关于 链接 项目 联系  │  ☀
+        │  个人主页                    │                            │
+```
+
+- 头像在胶囊**外面**，是一个单独的圆，带一圈细边和投影
+- 胶囊两端是完整半圆（圆角取到高度的一半）
+- 署名用**连笔手写体 Pacifico**（旧站首页同款），与站名并排
+- `Shizuku` / `个人主页` 两行的相对位置**始终不变**
+
+页面下滚过 32px 后收窄，只折叠署名：
 
 | | 展开 | 收起 |
 |---|---|---|
-| 宽度 | ~497px | ~375px |
-| 高度 | 56px | 46px |
-| 内容 | 站名 + 假名副标 + 导航 | 只留站标 + 导航 |
+| 胶囊宽度 | ~635px | ~415px |
+| 胶囊高度 | 56px | 46px |
+| 署名 | 显示（154px） | 折叠为 0 |
+| Shizuku / 个人主页 | 两行 | 两行（位置不动） |
 
-站名字样用 `grid-template-columns: 1fr → 0fr` 折叠（比动画 `width` 稳），假名副标用 `max-height` 折叠。
+折叠用 `grid-template-columns: 1fr → 0fr`（比动画 `width` 稳），假名副标用 `max-height`。
+
+窄屏（< 720px）下署名会隐藏：实测 390px 宽时，署名 + 五个导航标签会把导航压到 129px，
+标签必然被裁切。若要在移动端也显示署名，需要先把导航换成折叠菜单。
 
 `src/hooks/useScrollCollapse.ts` 里有两个关键处理：
 
@@ -162,9 +180,13 @@ body::before {
 **为什么不用动画库**：全站动效都是「淡入 + 位移」「缩放」「折叠」，CSS 足够。
 引入 motion 会让包体从 88KB 涨到 132KB（gzip），不划算。
 
-**为什么不用 Web 字体**：全部使用系统字体栈（`-apple-system` / `PingFang SC`）。
+**为什么正文不用 Web 字体**：正文全部使用系统字体栈（`-apple-system` / `PingFang SC`）。
 零加载成本，中英文混排表现最好，也避免 CJK 字体动辄上百 KB 的问题。
 和风不靠明朝体承载，靠假名、竖排、宽字距与留白。
+
+**顶栏的连笔手写体例外**：署名用 Pacifico（旧站首页也用它做标题）。
+不自托管前先确认过：`fonts.gstatic.com` 的 latin 子集只有 22KB，
+直接放进 `public/` 比引 Google Fonts CDN 更可靠——国内访问 `fonts.googleapis.com` 不稳定。
 
 **为什么正文不用卡片**：卡片容易变成「什么内容都装一个盒子」的偷懒版式。
 这里只在顶栏保留玻璃，正文用细线分行的方式排列，视觉更安静。

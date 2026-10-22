@@ -28,6 +28,8 @@ export const site = {
 
 export const profile = {
   name: 'Your Name',
+  /** 顶栏的连笔署名 */
+  signature: 'DRheEheAM_Gary',
   mbti: 'XXXX',
   location: '城市',
   description: '身份标签 · 身份标签 · 身份标签',
