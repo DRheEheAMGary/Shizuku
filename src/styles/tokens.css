@@ -86,14 +86,14 @@ html {
 
   /* 主题拨动开关 */
   --switch-w: 84px;
-  --switch-h: 36px;
-  --switch-knob: 30px;
+  --switch-h: 32px;
+  --switch-knob: 22px;
   --switch-pad: 4px;
-  --switch-travel: 46px;    /* 轨道宽 - 滑块宽 - 左右各 4px */
+  --switch-travel: 54px;    /* 轨道宽 - 滑块宽 - 左右各 4px */
   --switch-track: rgba(255, 255, 255, 0.72);
   /* z 轴底座：与轨道等宽，上下各多出这么多 —— 只在上下露出两道边。
-   * 轨道 + 底座 = 36 + 10 = 46px，正好等于头像直径，左右等高。 */
-  --switch-base-bleed: 5px;
+   * 轨道 + 底座 = 32 + 14 = 46px，正好等于头像直径，左右等高。 */
+  --switch-base-bleed: 7px;
 
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);

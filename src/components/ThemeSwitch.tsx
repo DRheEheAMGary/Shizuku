@@ -21,8 +21,8 @@ function ThemeGlyph() {
   return (
     <svg
       className="theme-switch__glyph"
-      width="22"
-      height="22"
+      width="19"
+      height="19"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
