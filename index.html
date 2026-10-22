@@ -29,14 +29,15 @@
       ;(function () {
         try {
           var key = 'shizuku-theme'
-          // ?theme=dark / light / auto 用于预览与分享时强制主题
+          // ?theme=dark / light 用于预览与分享时强制主题
           var q = new URLSearchParams(location.search).get('theme')
-          var mode = q || localStorage.getItem(key) || 'auto'
-          var dark =
-            mode === 'dark' ||
-            (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var mode = q || localStorage.getItem(key)
+          // 没有存过（或存的值不对）就按系统偏好定一次，此后固定
+          if (mode !== 'dark' && mode !== 'light') {
+            mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
           var root = document.documentElement
-          root.dataset.theme = dark ? 'dark' : 'light'
+          root.dataset.theme = mode
           root.dataset.themeMode = mode
         } catch (e) {
           /* localStorage 不可用时保持默认 */

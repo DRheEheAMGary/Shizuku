@@ -52,27 +52,14 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -3;
+  z-index: -2;
   background:
+    radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
+    radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%),
     var(--bg-focus),
     var(--bg-scrim),
     linear-gradient(var(--bg-mask), var(--bg-mask)),
     url('/bg.jpg') center / cover no-repeat;
-  opacity: var(--bg-image-opacity);
-  pointer-events: none;
-  transition: opacity var(--dur-base) var(--ease-apple);
-}
-
-/* ---------- 背景层 2：氛围光斑 ---------- */
-/*  浮在背景图之上，负责把画面统一到「浅葱 + 琥珀」的调子上 */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
-    radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%);
   pointer-events: none;
 }
 
@@ -80,6 +67,8 @@ body::after {
 @media (max-aspect-ratio: 3/4) {
   body::before {
     background:
+      radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
+      radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%),
       var(--bg-focus),
       var(--bg-scrim),
       linear-gradient(var(--bg-mask), var(--bg-mask)),

@@ -65,7 +65,7 @@ a.row:hover,
   padding-left: var(--sp-3);
 }
 
-:root[data-theme='dark'] a.row:hover {
+[data-theme='dark'] a.row:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 

@@ -8,7 +8,7 @@
  *  动效方向：Apple 缓动（cubic-bezier .32,.72,0,1）+ 克制的位移
  * ========================================================================== */
 
-:root {
+html {
   /* ---------- 排版 ---------- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
     'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -127,7 +127,6 @@
     rgba(247, 249, 250, 0.4) 62%,
     rgba(247, 249, 250, 0.14) 100%
   );
-  --bg-image-opacity: 1;
   /* 文字区的焦点遮罩：在内容列位置擦出一池干净的白 */
   --bg-focus: radial-gradient(
     58% 54% at 14% 40%,
@@ -140,7 +139,7 @@
 /* ============================================================================
  *  暗色
  * ========================================================================== */
-:root[data-theme='dark'] {
+[data-theme='dark'] {
   --bg: #0e1418;
   --bg-tint: #131b20;
 
@@ -171,7 +170,7 @@
   --glow-accent: rgba(217, 148, 41, 0.16);
 
   /* 暗色下换成深色遮罩，同一张图压成夜色 */
-  --bg-mask: rgba(12, 18, 22, 0.66);
+  --bg-mask: rgba(12, 18, 22, 0.74);
   --bg-scrim: linear-gradient(
     100deg,
     rgba(12, 18, 22, 0.93) 0%,
@@ -179,7 +178,6 @@
     rgba(12, 18, 22, 0.58) 62%,
     rgba(12, 18, 22, 0.34) 100%
   );
-  --bg-image-opacity: 0.85;
   --bg-focus: radial-gradient(
     58% 54% at 14% 40%,
     rgba(12, 18, 22, 0.82) 0%,

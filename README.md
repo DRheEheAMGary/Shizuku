@@ -10,7 +10,7 @@
 > ⚠️ **正文内容已清空，当前是画布。**
 > 顶栏、页面外壳、设计系统（tokens / glass / content）全部保留，
 > `src/content/` 里的数据也清空了但类型还在 —— 新布局定下来直接往里填。
-- 亮 / 暗双主题，跟随系统或手动切换
+- 亮 / 暗双主题，切换时有一枚从按钮扩散出去的圆形遮罩
 - 正文不用卡片，层次靠留白、细线、字重
 
 > ⚠️ 当前所有内容都是**占位文本**，用于观察版式。填入真实内容即可。
@@ -61,7 +61,7 @@ Shizuku/
     │   ├── base.css        # reset、排版基线、背景层
     │   ├── content.css     # 正文版式：行列表、文本列、引用
     │   └── glass.css       # 玻璃材质、按钮、胶囊标签
-    ├── components/         # SiteHeader / PageShell / Icon / GithubHeatmap
+    ├── components/         # SiteHeader / ThemeVeil / PageShell / Icon / GithubHeatmap
     ├── pages/              # Home（唯一的页面，⚠️ 正文已清空，是画布）
     └── hooks/              # useTheme / useReveal / useScrollCollapse
 ```
@@ -103,6 +103,28 @@ export const links: LinkItem[] = [
 ```
 
 暗色主题在 `:root[data-theme='dark']` 里覆盖同名变量。
+
+### 主题切换
+
+只有浅色 / 深色两态，**没有「跟随系统」**。
+首次访问按系统偏好定一次，之后就固定在用户自己选的那一态。
+
+切换时从按钮位置放出一枚圆形遮罩，盖满整屏后换主题：
+
+```css
+clip-path: circle(0 at var(--veil-x) var(--veil-y));
+animation: theme-veil-in 620ms var(--ease-apple) forwards;
+```
+
+两个关键点：
+
+1. **用 `clip-path` 而不是 `transform: scale()`** —— scale 会把元素连同背景一起缩放，
+   背景图会被放大变形；clip-path 只裁剪可见区域，背景保持原尺寸。
+2. **遮罩的背景必须和页面背景逐像素一致**，否则遮罩盖满的那一刻会「跳」一下。
+   所以 `ThemeVeil.css` 的背景堆叠与 `base.css` 的 `body::before` 完全相同，
+   且遮罩自身带上目标主题的 `data-theme`，取到那一套颜色变量。
+
+遮罩的 `z-index` 是 40，**压在顶栏（50）之下** —— 顶栏是常驻元素，不该被吞掉。
 
 ### 顶栏
 

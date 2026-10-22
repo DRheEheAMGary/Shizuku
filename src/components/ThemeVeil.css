@@ -1,0 +1,49 @@
+/* ============================================================================
+ *  Shizuku · 主题切换遮罩样式
+ * ========================================================================== */
+
+.theme-veil {
+  position: fixed;
+  inset: 0;
+  /* 压在顶栏（z-index 50）之下：顶栏是常驻元素，不该被遮罩吞掉。
+   * 遮罩只负责盖住正文。 */
+  z-index: 40;
+  pointer-events: none;
+
+  /* 与 base.css 的 body::before 完全一致 —— 遮罩盖满时才能无缝接上 */
+  background:
+    radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
+    radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%),
+    var(--bg-focus),
+    var(--bg-scrim),
+    linear-gradient(var(--bg-mask), var(--bg-mask)),
+    url('/bg.jpg') center / cover no-repeat;
+  background-color: var(--bg);
+
+  clip-path: circle(0 at var(--veil-x) var(--veil-y));
+  animation: theme-veil-in 620ms var(--ease-apple) forwards;
+}
+
+@keyframes theme-veil-in {
+  to {
+    clip-path: circle(var(--veil-r) at var(--veil-x) var(--veil-y));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-veil {
+    animation-duration: 1ms;
+  }
+}
+
+@media (max-aspect-ratio: 3/4) {
+  .theme-veil {
+    background:
+      radial-gradient(120% 80% at 15% 0%, var(--glow-primary), transparent 60%),
+      radial-gradient(100% 70% at 85% 100%, var(--glow-accent), transparent 60%),
+      var(--bg-focus),
+      var(--bg-scrim),
+      linear-gradient(var(--bg-mask), var(--bg-mask)),
+      url('/bg-portrait.jpg') center / cover no-repeat;
+  }
+}
