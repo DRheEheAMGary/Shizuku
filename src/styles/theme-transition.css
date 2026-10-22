@@ -3,11 +3,18 @@
  * ----------------------------------------------------------------------------
  *  用 View Transitions API 做圆形揭示：
  *  浏览器在切换时拍下「旧状态」和「新状态」两张快照，
- *  旧快照垫在下面不动，新快照用圆形裁切从按钮位置铺开。
+ *  旧快照垫在下面不动，新快照用圆形裁切从开关位置铺开。
  *
- *  整页都在过渡里 —— 文字、顶栏、背景一起变，
- *  不像「盖一层平色」那样只是把背景换掉。
+ *  拨动滑块单独处理：
+ *  它有自己的 view-transition-name，图层抬到揭示层之上，
+ *  于是既不进快照（不会被圆形裁切吞掉），又能独立播放拨动动画。
+ *  拨动时长与揭示时长都是 --dur-reveal，两者严格同步。
  * ========================================================================== */
+
+:root {
+  --dur-reveal: 0.5s;
+  --ease-reveal: cubic-bezier(0.35, 0, 0.25, 1);
+}
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -24,7 +31,7 @@
 ::view-transition-new(root) {
   z-index: 2;
   clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
-  animation: theme-reveal 1.1s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+  animation: theme-reveal var(--dur-reveal) var(--ease-reveal) forwards;
 }
 
 @keyframes theme-reveal {
@@ -36,8 +43,49 @@
   }
 }
 
-/* 兜底：不支持 View Transitions 时，颜色平滑过渡。
-   只在切换的这半秒内挂上，避免污染其它常态过渡。 */
+/* ---------- 拨动滑块 ---------- */
+/*  滑块有自己的快照组，抬到揭示层之上，全程可见 */
+.theme-switch__knob {
+  view-transition-name: theme-switch-knob;
+}
+
+::view-transition-group(theme-switch-knob) {
+  z-index: 10;
+  /* 浏览器默认会让「组」从旧位置移动到新位置（250ms），
+   * 那和下面的 keyframe 会叠加 —— 滑块就到不了终点，
+   * 旧快照还会被拖到一边变成多余的图标。这里关掉它，
+   * 位移完全交给 keyframe 控制。 */
+  animation: none;
+}
+
+/*  旧快照直接隐藏。
+ *  旧快照在深色主题下是「深色圆 + 亮太阳图标」——深色圆会融进深色轨道，
+ *  只剩太阳图标露在轨道里，像个残留。两张快照对齐播放反而容易出这种问题，
+ *  不如只留新的那张从另一端滑进来。 */
+::view-transition-old(theme-switch-knob) {
+  animation: none;
+  opacity: 0;
+  mix-blend-mode: normal;
+}
+
+/*  新快照从起点滑到终点 —— 与揭示同时长、同时缓动 */
+::view-transition-new(theme-switch-knob) {
+  animation: theme-switch-slide-in var(--dur-reveal) var(--ease-reveal) forwards;
+  mix-blend-mode: normal;
+}
+
+@keyframes theme-switch-slide-in {
+  from {
+    transform: translateX(calc(var(--knob-dir, 1) * -1 * var(--switch-travel)));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ---------- 兜底 ---------- */
+/*  不支持 View Transitions 时，颜色平滑过渡，滑块用 CSS 过渡拨动。
+ *  只在切换的这半秒内挂上，避免污染其它常态过渡。 */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
@@ -50,10 +98,18 @@ html.theme-transition *::after {
     stroke 0.5s ease !important;
 }
 
+/*  滑块平时由 CSS 过渡拨动；有 View Transitions 时改由快照动画接管，
+ *  否则 DOM 会在动画途中被拍进快照，起点就不对了。 */
+html.theme-transition .theme-switch__knob {
+  transition: transform var(--dur-reveal) var(--ease-reveal) !important;
+}
+
 /* 系统关掉动画时，两种方案都不生效 */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
-  ::view-transition-new(root) {
+  ::view-transition-new(root),
+  ::view-transition-old(theme-switch-knob),
+  ::view-transition-new(theme-switch-knob) {
     animation: none !important;
   }
 

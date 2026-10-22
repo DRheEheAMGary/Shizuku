@@ -84,6 +84,12 @@ html {
   --glass-blur: 24px;
   --glass-sat: 180%;
 
+  /* 主题拨动开关 */
+  --switch-w: 54px;
+  --switch-h: 28px;
+  --switch-knob: 22px;
+  --switch-travel: 28px;   /* 轨道宽 - 滑块宽 - 左右各 2px */
+
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);
 

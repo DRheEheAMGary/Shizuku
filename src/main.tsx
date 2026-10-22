@@ -13,7 +13,7 @@ import './styles/content.css'
 import './styles/theme-transition.css'
 
 import { App } from './App'
-import { applyTheme, getStoredMode } from './hooks/useTheme'
+import { applyTheme, getStoredMode, ThemeProvider } from './hooks/useTheme'
 
 // React 挂载前先把主题定下来，避免首屏亮暗闪烁
 applyTheme(getStoredMode())
@@ -23,7 +23,9 @@ const root = document.getElementById('root')
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
     </StrictMode>,
   )
 }

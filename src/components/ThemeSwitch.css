@@ -1,0 +1,40 @@
+/* ============================================================================
+ *  Shizuku · 主题拨动开关样式
+ * ========================================================================== */
+
+.theme-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  padding: 0;
+  border-radius: var(--r-full);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  box-shadow:
+    var(--glass-shadow),
+    var(--glass-inner);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-apple);
+}
+
+.theme-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: var(--switch-knob);
+  height: var(--switch-knob);
+  border-radius: var(--r-full);
+  display: grid;
+  place-items: center;
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+/* 深色：滑块拨到右边 */
+.theme-switch[data-on='dark'] .theme-switch__knob {
+  transform: translateX(var(--switch-travel));
+}
