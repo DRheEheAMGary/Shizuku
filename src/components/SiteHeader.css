@@ -22,13 +22,14 @@
   margin: var(--sp-4) auto 0;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
 
-  --avatar-size: 54px;
-  --halo-bleed: 1px;
+  /* 磨砂圆直径 = 顶栏高度，头像比它小一圈，露出 --halo-bleed 的玻璃边 */
+  --avatar-size: 46px;
+  --halo-bleed: 5px;
 }
 
 .site-header-wrap.is-collapsed {
-  --avatar-size: 45px;
-  --halo-bleed: 0.5px;
+  --avatar-size: 42px;
+  --halo-bleed: 2px;
 }
 
 .site-header__avatar {
@@ -290,11 +291,11 @@
     gap: var(--sp-2);
 
     /* 窄屏留给导航的空间有限，头像相应收小 */
-    --avatar-size: 38px;
+    --avatar-size: 34px;
   }
 
   .site-header-wrap.is-collapsed {
-    --avatar-size: 34px;
+    --avatar-size: 32px;
   }
 
   .site-header__inner {
