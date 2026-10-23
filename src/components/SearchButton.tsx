@@ -33,7 +33,7 @@ export function SearchButton() {
         aria-label="全域搜索"
         title="搜索（⌘K）"
       >
-        <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M15.4 15.4 20 20"
             fill="none"

@@ -20,9 +20,6 @@ export function SiteHeader() {
       {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
       <AuthDock />
 
-      {/* 顶栏左侧的搜索按钮：独立的圆形玻璃钮 */}
-      <SearchButton />
-
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar">
         <span className="site-header__avatar-halo" aria-hidden="true" />
@@ -53,6 +50,9 @@ export function SiteHeader() {
           左边又多了搜索按钮，再加一块等宽的透明占位，
           胶囊和头像才会停在原来的位置。 */}
       <span className="site-header__balance" aria-hidden="true" />
+
+      {/* 顶栏右侧的搜索按钮：独立的圆形玻璃钮 */}
+      <SearchButton />
 
     </div>
   )

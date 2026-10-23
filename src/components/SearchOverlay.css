@@ -11,19 +11,22 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  /*  头像那圈玻璃往外还出 5px 血，两枚圆钮要一样大才成对 */
-  width: calc(var(--avatar-size, 46px) + 10px);
-  height: calc(var(--avatar-size, 46px) + 10px);
+  /*  直径取头像外圈（46 + 5px 出血 = 56）的三分之二 */
+  width: 37px;
+  height: 37px;
   padding: 0;
   border: 1px solid var(--hairline-strong);
   border-radius: var(--r-full);
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  backdrop-filter: blur(14px) saturate(170%);
-  /*  玻璃质感跟头像的底圈一致：内沿一道高光 + 底下投影 */
+  /*  玻璃要透一点，底下的背景能透上来才像玻璃；
+   *  太实就成了一枚灰色的小圆片 */
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+  /*  内沿一道高光 + 底下投影，撑出玻璃的厚度 */
   box-shadow:
-    0 6px 20px rgba(31, 45, 61, 0.16),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.8);
+    0 4px 14px rgba(31, 45, 61, 0.16),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
   color: var(--text-secondary);
   cursor: pointer;
 
