@@ -27,12 +27,12 @@
 
 /* ---------- 首页大标题 ---------- */
 /*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充，
- *  套一层全圆角玻璃胶囊，沉到正文底部。切换 accent / 明暗时颜色跟着 --primary 缓动。 */
+ *  套全圆角玻璃胶囊 —— 没底板时文字压在壁纸上会看不清。颜色跟着 --primary 缓动。 */
 .home-title {
   font-family: var(--font-hand);
-  /*  Pacifico 墨迹宽度 ≈ 字号 × 8.9：8.5vw 在 390px 屏上 ≈ 33px → 字 295px
-   *  + 胶囊 padding ≈ 332px < 350px 正文宽；1.65rem 兜住 320px 小屏。 */
-  font-size: clamp(1.65rem, 8.5vw, 4.5rem);
+  /*  Pacifico 墨迹宽度 ≈ 字号 × 8.9。桌面和右侧卡片列共用一行：
+   *  4rem 封顶时胶囊 ≈ 640px + 卡列 340px + 缝 48px ≈ 1028px < 1216px 正文宽。 */
+  font-size: clamp(1.65rem, 5vw, 4rem);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: 0.01em;
@@ -43,11 +43,78 @@
     0 6px 24px rgba(0, 0, 0, 0.12);
 
   --glass-radius: var(--r-full);
-  align-self: flex-start;  /* 胶囊只包住文字，不撑满整行 */
-  margin-top: auto;        /* 沉到正文底部，上面留空画布 */
   padding: 0.4em 0.55em;   /* em 随字号走，Pacifico 下伸部的墨迹也罩得住 */
 
   transition: color var(--dur-base) var(--ease-apple);
+}
+
+/* ---------- 首屏分栏：左大名，右卡片列 ---------- */
+/*  整块垂直居中：上面留白画布，下面贴页脚 */
+.home-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-7);
+  margin: auto 0;
+}
+
+.home-side {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.home-card {
+  --glass-radius: var(--r-lg);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.home-card__title {
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-2);
+}
+
+.home-card__line {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.home-card__meta {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.home-card__quote {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.home-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/*  窄屏竖堆：一行要 ≈ 胶囊 + 340px 卡列 + 48px 缝，1081px 起才放得下 */
+@media (max-width: 1080px) {
+  .home-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-6);
+  }
+
+  .home-side {
+    flex: none;
+    width: 100%;
+  }
+
+  /*  竖堆后标题独占一行，可以放大 */
+  .home-title {
+    font-size: clamp(1.65rem, 8.5vw, 3.5rem);
+  }
 }
 
 /* ---------- Hero ---------- */

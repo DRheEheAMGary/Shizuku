@@ -3,9 +3,9 @@
  * ----------------------------------------------------------------------------
  *  组件化 + 卡片化：正文由一块块玻璃卡片组成。
  *
- *  ⚠️ 正文暂时清空 —— 版式还在重新设计，画布先空着。
+ *  布局：左侧用户名大胶囊，右侧一列玻璃卡片（关于我 / 去处）。
  *  下面的 .card-grid 骨架留着：横排、滚轮可横向滚动的逻辑都还在，
- *  版式定下来之后，把卡片放回 grid 里就能直接用。
+ *  以后想加横向卡片排时，把卡片放回 grid 里就能直接用。
  *
  *  卡片排成**一横排**，可以横向滚动：
  *    - 鼠标滚轮纵向滚动 → 转成横向位移（到头了就把滚动交还给页面）
@@ -17,6 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { PageShell } from '@/components/PageShell'
+import { profile } from '@/content/site'
 import './Home.css'
 
 export function Home() {
@@ -47,12 +48,36 @@ export function Home() {
 
   return (
     <PageShell marginText="しずく" wide>
-      {/*  第一行大标题：用户名，顶栏署名同款连笔体 + 主题色，玻璃胶囊沉底 */}
-      <h1 className="home-title glass intro" style={{ '--i': 0 } as React.CSSProperties}>
-        DRheEheAM_Gary
-      </h1>
+      {/*  首屏分栏：左侧用户名大胶囊，右侧一列玻璃卡片 */}
+      <div className="home-hero">
+        <h1 className="home-title glass intro" style={{ '--i': 0 } as React.CSSProperties}>
+          {profile.name}
+        </h1>
 
-      {/*  正文待定：先把画布留着，版式定了再往里放卡片 */}
+        <div className="home-side">
+          <section className="glass home-card intro" style={{ '--i': 1 } as React.CSSProperties}>
+            <h2 className="home-card__title">关于我</h2>
+            <p className="home-card__line">{profile.description}</p>
+            <p className="home-card__meta">
+              {profile.mbti} · {profile.location}
+            </p>
+            <p className="home-card__quote">{profile.quote}</p>
+          </section>
+
+          <section className="glass home-card intro" style={{ '--i': 2 } as React.CSSProperties}>
+            <h2 className="home-card__title">去处</h2>
+            <div className="home-card__links">
+              {profile.links.map((l) => (
+                <a key={l.url} className="chip" href={l.url} target="_blank" rel="noreferrer noopener">
+                  {l.name}
+                </a>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/*  横向卡片排骨架留着：版式定了再往里放卡片 */}
       <div className="card-track">
         <div className="card-grid" ref={trackRef} />
       </div>
