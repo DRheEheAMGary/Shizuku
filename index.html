@@ -23,6 +23,15 @@
 
     <link rel="icon" href="https://r.dreamgary.cn/images/headround.png" />
 
+    <!-- 加载页一上来就显示「Shizuku」，这个字体先预加载，避免先闪一下无衬线 -->
+    <link
+      rel="preload"
+      href="/fonts/eduqld-hand-bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
     <script>
       // 在任何渲染之前确定主题和主题色，避免首屏闪烁
       ;(function () {

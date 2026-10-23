@@ -1,7 +1,11 @@
 /* ============================================================================
  *  Shizuku · 字体声明
  * ----------------------------------------------------------------------------
- *  Pacifico —— 连笔手写体（Google Fonts）。旧站首页也用它做标题。
+ *  Edu QLD Hand —— 手写体（Google Fonts），专门渲染「Shizuku」这个站名。
+ *  原文件是 546KB 的静态 Bold，这里按实际用到的字符子集化并压成 woff2：
+ *  站名字母 + 大小写 + 数字 + 常用标点，共 51 个字符，39KB。
+ *
+ *  Pacifico —— 连笔手写体（Google Fonts），给顶栏的署名用。
  *
  *  这里自托管而不是引 Google Fonts CDN：
  *  国内访问 fonts.googleapis.com 不可靠，而 gstatic 的 woff2 又只有 22KB，
@@ -13,6 +17,15 @@
   font-family: 'Pacifico';
   src: url('/fonts/pacifico.woff2') format('woff2');
   font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 站名专用：只渲染「Shizuku」那几处，子集到 51 个字符 */
+@font-face {
+  font-family: 'Edu QLD Hand';
+  src: url('/fonts/eduqld-hand-bold.woff2') format('woff2');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }

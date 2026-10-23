@@ -73,7 +73,7 @@ export function SearchPanel({
   if (!query.trim()) {
     return (
       <div className="search-panel" ref={listRef}>
-        <p className="search-panel__note">输入关键词，跨博客文章与 MC 文档搜索。</p>
+        <p className="search-panel__note">全域搜索 (可能存在 30 min 延迟)</p>
         {index && (
           <p className="search-panel__note search-panel__note--dim">
             共 {index.items.length} 条索引

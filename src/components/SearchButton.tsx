@@ -8,6 +8,7 @@
  * ========================================================================== */
 
 import { forwardRef } from 'react'
+import { modKeyLabel } from '@/lib/platform'
 
 interface SearchButtonProps {
   searching: boolean
@@ -22,8 +23,8 @@ export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
         className="search-btn"
         data-flying={searching}
         onClick={onToggle}
-        aria-label={searching ? '收起搜索' : '全域搜索'}
-        title="搜索（⌘K）"
+        aria-label={searching ? '收起搜索' : `全域搜索（${modKeyLabel()}K）`}
+        title={`搜索（${modKeyLabel()}K）`}
       >
         <span className="search-btn__glass" aria-hidden="true" />
         <svg

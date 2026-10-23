@@ -225,10 +225,19 @@
 }
 
 .brand__name {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  line-height: 1.25;
+  /*  站名用手写体（Edu QLD Hand），手写体本身偏宽，
+   *  字号比原来大一点点、字距收一点才不至于散开 */
+  font-family: var(--font-wordmark);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+
+  /*  上层的 .brand__text-inner 为了折叠动画必须 overflow:hidden，
+   *  手写体的字体上下界比行框大（1.33em + 0.6em > 1.2em），
+   *  上下各留一点绘制余量，再用等量负 margin 抵消，占位不变。 */
+  padding: 0.12em 0;
+  margin: -0.12em 0;
 }
 
 .brand__sub {
