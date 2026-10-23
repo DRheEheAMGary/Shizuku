@@ -66,8 +66,8 @@
   inset: calc(-1 * var(--halo-bleed));
   border-radius: var(--r-full);
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(14px) saturate(170%);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
   border: 1px solid var(--hairline-strong);
   box-shadow:
     0 6px 20px rgba(31, 45, 61, 0.16),

@@ -17,8 +17,8 @@
   /*  比顶栏更实：卡片面积大，太透会让底图透上来抢内容；
    *  但也不能太实，否则一片死白、失去玻璃感 —— 取 0.84 那档。 */
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(20px) saturate(175%);
   -webkit-backdrop-filter: blur(20px) saturate(175%);
+  backdrop-filter: blur(20px) saturate(175%);
   border: 1px solid var(--hairline);
   box-shadow:
     0 8px 32px rgba(31, 45, 61, 0.1),

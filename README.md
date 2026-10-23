@@ -17,6 +17,32 @@
 
 ---
 
+## ⚠️ 踩过的坑：压缩器会吃掉 `backdrop-filter`
+
+源文件里每条玻璃规则都写成：
+
+```css
+backdrop-filter: blur(20px) saturate(175%);
+-webkit-backdrop-filter: blur(20px) saturate(175%);
+```
+
+Vite 用的压缩器**把这两个当成同一个属性**，只保留最后一条。
+我原来把标准版写在前面、前缀版写在后面 → 压缩后只剩 `-webkit-backdrop-filter`，
+而 **Chrome 不认这个别名**（计算值变成 `none`）——
+线上所有磨砂玻璃全部失效，而且本地 dev（不压缩）看不出来。
+
+修法：**标准版必须写在最后**。
+
+```css
+-webkit-backdrop-filter: blur(20px) saturate(175%);   /* 旧 Safari */
+backdrop-filter: blur(20px) saturate(175%);             /* 标准，必须在后面 */
+```
+
+现在压缩后 8 条规则全部保留标准属性，产物里前缀版为 0。
+（顺带：这样也就没有旧 Safari 的兼容了 —— 当前只覆盖 Safari 18+。）
+
+**教训：改完 CSS 一定要看构建产物，别只看 dev。**
+
 ## 版式：组件化 + 卡片化
 
 正文由玻璃卡片组成，靠 12 栅格排布。
