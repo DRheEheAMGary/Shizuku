@@ -117,6 +117,11 @@ html,
   --glass-shadow: 0 8px 32px rgba(31, 45, 61, 0.06);
   --glass-shadow-hover: 0 12px 40px rgba(31, 45, 61, 0.1);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  /*  小圆钮（顶栏搜索钮）：面积小，玻璃层要比大面板更透，
+   *  底下的背景透上来才看得出是玻璃而不是一枚白圆片；
+   *  边也得是亮边，深灰描边会立刻把它变回「实心按钮」。 */
+  --glass-bg-dot: rgba(255, 255, 255, 0.32);
+  --glass-edge: rgba(255, 255, 255, 0.62);
 
   /* ---------- 色彩 · 亮色（默认） ---------- */
   --bg: #f7f9fa;
@@ -192,6 +197,8 @@ html,
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-bg-dot: rgba(10, 15, 19, 0.34);
+  --glass-edge: rgba(255, 255, 255, 0.18);
   --switch-track: rgba(255, 255, 255, 0.12);
 
 

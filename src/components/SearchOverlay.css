@@ -15,18 +15,16 @@
   width: 37px;
   height: 37px;
   padding: 0;
-  border: 1px solid var(--hairline-strong);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--r-full);
-  /*  玻璃要透一点，底下的背景能透上来才像玻璃；
-   *  太实就成了一枚灰色的小圆片 */
-  background: var(--glass-bg);
+  /*  玻璃要透：底下的背景透上来才像玻璃，太实就是一枚白圆片 */
+  background: var(--glass-bg-dot);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   backdrop-filter: blur(16px) saturate(180%);
   /*  内沿一道高光 + 底下投影，撑出玻璃的厚度 */
   box-shadow:
-    0 4px 14px rgba(31, 45, 61, 0.16),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
+    0 4px 14px rgba(31, 45, 61, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
   cursor: pointer;
 
