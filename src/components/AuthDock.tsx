@@ -112,7 +112,7 @@ export function AuthDock() {
           {user && (
             <div className="auth-dock__ident">
               <strong>{displayName}</strong>
-              {user.email && <span>{user.email}</span>}
+              {user.email && <span title={user.email}>{user.email}</span>}
             </div>
           )}
 
@@ -169,11 +169,10 @@ export function AuthDock() {
                     <Icon name="chevron" size={13} />
                   </button>
                 </div>
-                <GithubHeatmap
-                  login={user?.github?.login}
-                  weeks={heatFull ? 53 : 26}
-                  compact
-                />
+                {/*  始终渲染完整一年：半年态由 CSS 右对齐、左侧溢出裁掉。
+                    展开时面板变宽，被裁掉的左半部分自然滑出来 ——
+                    不需要重新渲染，滑出动画直接由宽度过渡驱动。 */}
+                <GithubHeatmap login={user?.github?.login} compact />
               </div>
 
               <div className="auth-dock__weather">

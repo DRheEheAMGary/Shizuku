@@ -2,17 +2,22 @@
  *  Shizuku · GitHub 贡献热力图
  * ----------------------------------------------------------------------------
  *  GitHub 登录名来自 SSO 的 /userinfo（只有绑定了 GitHub 才有）。
- *  贡献数据来自 github-contributions-api.jogruber.de（无需 token）。
+ *  贡献数据走 **SSO 的 /api/contributions 代理**，不直连第三方：
+ *  上游 jogruber 在国内网络下经常不可达，直连会一直卡在「加载中」。
  *
  *  未绑定时不请求、不报错 —— 直接渲染一整年的空格子，
  *  在上面盖一句提示，版式不会因为状态不同而跳动。
  * ========================================================================== */
 
 import { useEffect, useState } from 'react'
+import { SSO_ISSUER } from '@/auth/config'
 import './GithubHeatmap.css'
 
 const API = (login: string) =>
-  `https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(login)}?y=last`
+  `${SSO_ISSUER}/api/contributions?login=${encodeURIComponent(login)}`
+
+/** 超时兜底：上游慢的时候别一直转圈 */
+const TIMEOUT_MS = 15_000
 
 /** 未绑定时用来撑版式的空序列：一整年、全 0 */
 function emptyYear(): Contribution[] {
@@ -32,8 +37,9 @@ interface Contribution {
   level: 0 | 1 | 2 | 3 | 4
 }
 
+/** 经 SSO 代理后 total 已经是汇总好的数字 */
 interface ApiResponse {
-  total: Record<string, number>
+  total: number | Record<string, number>
   contributions: Contribution[]
 }
 
@@ -96,6 +102,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
   useEffect(() => {
     if (!login) return
     const controller = new AbortController()
+    const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS)
 
     fetch(API(login), { signal: controller.signal })
       .then((r) => {
@@ -103,14 +110,20 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
         return r.json() as Promise<ApiResponse>
       })
       .then((data) => {
-        const total = Object.values(data.total ?? {}).reduce((a, b) => a + b, 0)
+        const raw = data.total
+        const total =
+          typeof raw === 'number'
+            ? raw
+            : Object.values(raw ?? {}).reduce((a, b) => a + b, 0)
         setState({ status: 'ready', weeks: toWeeks(data.contributions ?? []), total })
       })
-      .catch((err) => {
-        if (err?.name !== 'AbortError') setState({ status: 'error' })
-      })
+      .catch(() => setState({ status: 'error' }))
+      .finally(() => window.clearTimeout(timer))
 
-    return () => controller.abort()
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
   }, [login])
 
   // 未绑定：铺一整年的空格子，上面盖一句提示

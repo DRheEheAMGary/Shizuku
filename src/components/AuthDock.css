@@ -21,10 +21,10 @@
   /*  未登录只放一个主按钮，尺寸收紧；已登录多两行，另给一套 */
   --dock-w: 200px;
   --dock-h: 116px;
-  --dock-w-in: 340px;      /* 已登录 · 默认显示最近半年 */
-  --dock-h-in: 286px;
-  --dock-w-half: 560px;    /* 热力图展开 · 最近一年 */
-  --dock-h-half: 286px;
+  --dock-w-in: 300px;      /* 已登录 · 半年 26 周 = 258 + 内边距 */
+  --dock-h-in: 272px;
+  --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
+  --dock-h-half: 272px;
   /*  展开时头行内边距从 3px 变成 8/10px，会把头像推走 (7,5)。
    *  让面板反向挪同样多，头像在屏幕上就一动不动。 */
   --dock-lift-x: 7px;
@@ -479,6 +479,13 @@
 }
 
 /* ---------- 坞内热力图 ---------- */
+/*  格子与间距**固定**：8px 格 + 2px 缝 = 每周 10px。
+ *  半年 26 周 = 258px，一年 53 周 = 528px —— 面板宽度按这两个数反推，
+ *  所以两档的格子大小、间距完全一致，只是列数不同。
+ *
+ *  不能用 justify-content: space-between 去"铺满"：
+ *  间距会随周数变化，两档看起来就不是同一套样式；
+ *  而且总宽超出容器时还会溢出面板右边缘。 */
 .auth-dock__heat {
   display: flex;
   flex-direction: column;
@@ -533,40 +540,39 @@
   transform: rotate(180deg);
 }
 
-/* 坞里的热力图：格子小一号，不占满面板宽度 */
 .auth-dock__heat .heat {
   gap: 6px;
 }
 
+/*  固定度量：格子 8px、缝 2px，不随周数变化。
+ *
+ *  justify-content: flex-end —— 内容比窗口宽时，多出来的部分溢出在**左侧**，
+ *  被 overflow: hidden 裁掉。于是半年态显示的是最后 26 周，
+ *  面板变宽时左边那些周就自然地滑出来。 */
 .auth-dock__heat .heat__grid {
+  display: flex;
+  justify-content: flex-end;
   gap: 2px;
-  overflow-x: hidden;
-}
-
-/* 让周与周之间的间距自动摊开，铺满面板宽度 */
-.auth-dock__heat .heat__grid {
-  justify-content: space-between;
+  overflow: hidden;
 }
 
 .auth-dock__heat .heat__week {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .auth-dock__heat .heat__day {
   width: 8px;
   height: 8px;
   border-radius: 1.5px;
+  flex-shrink: 0;
 }
 
-/* 展开半年时格子略大，填满加宽后的面板 */
-.auth-dock[data-heat='year'] .auth-dock__heat .heat__day {
-  width: 9px;
-  height: 9px;
-}
-
-/* 未绑定的蒙层在坞里更轻，避免压住面板的玻璃质感 */
+/* 未绑定的蒙层在坞里更轻，避免压住玻璃质感 */
 .auth-dock__heat .heat__veil {
   border-radius: var(--r-sm);
-  font-size: var(--fs-2xs, 11px);
+  font-size: 11px;
   background: color-mix(in srgb, var(--bg) 45%, transparent);
 }
