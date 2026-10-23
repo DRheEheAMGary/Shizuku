@@ -17,6 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { PageShell } from '@/components/PageShell'
+import './Home.css'
 
 export function Home() {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -46,6 +47,11 @@ export function Home() {
 
   return (
     <PageShell marginText="しずく" wide>
+      {/*  第一行大标题：用户名，顶栏同款手写体 + 主题色 */}
+      <h1 className="home-title intro" style={{ '--i': 0 } as React.CSSProperties}>
+        DRheEheAM_Gary
+      </h1>
+
       {/*  正文待定：先把画布留着，版式定了再往里放卡片 */}
       <div className="card-track">
         <div className="card-grid" ref={trackRef} />
