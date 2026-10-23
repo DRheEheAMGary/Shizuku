@@ -311,6 +311,14 @@ python3 /www/wwwroot/shizuku/tools/build_search_index.py --dry-run  # 只看统�
 | 博客 | 已发布的文章 + 页面 | 修订、附件、自动草稿、导航菜单项、micropost 等一切非 post/page 的 post_type |
 | MC 文档 | `docs/**/*.md` 页面 | `.vitepress/`、`public/`、README、配置 |
 
+**博客条目还带作者、标签、分类**（`author` / `tags` / `cats`，MC 文档不写这几个字段）：
+作者来自 `wp_users`，标签分类来自 `wp_term_relationships`（`post_tag` 与 `category` 两个分类法）。
+这三项参与搜索，权重比正文重、比标题轻。
+
+命中作者/标签/分类时，结果行会显示成 `作者：DRheEheAM_Gary` 这样，命中处同样高亮；
+**正文也命中时优先显示正文摘要**，那一行就不显示了（多词查询里每个词都必须真命中，
+不会因为前一个词命中了附属项就放行后面的词）。
+
 主站（`dreamgary.cn`）以后要换成 shizuku，所以整站暂时不收。
 
 **两个坑**：

@@ -330,8 +330,13 @@ def read_text(path):
     return raw.decode("utf-8", "replace")
 
 
-def make_item(site, itype, title, url, text, date):
-    return {
+def make_item(site, itype, title, url, text, date, author=None, tags=None, cats=None):
+    """条目对象。
+
+    author / tags / cats 只有博客文章才有，没有就整个字段不写
+    （MC 文档不需要，也省体积）。
+    """
+    item = {
         "site": site,
         "type": itype,
         "title": title,
@@ -339,6 +344,13 @@ def make_item(site, itype, title, url, text, date):
         "text": text,
         "date": norm_date(date),
     }
+    if author:
+        item["author"] = author
+    if tags:
+        item["tags"] = list(tags)
+    if cats:
+        item["cats"] = list(cats)
+    return item
 
 
 # ---------------------------------------------------------------------------
@@ -498,9 +510,9 @@ _RAW_CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 # （--batch 会把 \n 转成字面量、内容里还有裸 CR，行结构很容易被打乱）。
 _COLS = (
     "ID, HEX(post_type), HEX(post_status), HEX(post_title), HEX(post_name), "
-    "HEX(post_date), HEX(post_excerpt), HEX(post_content), post_parent"
+    "HEX(post_date), HEX(post_excerpt), HEX(post_content), post_parent, post_author"
 )
-_COL_COUNT = 9
+_COL_COUNT = 10
 
 
 def hex_to_text(value):
@@ -556,17 +568,63 @@ def collect_blog(stat):
         pexcerpt = hex_to_text(r[6])
         pcontent = hex_to_text(r[7])
         pparent = r[8].strip()
-        parsed.append((pid, ptype, ptitle, pname, pdate, pexcerpt, pcontent, pparent))
+        pauthor = r[9].strip()
+        parsed.append((pid, ptype, ptitle, pname, pdate, pexcerpt, pcontent, pparent, pauthor))
+
+    # 作者：user_login / display_name 两个都收，搜哪个都能中
+    authors = {}
+    raw_users = run_query(cfg, "SELECT ID, HEX(user_login), HEX(display_name) FROM wp_users;", backend)
+    for line in raw_users.split("\n"):
+        if not line.strip():
+            continue
+        cells = line.split("\t")
+        if len(cells) != 3:
+            continue
+        uid = cells[0].strip()
+        login = hex_to_text(cells[1]).strip()
+        disp = hex_to_text(cells[2]).strip()
+        names = []
+        for n in (disp, login):
+            if n and n not in names:
+                names.append(n)
+        authors[uid] = " / ".join(names)
+
+    # 分类与标签：按 post 归堆
+    terms = {}
+    raw_terms = run_query(
+        cfg,
+        "SELECT tr.object_id, HEX(tt.taxonomy), HEX(t.name) "
+        "FROM wp_term_relationships tr "
+        "JOIN wp_term_taxonomy tt ON tt.term_taxonomy_id = tr.term_taxonomy_id "
+        "JOIN wp_terms t ON t.term_id = tt.term_id "
+        "WHERE tt.taxonomy IN ('category','post_tag') ORDER BY tr.object_id;",
+        backend,
+    )
+    for line in raw_terms.split("\n"):
+        if not line.strip():
+            continue
+        cells = line.split("\t")
+        if len(cells) != 3:
+            continue
+        oid = cells[0].strip()
+        tax = hex_to_text(cells[1]).strip()
+        name = hex_to_text(cells[2]).strip()
+        if not name:
+            continue
+        bucket = terms.setdefault(oid, {"cats": [], "tags": []})
+        key = "cats" if tax == "category" else ("tags" if tax == "post_tag" else None)
+        if key and name not in bucket[key]:
+            bucket[key].append(name)
 
     # 已知的页面 slug（用于修正页面层级 URL）
     page_slugs = {}
-    for pid, ptype, _t, pname, _d, _e, _c, pparent in parsed:
+    for pid, ptype, _t, pname, _d, _e, _c, pparent, _a in parsed:
         if ptype == "page":
             page_slugs[pid] = (pname, pparent)
 
     items = []
     seen = set()
-    for pid, ptype, ptitle, pname, pdate, pexcerpt, pcontent, pparent in parsed:
+    for pid, ptype, ptitle, pname, pdate, pexcerpt, pcontent, pparent, pauthor in parsed:
         stat["blog"]["rows"] += 1
         if ptype not in BLOG_POST_TYPES:
             continue
@@ -586,8 +644,19 @@ def collect_blog(stat):
             stat["blog"]["skipped_empty"] += 1
             warn("blog#%s 正文为空，跳过（%s）" % (pid, url))
             continue
+        facets = terms.get(pid, {})
         items.append(
-            make_item("blog", BLOG_TYPE_MAP[ptype], title, url, truncate(text, TEXT_LIMIT), date)
+            make_item(
+                "blog",
+                BLOG_TYPE_MAP[ptype],
+                title,
+                url,
+                truncate(text, TEXT_LIMIT),
+                date,
+                author=authors.get(pauthor, ""),
+                tags=facets.get("tags"),
+                cats=facets.get("cats"),
+            )
         )
     return items
 

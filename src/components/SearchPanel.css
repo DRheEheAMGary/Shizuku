@@ -129,6 +129,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- 作者 / 标签 / 分类命中 ---------- */
+.search-hit-row__facets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.search-facet {
+  display: inline-flex;
+  align-items: baseline;
+  max-width: 100%;
+}
+
+.search-facet__label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .search-hit-row__snippet {
   grid-column: 1 / -1;
   font-size: var(--fs-xs);

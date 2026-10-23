@@ -17,6 +17,10 @@ export interface SearchItem {
   /** 正文纯文本摘要 */
   text: string
   date: string | null
+  /** 以下三项只有博客文章有（MC 文档不写这些字段） */
+  author?: string
+  tags?: string[]
+  cats?: string[]
 }
 
 export interface SearchIndex {
@@ -36,6 +40,28 @@ export const SITE_TYPES: Record<string, string> = {
   doc: '文档',
 }
 
+/** 博客文章上可以命中的附属项 */
+export type FacetKind = 'author' | 'tag' | 'cat'
+
+/** 命中了哪一项：作者 / 标签 / 分类 */
+export interface FacetMatch {
+  kind: FacetKind
+  /** 展示用的前缀：作者 / 标签 / 分类 */
+  label: string
+  /** 项本身的值，命中处高亮 */
+  value: string
+  hits: Highlight[]
+}
+
+const FACET_LABELS: Record<FacetKind, string> = {
+  author: '作者',
+  tag: '标签',
+  cat: '分类',
+}
+
+/** 附属项命中一次的权重：比正文重，比标题轻 */
+const FACET_WEIGHT = 6
+
 /** 命中的位置，用来高亮 */
 export interface Highlight {
   start: number
@@ -50,6 +76,8 @@ export interface SearchResult {
   /** 摘要片段：正文里第一处命中的前后文 */
   snippet: string
   snippetHits: Highlight[]
+  /** 命中的作者 / 标签 / 分类 */
+  facets: FacetMatch[]
 }
 
 /** 找出 needle 在 haystack 里的全部出现位置（忽略大小写） */
@@ -91,10 +119,30 @@ export function searchItems(items: SearchItem[], rawQuery: string): SearchResult
     const titleHits: Highlight[] = []
     const textHits: Highlight[] = []
 
+    /*  附属项：作者、每个标签、每个分类各算一条可以命中的「字段」 */
+    const facetFields: { kind: FacetKind; value: string }[] = []
+    if (item.author) facetFields.push({ kind: 'author', value: item.author })
+    for (const v of item.tags ?? []) facetFields.push({ kind: 'tag', value: v })
+    for (const v of item.cats ?? []) facetFields.push({ kind: 'cat', value: v })
+
+    const facetHits = new Map<number, Highlight[]>()
+
     for (const term of terms) {
       const t = findAll(titleHay, term)
       const x = findAll(textHay, term)
-      if (!t.length && !x.length) {
+      /*  必须按「当前这个词」判断有没有命中附属项：
+       *  facetHits 是累积的，拿它判断会让后续的词白蹭前面的命中，
+       *  多词查询里只要第一个词中了，后面的词不中也会放行。 */
+      let termViaFacet = false
+      facetFields.forEach((f, fi) => {
+        const h = findAll(f.value.toLowerCase(), term)
+        if (h.length) {
+          termViaFacet = true
+          const prev = facetHits.get(fi) ?? []
+          facetHits.set(fi, prev.concat(h))
+        }
+      })
+      if (!t.length && !x.length && !termViaFacet) {
         ok = false
         break
       }
@@ -105,6 +153,15 @@ export function searchItems(items: SearchItem[], rawQuery: string): SearchResult
       if (titleHay.startsWith(term)) score += 12
     }
     if (!ok) continue
+
+    const facets: FacetMatch[] = []
+    facetFields.forEach((f, fi) => {
+      const h = facetHits.get(fi)
+      if (h && h.length) {
+        facets.push({ kind: f.kind, label: FACET_LABELS[f.kind], value: f.value, hits: h })
+        score += h.length * FACET_WEIGHT
+      }
+    })
 
     // 摘要：截第一处正文命中的前后文；正文没命中就取开头
     let snippet = item.text
@@ -123,11 +180,16 @@ export function searchItems(items: SearchItem[], rawQuery: string): SearchResult
       snippetHits = textHits
         .filter((h) => h.start >= start && h.end <= end)
         .map((h) => ({ start: h.start + shift, end: h.end + shift }))
+    } else if (facets.length) {
+      /*  正文没命中、但作者/标签/分类中了：不显示正文预览，
+       *  那一行位置留给「作者：xxx」这类信息（内容命中时永远优先显示内容）。 */
+      snippet = ''
+      snippetHits = []
     } else {
       snippet = item.text.slice(0, SNIPPET_RADIUS * 2)
     }
 
-    results.push({ item, score, titleHits, textHits, snippet, snippetHits })
+    results.push({ item, score, titleHits, textHits, snippet, snippetHits, facets })
   }
 
   results.sort((a, b) => {

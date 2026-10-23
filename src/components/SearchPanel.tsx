@@ -120,6 +120,18 @@ export function SearchPanel({
                     <span className="search-hit-row__date">{r.item.date}</span>
                   )}
                 </span>
+                {/* 作者 / 标签 / 分类命中：正文也命中时这一行不显示（内容优先） */}
+                {!r.textHits.length && r.facets.length > 0 && (
+                  <span className="search-hit-row__facets">
+                    {r.facets.map((f, fi) => (
+                      <span className="search-facet" data-kind={f.kind} key={fi}>
+                        <span className="search-facet__label">{f.label}：</span>
+                        {highlight(f.value, f.hits)}
+                      </span>
+                    ))}
+                  </span>
+                )}
+
                 {r.snippet && (
                   <span className="search-hit-row__snippet">
                     {highlight(r.snippet, r.snippetHits)}
