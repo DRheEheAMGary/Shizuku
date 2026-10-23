@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { AccentPicker } from './AccentPicker'
+import { useTheme } from '@/hooks/useTheme'
 import { ThemeSwitch } from './ThemeSwitch'
 import { GithubHeatmap } from './GithubHeatmap'
 import { useAuth } from '@/hooks/useAuth'
@@ -48,6 +49,7 @@ function weatherIcon(code: number, isDay: boolean) {
 
 export function AuthDock() {
   const { user, loading, error, login, logout, dismissError } = useAuth()
+  const { transitioning } = useTheme()
   const [open, setOpen] = useState(false)
   /** 热力图展开：最近一个月 ↔ 最近半年 */
   const [heatFull, setHeatFull] = useState(false)
@@ -106,6 +108,9 @@ export function AuthDock() {
             type="button"
             className="auth-dock__trigger"
             onClick={() => {
+              //  主题切换动画期间快照层不吃点击，事件会穿透到这儿 ——
+              //  这时候不响应，坞才不会莫名其妙收起来
+              if (transitioning) return
               setConfirmLogout(false)
               setOpen((v) => !v)
             }}

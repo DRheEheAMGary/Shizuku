@@ -237,6 +237,10 @@ html[data-accent='yellow'] {
   --accent: #c34d78;
   --accent-hover: #a83f64;
   --accent-soft: rgba(195, 77, 120, 0.14);
+
+  /*  首屏加载页也得跟主色走，不然蓝底配黄字很奇怪 */
+  --loader-bg: #faf6ec;
+  --loader-glow: rgba(156, 113, 23, 0.13);
 }
 
 html[data-accent='purple'] {
@@ -253,6 +257,10 @@ html[data-accent='purple'] {
   --accent: #2f97a6;
   --accent-hover: #267c89;
   --accent-soft: rgba(47, 151, 166, 0.16);
+
+  /*  首屏加载页也得跟主色走 */
+  --loader-bg: #f4f1fa;
+  --loader-glow: rgba(111, 79, 168, 0.13);
 }
 
 /* ---------- 暗色下的三套 ---------- */
@@ -271,7 +279,7 @@ html[data-accent='blue'][data-theme='dark'] {
 }
 
 html[data-accent='yellow'][data-theme='dark'] {
-  --bg-veil: rgba(30, 17, 3, 0.4);
+  --bg-veil: rgba(18, 10, 2, 0.76);
 
   --primary: #e6b445;
   --primary-hover: #f2c76a;
@@ -281,10 +289,13 @@ html[data-accent='yellow'][data-theme='dark'] {
   --accent: #e884a8;
   --accent-hover: #f19cba;
   --accent-soft: rgba(232, 132, 168, 0.16);
+
+  --loader-bg: #14100a;
+  --loader-glow: rgba(230, 180, 69, 0.14);
 }
 
 html[data-accent='purple'][data-theme='dark'] {
-  --bg-veil: rgba(18, 9, 36, 0.4);
+  --bg-veil: rgba(8, 4, 18, 0.6);
 
   --primary: #b79ae8;
   --primary-hover: #cbb2f2;
@@ -294,4 +305,7 @@ html[data-accent='purple'][data-theme='dark'] {
   --accent: #62c3d2;
   --accent-hover: #86d4e0;
   --accent-soft: rgba(98, 195, 210, 0.16);
+
+  --loader-bg: #0d0a16;
+  --loader-glow: rgba(183, 154, 232, 0.14);
 }

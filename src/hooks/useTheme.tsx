@@ -12,7 +12,7 @@
  *  旧快照垫在下面不动。拨动滑块有自己的快照组，全程可见。
  * ========================================================================== */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 
@@ -100,11 +100,17 @@ function clearTransitionVars() {
  *
  * 浏览器在切换时拍下「旧状态」和「新状态」两张快照，
  * 旧快照垫在下面不动，新快照用圆形裁切从 origin 扩散开。
+ *
+ * onStart / onEnd 用来在动画期间锁住交互 ——
+ * 快照层不吃点击（::view-transition 是 pointer-events:none），
+ * 事件会直接穿透到真实 DOM，不锁的话动画期间点到什么都会有反应。
  */
 function reveal(
   origin: HTMLElement | null | undefined,
   apply: () => void,
   knobDir?: 1 | -1,
+  onStart?: () => void,
+  onEnd?: () => void,
 ) {
   const doc = document as ViewTransitionDocument
   const root = document.documentElement
@@ -112,6 +118,7 @@ function reveal(
   // 系统里关掉了动画：不介入
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     apply()
+    onEnd?.()
     return
   }
 
@@ -119,7 +126,10 @@ function reveal(
   if (typeof doc.startViewTransition !== 'function') {
     root.classList.add('theme-transition')
     apply()
-    window.setTimeout(() => root.classList.remove('theme-transition'), FALLBACK_MS)
+    window.setTimeout(() => {
+      root.classList.remove('theme-transition')
+      onEnd?.()
+    }, FALLBACK_MS)
     return
   }
 
@@ -142,18 +152,20 @@ function reveal(
   if (knobDir) root.style.setProperty('--knob-dir', knobDir === 1 ? '1' : '-1')
 
   try {
+    onStart?.()
     const vt = doc.startViewTransition(() => {
       // 同步改 DOM，浏览器才能拍到新状态的快照；
       // flushSync 让 React 的状态也同步跟上，图标才不会慢半拍。
       flushSync(apply)
     })
 
-    if (vt.finished) vt.finished.finally(clearTransitionVars)
-    else clearTransitionVars()
+    if (vt.finished) vt.finished.finally(() => { clearTransitionVars(); onEnd?.() })
+    else { clearTransitionVars(); onEnd?.() }
   } catch {
     // 出任何问题都退化成直接切换，绝不把开关点坏
     apply()
     clearTransitionVars()
+    onEnd?.()
   }
 }
 
@@ -166,6 +178,13 @@ interface ThemeApi {
   accent: AccentId
   /** 切换主题色。origin 是色点按钮，揭示从色点扩散开。 */
   setAccent: (accent: AccentId, origin?: HTMLElement | null) => void
+  /**
+   * 切换动画进行中。
+   *
+   * 揭示期间快照层不吃点击，事件会穿透到真实 DOM ——
+   * 这段时间里要锁住交互，否则点坞会把坞收了。
+   */
+  transitioning: boolean
 }
 
 const ThemeContext = createContext<ThemeApi | null>(null)
@@ -173,6 +192,9 @@ const ThemeContext = createContext<ThemeApi | null>(null)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(getStoredMode)
   const [accent, setAccentState] = useState<AccentId>(getStoredAccent)
+  const [transitioning, setTransitioning] = useState(false)
+  /** 一次只允许一个切换在进行 */
+  const busyRef = useRef(false)
 
   useEffect(() => {
     applyTheme(mode)
@@ -186,6 +208,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(
     (origin?: HTMLElement | null) => {
+      if (busyRef.current) return
       const next: ThemeMode = mode === 'dark' ? 'light' : 'dark'
       reveal(
         origin,
@@ -194,6 +217,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           setMode(next)
         },
         next === 'dark' ? 1 : -1,
+        () => {
+          busyRef.current = true
+          setTransitioning(true)
+        },
+        () => {
+          busyRef.current = false
+          setTransitioning(false)
+        },
       )
     },
     [mode],
@@ -201,18 +232,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setAccent = useCallback(
     (next: AccentId, origin?: HTMLElement | null) => {
-      if (next === accent) return
-      reveal(origin, () => {
-        applyAccent(next)
-        setAccentState(next)
-      })
+      if (next === accent || busyRef.current) return
+      reveal(
+        origin,
+        () => {
+          applyAccent(next)
+          setAccentState(next)
+        },
+        undefined,
+        () => {
+          busyRef.current = true
+          setTransitioning(true)
+        },
+        () => {
+          busyRef.current = false
+          setTransitioning(false)
+        },
+      )
     },
     [accent],
   )
 
   const value = useMemo<ThemeApi>(
-    () => ({ mode, setMode, toggle, accent, setAccent }),
-    [mode, setMode, toggle, accent, setAccent],
+    () => ({ mode, setMode, toggle, accent, setAccent, transitioning }),
+    [mode, setMode, toggle, accent, setAccent, transitioning],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
