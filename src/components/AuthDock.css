@@ -101,7 +101,8 @@
   width: 1px;
   height: 18px;
   margin: 0 5px;
-  background: var(--hairline-strong);
+  /*  用更实的那档：1px 的线用普通描边色几乎看不见 */
+  background: var(--hairline-bold);
 }
 
 /* ---------- 头行 ---------- */

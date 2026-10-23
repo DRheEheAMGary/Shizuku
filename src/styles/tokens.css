@@ -139,6 +139,7 @@ html,
 
   --hairline: rgba(28, 37, 48, 0.08);
   --hairline-strong: rgba(28, 37, 48, 0.14);
+  --hairline-bold: rgba(28, 37, 48, 0.24);   /* 分隔线：1px 的线太淡就看不见了 */
 
 
 }
@@ -165,6 +166,7 @@ html,
 
   --hairline: rgba(230, 237, 242, 0.09);
   --hairline-strong: rgba(230, 237, 242, 0.16);
+  --hairline-bold: rgba(230, 237, 242, 0.30);
 
   /* 暗色下用暗色底当薄纱；同理玻璃也该是深色 tint ——
    * 白色 tint 罩不住亮背景，顶栏会变成一条亮带。 */
