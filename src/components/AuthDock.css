@@ -35,7 +35,7 @@
   --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
   /*  悬停预览：撑开成能放下「头像 + 竖线 + 名字 + 完整邮箱」的宽度。
    *  46(头像) + 11(竖线) + 174(邮箱) + 8(内边距) ≈ 240，留点余量。 */
-  --dock-w-peek: 262px;
+  --dock-w-peek: 272px;
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
   --dock-h-half: 282px;
   /*  展开时头行内边距从 4px 变成 8/8px，会把头像推走 (4,4)。
@@ -136,6 +136,11 @@
 .auth-dock[data-open='false'][data-peek='true'] .auth-dock__head-right {
   width: 0;
   gap: 0;
+}
+
+/*  右边多留一点：邮箱正好占满身份块时贴着面板边缘会显得挤 */
+.auth-dock[data-open='false'][data-peek='true'] .auth-dock__head {
+  padding-right: 10px;
 }
 
 /* ---------- 头行 ---------- */
