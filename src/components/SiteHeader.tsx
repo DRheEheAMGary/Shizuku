@@ -40,12 +40,10 @@ export function SiteHeader() {
   const baseRef = useRef({ slotOffset: 0, slotW: 16, avatarLeft: 0, pillTop: 0, pillH: 0, iconX: 0, iconY: 0 })
 
   /*  点击次数：点开并关上算一轮。
-   *  奇数次 = 开着，搜索栏是正常（撑开）的大小，图标偏在顶栏左侧；
-   *  偶数次 = 关着，搜索栏回到原先菜单的大小，图标偏在右侧（按钮上）。
-   *  每多点一次，图标开着时的偏移就更大一点。 */
+   *  奇数次 = 开着，搜索栏是正常（撑开）的大小，图标落在顶栏左侧；
+   *  偶数次 = 关着，搜索栏回到原先菜单的大小，图标落回右侧的按钮。
+   *  落点是固定的：不随着点击次数往外跑。 */
   const clicksRef = useRef(0)
-  const STEP = 16 // 每多一轮，图标多偏这么远
-  const MAX_STEPS = 6
   const measureRef = useRef<() => void>(() => {})
 
   const close = useCallback(() => {
@@ -117,11 +115,9 @@ export function SiteHeader() {
     const icon = iconRef.current
     if (!icon) return
     if (searching) {
-      // 开着：图标落在顶栏左侧，越点越偏
+      // 开着：图标落在顶栏左侧的槽位上（固定落点）
       const base = baseRef.current
-      const steps = Math.min(Math.floor((clicksRef.current - 1) / 2), MAX_STEPS)
-      const offset = steps * STEP
-      const targetX = base.avatarLeft + base.slotOffset + base.slotW / 2 - offset
+      const targetX = base.avatarLeft + base.slotOffset + base.slotW / 2
       const targetY = base.pillTop + base.pillH / 2
       flyRef.current = { x: targetX - base.iconX, y: targetY - base.iconY }
       icon.style.setProperty('--fly-x', `${flyRef.current.x}px`)
