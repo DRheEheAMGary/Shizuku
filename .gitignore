@@ -4,3 +4,6 @@ dist
 *.local
 .vite
 *.tsbuildinfo
+
+# 背景图原图（已转成 webp 进 public/，原图不入库）
+assets/

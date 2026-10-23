@@ -18,6 +18,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
+import { AccentPicker } from './AccentPicker'
 import { ThemeSwitch } from './ThemeSwitch'
 import { GithubHeatmap } from './GithubHeatmap'
 import { useAuth } from '@/hooks/useAuth'
@@ -176,6 +177,7 @@ export function AuthDock() {
               <div className="auth-dock__clock">
                 <strong>{time}</strong>
                 <span>{greetingOf(now.getHours())}</span>
+                <AccentPicker />
               </div>
 
               <div className="auth-dock__heat">

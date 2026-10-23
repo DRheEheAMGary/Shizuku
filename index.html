@@ -22,12 +22,14 @@
     <meta name="twitter:description" content="高一生 | OIer | 二次元" />
 
     <link rel="icon" href="https://r.dreamgary.cn/images/headround.png" />
-    <link rel="preload" href="/bg.webp" as="image" />
 
     <script>
-      // 在任何渲染之前确定主题，避免首屏亮暗闪烁
+      // 在任何渲染之前确定主题和主题色，避免首屏闪烁
       ;(function () {
         try {
+          var root = document.documentElement
+
+          // 浅色 / 深色
           var key = 'shizuku-theme'
           // ?theme=dark / light 用于预览与分享时强制主题
           var q = new URLSearchParams(location.search).get('theme')
@@ -36,9 +38,28 @@
           if (mode !== 'dark' && mode !== 'light') {
             mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
           }
-          var root = document.documentElement
           root.dataset.theme = mode
           root.dataset.themeMode = mode
+
+          // 主题色：青蓝 / 暖黄 / 紫罗兰
+          var akey = 'shizuku-accent'
+          var aq = new URLSearchParams(location.search).get('accent')
+          var accent = aq || localStorage.getItem(akey) || 'blue'
+          if (['blue', 'yellow', 'purple'].indexOf(accent) < 0) accent = 'blue'
+          root.dataset.accent = accent
+
+          // 背景图随主题色走，提前预加载对应那张
+          var bg =
+            accent === 'yellow'
+              ? '/bg-yellow.webp'
+              : accent === 'purple'
+                ? '/bg-purple.webp'
+                : '/bg.webp'
+          var pre = document.createElement('link')
+          pre.rel = 'preload'
+          pre.as = 'image'
+          pre.href = bg
+          document.head.appendChild(pre)
         } catch (e) {
           /* localStorage 不可用时保持默认 */
         }

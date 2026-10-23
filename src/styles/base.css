@@ -59,9 +59,10 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -2;
+  /*  背景图随主题色走，由 --bg-image 决定 */
   background:
     linear-gradient(var(--bg-veil), var(--bg-veil)),
-    url('/bg.webp') center / cover no-repeat;
+    var(--bg-image) center / cover no-repeat;
   pointer-events: none;
 }
 

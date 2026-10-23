@@ -513,6 +513,59 @@
   color: var(--text-faint);
 }
 
+/* ---------- 主题色：三个圆点 ---------- */
+.auth-dock__accents {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.auth-dock__accent {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/*  激活态：色点后面垫一圈大一圈的半透明同色圆 */
+.auth-dock__accent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  background: var(--dot);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 260ms var(--ease-apple),
+    transform 300ms var(--ease-apple);
+}
+
+.auth-dock__accent[data-on='true']::before {
+  opacity: 0.22;
+  transform: scale(1);
+}
+
+.auth-dock__accent-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--dot);
+  box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);
+  transition: transform 240ms var(--ease-apple);
+}
+
+.auth-dock__accent:hover .auth-dock__accent-dot {
+  transform: scale(1.15);
+}
+
 .auth-dock__weather {
   display: flex;
   align-items: center;

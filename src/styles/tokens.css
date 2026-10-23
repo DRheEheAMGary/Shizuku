@@ -197,3 +197,101 @@ html,
 
   /* 暗色下换成深色遮罩，同一张图压成夜色 */
 }
+
+/* ============================================================================
+ *  主题色：青蓝（默认）/ 暖黄 / 紫罗兰
+ * ----------------------------------------------------------------------------
+ *  同一套 token，三种取值 —— 换色只是换一组变量。
+ *
+ *  每套还带一张自己的背景图和一层薄纱：
+ *  背景是原图，不加任何光晕和模糊，只压一层薄纱让字读得出来。
+ *  亮背景（生日插画）压深一点，白玻璃才压得住；
+ *  暗背景（霓虹夜车）保持它的暗，才不至于脏。
+ * ========================================================================== */
+
+html[data-accent='blue'] {
+  --bg-image: url('/bg.webp');
+  --bg-veil: rgba(255, 255, 255, 0.35);
+
+  --primary: #3f7d8c;
+  --primary-hover: #33697a;
+  --primary-soft: rgba(63, 125, 140, 0.1);
+  --primary-ring: rgba(63, 125, 140, 0.28);
+
+  --accent: #d99429;
+  --accent-hover: #c07f1c;
+  --accent-soft: rgba(217, 148, 41, 0.12);
+}
+
+html[data-accent='yellow'] {
+  --bg-image: url('/bg-yellow.webp');
+  /*  这张背景又亮又艳，压一层深色的才压得住白玻璃 */
+  --bg-veil: rgba(54, 32, 8, 0.38);
+
+  --primary: #9c7117;
+  --primary-hover: #7f5c11;
+  --primary-soft: rgba(156, 113, 23, 0.12);
+  --primary-ring: rgba(156, 113, 23, 0.3);
+
+  /*  点缀换成玫瑰粉，跟背景里的草莓和蝴蝶结是一路 */
+  --accent: #c34d78;
+  --accent-hover: #a83f64;
+  --accent-soft: rgba(195, 77, 120, 0.14);
+}
+
+html[data-accent='purple'] {
+  --bg-image: url('/bg-purple.webp');
+  /*  这张本身就是夜色，保持它的暗 */
+  --bg-veil: rgba(14, 7, 30, 0.42);
+
+  --primary: #6f4fa8;
+  --primary-hover: #5b3f8c;
+  --primary-soft: rgba(111, 79, 168, 0.14);
+  --primary-ring: rgba(111, 79, 168, 0.3);
+
+  /*  点缀换成青，跟背景里的霓虹青是一路 */
+  --accent: #2f97a6;
+  --accent-hover: #267c89;
+  --accent-soft: rgba(47, 151, 166, 0.16);
+}
+
+/* ---------- 暗色下的三套 ---------- */
+
+html[data-accent='blue'][data-theme='dark'] {
+  --bg-veil: rgba(14, 20, 24, 0.35);
+
+  --primary: #6fb3c2;
+  --primary-hover: #8ac6d3;
+  --primary-soft: rgba(111, 179, 194, 0.14);
+  --primary-ring: rgba(111, 179, 194, 0.32);
+
+  --accent: #e8a33d;
+  --accent-hover: #f2b458;
+  --accent-soft: rgba(232, 163, 61, 0.14);
+}
+
+html[data-accent='yellow'][data-theme='dark'] {
+  --bg-veil: rgba(30, 17, 3, 0.4);
+
+  --primary: #e6b445;
+  --primary-hover: #f2c76a;
+  --primary-soft: rgba(230, 180, 69, 0.16);
+  --primary-ring: rgba(230, 180, 69, 0.34);
+
+  --accent: #e884a8;
+  --accent-hover: #f19cba;
+  --accent-soft: rgba(232, 132, 168, 0.16);
+}
+
+html[data-accent='purple'][data-theme='dark'] {
+  --bg-veil: rgba(18, 9, 36, 0.4);
+
+  --primary: #b79ae8;
+  --primary-hover: #cbb2f2;
+  --primary-soft: rgba(183, 154, 232, 0.16);
+  --primary-ring: rgba(183, 154, 232, 0.34);
+
+  --accent: #62c3d2;
+  --accent-hover: #86d4e0;
+  --accent-soft: rgba(98, 195, 210, 0.16);
+}
