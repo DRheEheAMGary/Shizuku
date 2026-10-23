@@ -143,21 +143,6 @@ export function AuthDock() {
           </div>
         </div>
 
-        {/* 退出二次确认：点在面板内部，不会被 overflow:hidden 裁掉 */}
-        {confirmLogout && (
-          <div className="auth-dock__confirm" role="alertdialog" aria-label="确认退出登录">
-            <span className="auth-dock__confirm-q">确认退出登录？</span>
-            <div className="auth-dock__confirm-acts">
-              <button type="button" onClick={() => setConfirmLogout(false)}>
-                取消
-              </button>
-              <button type="button" className="is-danger" onClick={logout}>
-                退出
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="auth-dock__body" aria-hidden={!open}>
           {error && (
             <div className="auth-dock__error" role="alert">
@@ -168,7 +153,21 @@ export function AuthDock() {
             </div>
           )}
 
-          {!user ? (
+          {user && confirmLogout ? (
+            /*  确认时把整个内容区换掉，而不是浮在上面：
+             *  面板有 overflow:hidden，浮层既会被裁也会压住时钟 */
+            <div className="auth-dock__confirm" role="alertdialog" aria-label="确认退出登录">
+              <span className="auth-dock__confirm-q">确认退出登录？</span>
+              <div className="auth-dock__confirm-acts">
+                <button type="button" onClick={() => setConfirmLogout(false)}>
+                  取消
+                </button>
+                <button type="button" className="is-danger" onClick={logout}>
+                  退出
+                </button>
+              </div>
+            </div>
+          ) : !user ? (
             <button type="button" className="auth-dock__cta" onClick={login} disabled={loading}>
               {loading ? '登录中…' : '登录 / 注册'}
             </button>
