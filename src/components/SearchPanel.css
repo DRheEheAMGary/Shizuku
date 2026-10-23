@@ -9,6 +9,8 @@
   position: absolute;
   top: calc(100% + 10px);
   left: 50%;
+  /*  少了这一行，动画结束后整块会右移半个身位 */
+  transform: translateX(-50%);
   z-index: 55;
 
   width: min(560px, calc(100% - var(--page-gutter) * 2));

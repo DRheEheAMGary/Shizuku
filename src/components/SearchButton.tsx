@@ -1,32 +1,31 @@
 /* ============================================================================
  *  Shizuku · 顶栏右侧的搜索按钮
  * ----------------------------------------------------------------------------
- *  一枚圆形磨砂玻璃钮。点开之后：
- *    · 按钮的玻璃溶进顶栏的玻璃（圆形淡出）
- *    · 放大镜图标一路向左飞进顶栏的胶囊里，落成输入框左侧的图标
- *    · 左侧的头像也溶进顶栏
- *  所以视觉上是「整个顶栏变成了搜索框」。
+ *  圆形磨砂玻璃钮。点开之后：
+ *    · 钮的玻璃溶进顶栏的玻璃
+ *    · 放大镜图标一路向左飞进顶栏的胶囊，落成输入框左侧的图标
+ *  图标自己待在按钮里：按钮的位置是稳的，飞回去也就是回到原处。
  * ========================================================================== */
 
 import { forwardRef } from 'react'
 
 interface SearchButtonProps {
   searching: boolean
-  onOpen: () => void
+  onToggle: () => void
 }
 
 export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
-  function SearchButton({ searching, onOpen }, iconRef) {
+  function SearchButton({ searching, onToggle }, iconRef) {
     return (
       <button
         type="button"
         className="search-btn"
         data-flying={searching}
-        onClick={onOpen}
-        aria-label="全域搜索"
+        onClick={onToggle}
+        aria-label={searching ? '收起搜索' : '全域搜索'}
         title="搜索（⌘K）"
-        aria-hidden={searching}
       >
+        <span className="search-btn__glass" aria-hidden="true" />
         <svg
           ref={iconRef}
           className="search-btn__icon"

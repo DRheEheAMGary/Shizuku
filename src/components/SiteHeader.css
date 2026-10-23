@@ -106,7 +106,10 @@
 
   transition:
     box-shadow var(--dur-base) var(--ease-apple),
-    background-color var(--dur-base) var(--ease-apple);
+    background-color var(--dur-base) var(--ease-apple),
+    width 420ms var(--ease-apple),
+    margin-left 420ms var(--ease-apple),
+    margin-right 420ms var(--ease-apple);
 }
 
 .site-header-wrap.is-collapsed .site-header {
@@ -260,10 +263,11 @@
  *  搜索态：顶栏自己变成搜索框
  * ----------------------------------------------------------------------------
  *  点一下右侧的搜索钮：
- *    · 钮的玻璃溶进顶栏的玻璃（圆形淡出）
+ *    · 钮的玻璃溶进顶栏的玻璃
  *    · 放大镜图标一路向左飞进胶囊，落成输入框左侧的图标
  *    · 左侧头像也溶进顶栏
  *    · 签名字迹淡出，输入框浮现
+ *    · 胶囊横向撑开，横跨头像左缘到搜索钮右缘之间的整段
  *    · 背后整页糊上一层
  * ========================================================================== */
 
@@ -271,28 +275,31 @@
 .search-backdrop {
   position: fixed;
   inset: 0;
-  /*  和顶栏是同一个 flex 容器里的兄弟：容器内部比层级，
-   *  这个值必须小于下面几个「要留在遮罩之上」的元素 */
+  /*  和顶栏是同一个 flex 容器里的兄弟：容器内部比层级 */
   z-index: 40;
   background: rgba(16, 24, 32, 0.16);
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
-  backdrop-filter: blur(10px) saturate(120%);
-  animation: search-blur 340ms var(--ease-apple);
+  -webkit-backdrop-filter: blur(0px) saturate(100%);
+  backdrop-filter: blur(0px) saturate(100%);
+  opacity: 0;
+  pointer-events: none;
+  /*  transition 列表里不能带 -webkit- 前缀：浏览器不认这个可过渡属性，
+   *  整条列表会被丢掉（连 opacity 的过渡一起没）。 */
+  transition:
+    opacity 280ms var(--ease-apple),
+    backdrop-filter 280ms var(--ease-apple);
 }
 
-@keyframes search-blur {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.site-header-wrap[data-search='true'] .search-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
 }
 
 /* ---------- 圆形搜索钮 ---------- */
 .search-btn {
   position: relative;
-  z-index: 41;
+  z-index: 43;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -301,13 +308,11 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--text-secondary);
   cursor: pointer;
 }
 
-/*  玻璃单独放在伪元素上：打开时只让它淡出，图标还要留着飞 */
-.search-btn::before {
-  content: '';
+/*  玻璃单独一层：打开时只让它淡出 */
+.search-btn__glass {
   position: absolute;
   inset: 0;
   border-radius: var(--r-full);
@@ -318,30 +323,40 @@
   box-shadow:
     0 6px 20px rgba(31, 45, 61, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  transition: opacity 300ms var(--ease-apple);
+  transition: opacity 260ms var(--ease-apple);
 }
 
-.search-btn:hover::before {
+.search-btn:hover .search-btn__glass {
   box-shadow:
     0 8px 24px rgba(31, 45, 61, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 /*  钮溶进顶栏 */
-.search-btn[data-flying='true']::before {
+.site-header-wrap[data-search='true'] .search-btn__glass {
   opacity: 0;
 }
 
-/*  放大镜图标：飞进胶囊 */
+/* ---------- 飞行的放大镜 ---------- */
+/*  图标就在按钮里，位置是稳的；飞出去、再飞回来 */
 .search-btn__icon {
   position: relative;
   z-index: 1;
+  color: var(--text-secondary);
   pointer-events: none;
+  transform: translate(var(--fly-x, 0px), var(--fly-y, 0px));
   transition: transform 460ms var(--ease-apple);
 }
 
-.search-btn[data-flying='true'] .search-btn__icon {
-  transform: translate(var(--fly-x, 0px), var(--fly-y, 0px));
+/* ---------- 胶囊撑开 ---------- */
+/*  撑开后的宽度和左右外边距都是量出来的：
+ *  左缘对齐头像左缘，右缘对齐搜索钮右缘，
+ *  整组的宽度不变，居中关系也就不会跑。 */
+.site-header-wrap[data-search='true'] .site-header {
+  z-index: 42;
+  width: var(--field-w, fit-content);
+  margin-left: var(--field-ml, 0px);
+  margin-right: var(--field-mr, 0px);
 }
 
 /* ---------- 胶囊里的输入框 ---------- */
@@ -375,8 +390,9 @@
 
 .site-header__search-input {
   width: 100%;
-  /*  图标落在左边 18px 处，占位文字别跟它挤在一起 */
   padding-left: 30px;
+  /*  右边给搜索钮让出位置，点那里是收起搜索 */
+  padding-right: 46px;
   border: 0;
   outline: none;
   background: none;
