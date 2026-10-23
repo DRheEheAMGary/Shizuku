@@ -44,6 +44,9 @@
 
   --glass-radius: var(--r-full);
   padding: 0.4em 0.55em;   /* em 随字号走，Pacifico 下伸部的墨迹也罩得住 */
+  /*  比卡列低一段，错开才有层次。用独立的 translate 属性，
+   *  不和 .intro 入场动画的 transform 互相覆盖（两者是叠加关系）。 */
+  translate: 0 var(--sp-7);
 
   transition: color var(--dur-base) var(--ease-apple);
 }
@@ -59,6 +62,7 @@
 
 .home-side {
   flex: 0 0 340px;
+  margin-left: auto;  /* 顶到正文右缘，和标题拉开距离 */
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
@@ -109,11 +113,13 @@
   .home-side {
     flex: none;
     width: 100%;
+    margin-left: 0;
   }
 
-  /*  竖堆后标题独占一行，可以放大 */
+  /*  竖堆后标题独占一行，可以放大；下沉的错位也收回来 */
   .home-title {
     font-size: clamp(1.65rem, 8.5vw, 3.5rem);
+    translate: none;
   }
 }
 
