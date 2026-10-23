@@ -367,11 +367,16 @@
 
 /* ---------- 胶囊里的输入框 ---------- */
 .site-header__search {
+  /*  两个间距：搜索区左右内边距、图标之后文字起点的缩进。
+   *  输入框里的文字实际起点 = 两者之和，占位文字必须落在同一个位置。 */
+  --search-pad: 18px;
+  --search-text-pad: 30px;
+
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
-  padding: 0 18px;
+  padding: 0 var(--search-pad);
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms var(--ease-apple);
@@ -386,7 +391,9 @@
 /* ---------- 占位文字：逐字上浮 ---------- */
 .site-header__search-ph {
   position: absolute;
-  left: 30px;
+  /*  跟输入框里文字的实际起点对齐（之前少了搜索区那 18px 内边距，
+   *  整行字被推到放大镜上） */
+  left: calc(var(--search-pad) + var(--search-text-pad));
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -426,7 +433,7 @@
 /*  放大镜的落点 */
 .site-header__search-slot {
   position: absolute;
-  left: 18px;
+  left: var(--search-pad);
   top: 50%;
   width: 16px;
   height: 16px;
@@ -435,7 +442,7 @@
 
 .site-header__search-input {
   width: 100%;
-  padding-left: 30px;
+  padding-left: var(--search-text-pad);
   /*  右边给搜索钮让出位置，点那里是收起搜索 */
   padding-right: 46px;
   border: 0;
