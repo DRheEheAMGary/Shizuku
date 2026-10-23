@@ -8,9 +8,9 @@
 .search-panel {
   position: absolute;
   top: calc(100% + 10px);
-  left: 50%;
-  /*  少了这一行，动画结束后整块会右移半个身位 */
-  transform: translateX(-50%);
+  /*  左缘跟展开后的搜索栏对齐（--field-left 是量出来的），
+   *  不用「容器居中」——那样会跟胶囊差几像素，看着就是歪的 */
+  left: var(--field-left, 50%);
   z-index: 55;
 
   /*  跟搜索栏同宽：撑开后的搜索栏就是 --field-w，
@@ -33,11 +33,11 @@
 @keyframes search-drop {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 

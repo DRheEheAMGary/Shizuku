@@ -85,6 +85,7 @@ export function SiteHeader() {
     const slot = slotRef.current
     if (!wrap || !icon || !pill || !avatar || !slot) return
 
+    const wrapRect = wrap.getBoundingClientRect()
     const pillRect = pill.getBoundingClientRect()
     const avatarRect = avatar.getBoundingClientRect()
     const slotRect = slot.getBoundingClientRect()
@@ -107,6 +108,10 @@ export function SiteHeader() {
     wrap.style.setProperty('--field-w', `${fieldW}px`)
     wrap.style.setProperty('--field-ml', `${center - half - pillRect.left}px`)
     wrap.style.setProperty('--field-mr', `${center + half - (pillRect.left + fieldW)}px`)
+    /*  结果卡片的位置：不能用「容器居中」，那会跟展开后的胶囊差几像素
+     *  （胶囊以原中心为基准，容器居中的是视口中心）。直接记展开后的左缘，
+     *  相对容器边距盒，卡片就跟胶囊严丝合缝。 */
+    wrap.style.setProperty('--field-left', `${center - half - wrapRect.left}px`)
 
     // 落点的基准：胶囊左内缘的槽位
     baseRef.current = {
