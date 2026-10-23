@@ -85,14 +85,38 @@ export function SiteHeader() {
     const slot = slotRef.current
     if (!wrap || !icon || !pill || !avatar || !slot) return
 
+    /*  要量的都是「收起态」的几何：胶囊的自然宽度、它原来的中心等等。
+     *  所以每次都先把内联样式还原成收起态（width: fit-content、外边距归零），
+     *  量完立刻清掉 —— 整个过程在同一个 JS 任务里同步完成，
+     *  浏览器还没绘制，不会闪。
+     *
+     *  这一步不能只在「开着」的时候做：收起的那一刻胶囊还在过渡中途
+     *  （宽度正从撑开的 403px 动画回 85px），那时量到的是中间值，
+     *  会把 --pill-w 写坏，之后每开合一次就偏一点。 */
+    const savedCss = pill.style.cssText
+    /*  只在「开着」的时候强制还原：这时胶囊是撑开的，直接量到的是撑开态几何。
+     *  收起态本来就是收起态，不用动它 —— 而且不能动：
+     *  一在这里按回收起宽度，关闭时的回缩动画就没了。 */
+    const opened = wrap.dataset.search === 'true'
+    if (opened) {
+      // 过渡也要临时关掉，否则同步读到的是补间中的中间值
+      pill.style.transition = 'none'
+      pill.style.width = 'fit-content'
+      pill.style.marginLeft = '0px'
+      pill.style.marginRight = '0px'
+    }
+
     const wrapRect = wrap.getBoundingClientRect()
     const pillRect = pill.getBoundingClientRect()
     const avatarRect = avatar.getBoundingClientRect()
     const slotRect = slot.getBoundingClientRect()
     const iconRect = icon.getBoundingClientRect()
-
-    // 按钮（连它那圈玻璃）在顶栏里的位置
+    /*  按钮也要在「还原成收起态」的时候读：它是胶囊后面的 flex 项，
+     *  胶囊一撑开就被推向右边。这一行如果写在恢复样式之后，
+     *  量到的是撑开后的位置 —— 开着缩放时 --field-w 会一次比一次大。 */
     const btnRect = icon.closest('.search-btn')!.getBoundingClientRect()
+
+    if (opened) pill.style.cssText = savedCss
 
     /*  撑开：以胶囊原来的中心为基准，向两边等量扩展，
      *  宽度取「头像左缘 ↔ 搜索钮右缘」那么宽。
@@ -144,6 +168,10 @@ export function SiteHeader() {
     } else {
       icon.style.setProperty('--fly-x', '0px')
       icon.style.setProperty('--fly-y', '0px')
+      /*  这里刻意不测量。收起的那一刻胶囊正在回缩途中：measure() 会把
+       *  transition 关掉、把宽度直接按到收起值，回缩动画就没了
+       *  （实测关闭瞬间宽度从 415 直接跳到 278，没有任何中间帧）。
+       *  基准由「点开之前」和「缩放时」两次测量保证，够了。 */
     }
   }, [searching])
 
@@ -151,10 +179,7 @@ export function SiteHeader() {
    *  手写字体是异步加载的，首帧量到的胶囊宽度是回退字体的，
    *  差个几像素，撑开的边缘就会对不齐。 */
   useEffect(() => {
-    const remeasure = () => {
-      // 只在收起状态下量：撑开后的尺寸是结果，不能拿来当基准
-      if (!searchingRef.current) measure()
-    }
+    const remeasure = () => measure()
     remeasure()
     document.fonts?.ready.then(remeasure).catch(() => {})
 

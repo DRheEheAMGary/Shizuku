@@ -16,6 +16,10 @@
   /*  跟搜索栏同宽：撑开后的搜索栏就是 --field-w，
    *  卡片跟它对齐才不像两块拼的 */
   width: min(max(var(--field-w, 560px), 340px), calc(100% - var(--page-gutter) * 2));
+  /*  兜一道：卡片左缘到容器右缘还剩多少，就最多占多少。
+   *  窄屏上搜索栏可能只有一百多像素，而卡片有 340px 的下限宽度，
+   *  不加这条会直接顶出屏幕、把整页撑宽。 */
+  max-width: calc(100% - var(--field-left, 0px) - var(--page-gutter));
   max-height: min(60vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -173,4 +177,15 @@
   /*  命中跨行断开时，两半都保留圆角和底色 */
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+
+/*  手机上搜索栏本身就很窄（一百多像素），卡片不跟它比宽度，
+ *  直接铺满可用宽度更好读，也免得被下限宽度顶出屏幕。 */
+@media (max-width: 720px) {
+  .search-panel {
+    left: var(--page-gutter);
+    right: var(--page-gutter);
+    width: auto;
+    max-width: none;
+  }
 }
