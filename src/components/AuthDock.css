@@ -10,7 +10,10 @@
 
 .auth-dock {
   position: absolute;
-  left: 0;
+  /*  坞贴到视口左边，与上边距（--sp-4）一样宽。
+   *  外层顶栏有 --page-gutter 的左右外边距，坞要往左探出去那么多，
+   *  才能和上边距对齐。 */
+  left: calc(-1 * (var(--page-gutter) - var(--sp-4)));
   /*  贴住顶栏的上沿。
    *  原来用 top: calc(50% - 尺寸/2) 在顶栏里垂直居中 ——
    *  顶栏折叠后会变矮，居中基准跟着变，坞就会上下偏。
@@ -25,7 +28,10 @@
   /*  未登录只放一个主按钮，尺寸收紧；已登录多两行，另给一套 */
   --dock-w: 200px;
   --dock-h: 116px;
-  --dock-w-in: 300px;      /* 已登录 · 半年 26 周 = 258 + 内边距 */
+  /*  已登录展开态：宽度按「邮箱能完整显示」来定 ——
+   *  身份块会 flex:1 吃掉剩余空间，邮箱短了就不截断。
+   *  顺带热力图也顺势多露出几周：容器变宽 → 露出的周数变多。 */
+  --dock-w-in: 380px;
   --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
   --dock-h-half: 282px;
@@ -194,6 +200,9 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
+  /*  吃掉剩余宽度：面板加宽后邮箱就能完整显示，
+   *  宽度不够时才截断 */
+  flex: 1;
   min-width: 0;
   opacity: 0;
   transition: opacity 180ms linear;
