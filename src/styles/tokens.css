@@ -120,6 +120,8 @@ html,
   --glass-shadow: 0 8px 32px rgba(31, 45, 61, 0.06);
   --glass-shadow-hover: 0 12px 40px rgba(31, 45, 61, 0.1);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  /*  玻璃顶部那道亮线（"打光"）：亮色下要它撑起厚度 */
+  --glass-topline: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
   /* ---------- 色彩 · 亮色（默认） ---------- */
   --bg: #f7f9fa;
@@ -195,6 +197,9 @@ html,
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
   --glass-inner: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /*  暗色下不要"打光"：深玻璃配亮上沿会显得发亮发脏，
+   *  顶部亮线直接去掉，只留投影和极细的边框来界定边缘 */
+  --glass-topline: inset 0 1px 0 rgba(255, 255, 255, 0);
   --switch-track: rgba(255, 255, 255, 0.12);
 
 

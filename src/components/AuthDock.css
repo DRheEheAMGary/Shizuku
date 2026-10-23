@@ -71,7 +71,7 @@
   border: 1px solid var(--hairline);
   box-shadow:
     0 6px 24px rgba(31, 45, 61, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    var(--glass-topline);
 
   /*  圆角先收敛（200ms），尺寸再慢慢长（420ms）。
    *  两者同长的话，很长一段时间里它还是个高度 46px 的胶囊 ——
@@ -101,7 +101,7 @@
   translate: calc(-1 * var(--dock-lift-x)) calc(-1 * var(--dock-lift-y));
   box-shadow:
     0 18px 48px rgba(31, 45, 61, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    var(--glass-topline);
 }
 
 /* ---------- 头像与名字之间的细竖线 ---------- */

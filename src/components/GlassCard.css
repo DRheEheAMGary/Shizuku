@@ -28,7 +28,7 @@
   box-shadow:
     0 8px 32px rgba(31, 45, 61, 0.1),
     0 2px 8px rgba(31, 45, 61, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    var(--glass-topline);
 }
 
 .glass-card__head {
