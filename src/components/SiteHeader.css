@@ -205,6 +205,11 @@
   opacity: 0;
 }
 
+.site-header .brand__name,
+.site-header .brand__sub {
+  text-shadow: var(--glass-text-shadow);
+}
+
 .brand__name {
   font-size: var(--fs-sm);
   font-weight: 600;
