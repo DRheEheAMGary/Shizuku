@@ -34,6 +34,13 @@
 }
 
 .auth-dock__panel {
+
+  /*  独立合成层：backdrop-filter 的元素如果和别的玻璃元素共处一个渲染面，
+   *  一处重绘（比如悬停）会让整页的 backdrop 重新分块采样，
+   *  GPU 分块之间就露出横向接缝（"光带"）。
+   *  提升成自己的图层后，重绘互不影响。 */
+  transform: translateZ(0);
+
   position: relative;
   width: var(--dock-size);
   height: var(--dock-size);

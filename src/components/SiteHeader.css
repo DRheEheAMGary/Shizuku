@@ -63,6 +63,8 @@
 /* 磨砂玻璃圆：比头像大一圈，露出一圈玻璃边 */
 .site-header__avatar-halo {
   position: absolute;
+  /* 独立合成层，见 GlassCard.css 里的说明 */
+  transform: translateZ(0);
   inset: calc(-1 * var(--halo-bleed));
   border-radius: var(--r-full);
   background: var(--glass-bg-strong);
