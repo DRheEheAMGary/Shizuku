@@ -42,11 +42,6 @@ export function SiteHeader() {
   // 量好的基准位置：落点槽位、图标当前位置
   const baseRef = useRef({ slotOffset: 0, slotW: 16, avatarLeft: 0, pillTop: 0, pillH: 0, iconX: 0, iconY: 0 })
 
-  /*  点击次数：点开并关上算一轮。
-   *  奇数次 = 开着，搜索栏是正常（撑开）的大小，图标落在顶栏左侧；
-   *  偶数次 = 关着，搜索栏回到原先菜单的大小，图标落回右侧的按钮。
-   *  落点是固定的：不随着点击次数往外跑。 */
-  const clicksRef = useRef(0)
   const measureRef = useRef<() => void>(() => {})
 
   const close = useCallback(() => {
@@ -56,20 +51,29 @@ export function SiteHeader() {
 
   /*  任何一次开合都记一次数：奇偶始终跟开着/关着对得上 */
   const open = useCallback(() => {
-    clicksRef.current += 1
     setSearching(true)
   }, [])
 
+  /*  开 / 关以 DOM 上的 data-search 为准，不用 state 也不用计数。
+   *
+   *  为什么不读 state：一次点击里这个回调会被触发两次（实测如此），
+   *  两次都在同一个 React 批次里 —— 读 state 的话第二次读到的还是旧值，
+   *  于是「开一次又关一次」，合并渲染后状态没变，看着就是点了没反应。
+   *  读 DOM 属性则两次都读到「未开」，两次都执行打开，天然幂等。
+   *
+   *  为什么不用计数：计数只在「点按钮 / Esc / ⌘K」里加，
+   *  从背景遮罩或结果条目关闭时没加，奇偶会与实际状态错位 ——
+   *  下一次点按钮落在「偶数」上又执行关闭，
+   *  表现就是「关掉之后要点两下才能再打开」。 */
   const toggle = useCallback(() => {
-    clicksRef.current += 1
-    if (clicksRef.current % 2 === 1) {
+    const isOpen = wrapRef.current?.dataset.search === 'true'
+    if (isOpen) {
+      close()
+    } else {
       measureRef.current() // 开之前量：这时布局是稳的
       setSearching(true)
-    } else {
-      setSearching(false)
-      setQuery('')
     }
-  }, [])
+  }, [close])
 
   /*  量两件事（都在收起状态下量，量完存起来）：
    *    · 胶囊撑开后的宽度与左右外边距
@@ -93,13 +97,16 @@ export function SiteHeader() {
      *  这一步不能只在「开着」的时候做：收起的那一刻胶囊还在过渡中途
      *  （宽度正从撑开的 403px 动画回 85px），那时量到的是中间值，
      *  会把 --pill-w 写坏，之后每开合一次就偏一点。 */
-    const savedCss = pill.style.cssText
-    /*  只在「开着」的时候强制还原：这时胶囊是撑开的，直接量到的是撑开态几何。
-     *  收起态本来就是收起态，不用动它 —— 而且不能动：
-     *  一在这里按回收起宽度，关闭时的回缩动画就没了。 */
+    /*  只在「开着」的时候还原成收起态几何 —— 那时胶囊是撑开的，
+     *  量到的中心、外边距基准全是错的。
+     *
+     *  收起态一律不动胶囊：这里动它就会污染紧接着那次样式变化，
+     *  把「点开」的展开动画吃掉（实测中间帧从 19 个掉到 1 个）。
+     *  收起态本来就不需要动 —— 自然宽度改用下面的内容推算。 */
     const opened = wrap.dataset.search === 'true'
+    const savedCss = pill.style.cssText
     if (opened) {
-      // 过渡也要临时关掉，否则同步读到的是补间中的中间值
+      // 过渡也临时关掉，否则同步读到的是补间中的中间值
       pill.style.transition = 'none'
       pill.style.width = 'fit-content'
       pill.style.marginLeft = '0px'
@@ -127,8 +134,20 @@ export function SiteHeader() {
     const fieldW = btnRect.right - avatarRect.left
     const center = (pillRect.left + pillRect.right) / 2
     const half = fieldW / 2
-    // 收起时的宽度也要写成具体长度，不然 fit-content → 长度值过渡不了
-    wrap.style.setProperty('--pill-w', `${pillRect.width}px`)
+    /*  收起时的宽度：不能读胶囊自己的宽度 —— 那正是 --pill-w 渲染出来的值，
+     *  自我锁定（首帧 Pacifico 没加载时量到偏窄，之后永远纠正不过来）。
+     *  改用内容推算：.brand 是 flex-shrink:0，它的宽度就是自然宽度，
+     *  再加内层的内边距与边框。这样收起态完全不用碰胶囊。 */
+    const brand = pill.querySelector('.brand') as HTMLElement | null
+    const inner = pill.firstElementChild as HTMLElement | null
+    let naturalW = pillRect.width
+    if (brand && inner) {
+      const ics = getComputedStyle(inner)
+      const padX = (parseFloat(ics.paddingLeft) || 0) + (parseFloat(ics.paddingRight) || 0)
+      const borX = (parseFloat(ics.borderLeftWidth) || 0) + (parseFloat(ics.borderRightWidth) || 0)
+      naturalW = brand.getBoundingClientRect().width + padX + borX
+    }
+    wrap.style.setProperty('--pill-w', `${naturalW}px`)
     wrap.style.setProperty('--field-w', `${fieldW}px`)
     wrap.style.setProperty('--field-ml', `${center - half - pillRect.left}px`)
     wrap.style.setProperty('--field-mr', `${center + half - (pillRect.left + fieldW)}px`)
@@ -175,6 +194,12 @@ export function SiteHeader() {
     }
   }, [searching])
 
+  /*  收紧状态一变，胶囊宽度就变了（折起了「细线 + 站名」），
+   *  基准也得跟着更新，否则搜索展开时会按旧宽度算外边距。 */
+  useEffect(() => {
+    measureRef.current()
+  }, [collapsed])
+
   /*  首帧、字体就绪、窗口尺寸变化后都要重新量。
    *  手写字体是异步加载的，首帧量到的胶囊宽度是回退字体的，
    *  差个几像素，撑开的边缘就会对不齐。 */
@@ -206,7 +231,6 @@ export function SiteHeader() {
         }
       } else if (e.key === 'Escape' && searching) {
         e.preventDefault()
-        clicksRef.current += 1
         close()
       }
     }
@@ -232,16 +256,16 @@ export function SiteHeader() {
       <header className="site-header glass" ref={pillRef}>
         <div className="site-header__inner">
           <a href="#top" className="brand" aria-label="回到首页">
-            {/* 署名：连笔手写体，主题色，始终保留 */}
+            {/* 署名：连笔手写体，主题色，始终保留（收紧时折的是右边那道线加站名） */}
             <span className="brand__sig">
               <span>{profile.signature}</span>
             </span>
 
-            {/* 站名与副标题：两行，位置固定不动；滚动时整块折起 */}
-            <span className="brand__text">
-              <span className="brand__text-inner">
+            {/* 站名：跟署名之间隔一道细线；滚动或窄屏收紧时整块折起 */}
+            <span className="brand__tail">
+              <span className="brand__tail-inner">
+                <span className="brand__divider" aria-hidden="true" />
                 <span className="brand__name">Shizuku</span>
-                <span className="brand__sub">{site.title}</span>
               </span>
             </span>
           </a>

@@ -166,6 +166,9 @@
 .brand__sig {
   display: grid;
   grid-template-columns: 1fr;
+  /*  不许被压缩：胶囊宽度偏窄时它会被挤小，再被 overflow:hidden 裁掉
+   *  末尾（实测手机上「DRheEheAM_Gary」的 y 被切掉） */
+  flex-shrink: 0;
   overflow: hidden;
   white-space: nowrap;
   font-family: var(--font-hand);
@@ -186,13 +189,13 @@
   min-width: 0;
 }
 
-/* 站名与副标题：两行堆叠，位置固定。
- * 收起时整块折起 —— 行、列同时 1fr → 0fr：
- *   只折行（高度）的话，列宽还留着，两行文字之间会空出一段；
+/* 站名那一段：一道细线 + Shizuku。
+ * 收紧时整块折起 —— 行、列同时 1fr → 0fr：
+ *   只折行（高度）的话，列宽还留着，会空出一段；
  *   只折列（宽度）的话，高度还在，胶囊会显得偏胖。
  * 两个方向一起归零，盒子才真正消失。
  * 高度、宽度都由内容决定，不必写死 max-height。 */
-.brand__text {
+.brand__tail {
   display: grid;
   grid-template-rows: 1fr;
   grid-template-columns: 1fr;
@@ -203,20 +206,21 @@
     grid-template-columns var(--dur-base) var(--ease-apple),
     opacity var(--dur-base) var(--ease-apple);
 
-  /*  见 .brand__text-inner 的说明 */
+  /*  见 .brand__tail-inner 的说明 */
   padding: 2px 0;
   margin: -2px 0;
 }
 
-.brand__text-inner {
+.brand__tail-inner {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
 
-  /*  这一层和外面的 .brand__text 都带 overflow:hidden（折叠动画必须裁切），
+  /*  这一层和外面的 .brand__tail 都带 overflow:hidden（折叠动画必须裁切），
    *  而 overflow 是在 padding 盒上裁的 —— 手写体「Shizuku」的墨迹比行框
    *  高出一点点，低分屏上就会把「S」的顶部切掉一条。
    *  上下各留 2px 绘制余量，再用等量负 margin 抵消：
@@ -225,14 +229,13 @@
   margin: -2px 0;
 }
 
-.site-header-wrap.is-collapsed .brand__text {
+.site-header-wrap.is-collapsed .brand__tail {
   grid-template-rows: 0fr;
   grid-template-columns: 0fr;
   opacity: 0;
 }
 
-.site-header .brand__name,
-.site-header .brand__sub {
+.site-header .brand__name {
   text-shadow: var(--glass-text-shadow);
 }
 
@@ -246,11 +249,12 @@
   line-height: 1.2;
 }
 
-.brand__sub {
-  font-size: 0.625rem;
-  color: var(--text-muted);
-  letter-spacing: var(--tracking-wide);
-  line-height: 1.2;
+/* 署名与站名之间那道细线：1px，高度比文字略短一点 */
+.brand__divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 0.95em;
+  background: var(--hairline-strong);
 }
 
 /* ---------- 响应式 ---------- */
@@ -274,8 +278,15 @@
     gap: var(--sp-1);
   }
 
-  .brand__sig {
-    display: none;
+  /*  窄屏收紧：保留署名，折起「细线 + 站名」，和向下滚动时的表现一致 */
+  .brand__tail {
+    grid-template-rows: 0fr;
+    grid-template-columns: 0fr;
+    opacity: 0;
+  }
+
+  .brand {
+    gap: 0;
   }
 }
 
