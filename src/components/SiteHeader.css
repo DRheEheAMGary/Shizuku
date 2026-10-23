@@ -350,7 +350,8 @@
   color: var(--text-secondary);
   pointer-events: none;
   transform: translate(var(--fly-x, 0px), var(--fly-y, 0px));
-  transition: transform 460ms var(--ease-apple);
+  /*  飞得快一点：距离长，用太慢会显得拖沓 */
+  transition: transform 290ms var(--ease-apple);
 }
 
 /* ---------- 胶囊撑开 ---------- */
@@ -379,9 +380,47 @@
 .site-header-wrap[data-search='true'] .site-header__search {
   opacity: 1;
   pointer-events: auto;
-  /*  等图标飞过来落位再亮起文字，
-   *  不然图标会从占位文字上飞过去，两层字叠在一起 */
-  transition-delay: 400ms;
+  transition-delay: 80ms;
+}
+
+/* ---------- 占位文字：逐字上浮 ---------- */
+.site-header__search-ph {
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  pointer-events: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.site-header__search-ph i {
+  display: inline-block;
+  font-style: normal;
+  opacity: 0;
+}
+
+/*  等图标飞过来落位（290ms）之后，才一个字一个字往上浮。
+ *  用 animation 而不是 transition：元素是挂载出来的，
+ *  挂载时不会触发 transition。 */
+.site-header-wrap[data-search='true'] .site-header__search-ph i {
+  animation: ph-rise 300ms var(--ease-apple) both;
+  animation-delay: calc(280ms + var(--i, 0) * 20ms);
+}
+
+@keyframes ph-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /*  放大镜的落点 */

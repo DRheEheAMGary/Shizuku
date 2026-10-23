@@ -19,6 +19,9 @@ import { SearchPanel } from './SearchPanel'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
+/** 搜索框里的占位文字：逐字上浮，所以得自己渲染，不能用原生 placeholder */
+const PLACEHOLDER = '搜索博客与文档…'
+
 export function SiteHeader() {
   const collapsed = useScrollCollapse()
   const [searching, setSearching] = useState(false)
@@ -222,12 +225,22 @@ export function SiteHeader() {
               className="site-header__search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索博客与文档…"
               spellCheck={false}
               autoComplete="off"
-              aria-label="全域搜索"
+              aria-label="搜索博客与文档"
               tabIndex={searching ? 0 : -1}
             />
+
+            {/* 占位文字：一个字一个 i，逐个上浮登场 */}
+            {!query && (
+              <span className="site-header__search-ph" aria-hidden="true">
+                {[...PLACEHOLDER].map((ch, i) => (
+                  <i key={i} style={{ '--i': i } as React.CSSProperties}>
+                    {ch}
+                  </i>
+                ))}
+              </span>
+            )}
           </div>
         </div>
       </header>
