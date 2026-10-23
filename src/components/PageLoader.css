@@ -1,0 +1,104 @@
+/* ============================================================================
+ *  Shizuku · 首屏加载
+ * ========================================================================== */
+
+/*  填充进度：注册成真正的百分比属性，才能补间。
+ *  没注册的话动画只能整段跳变，做不出「从左往右填」的效果。 */
+@property --fill {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  display: grid;
+  place-items: center;
+
+  background:
+    radial-gradient(120% 90% at 50% 40%, var(--loader-glow), transparent 62%),
+    var(--loader-bg);
+
+  transition:
+    opacity var(--loader-fade) var(--ease-apple),
+    visibility var(--loader-fade) var(--ease-apple);
+}
+
+.page-loader.is-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/*  站名：由白转蓝，从左到右填。
+ *  用渐变切文字：--fill 是蓝白分界的位置，从 0% 推到 100%。 */
+.page-loader__word {
+  position: relative;
+  z-index: 1;
+
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 9vw, 5.5rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+
+  color: transparent;
+  background: linear-gradient(90deg, var(--primary) var(--fill), #fff var(--fill));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.page-loader.is-fill .page-loader__word {
+  animation: loader-fill var(--loader-fill) var(--ease-apple) forwards;
+}
+
+@keyframes loader-fill {
+  from {
+    --fill: 0%;
+  }
+  to {
+    --fill: 100%;
+  }
+}
+
+/*  底下那团柔光：跟着填充进度亮起来，给纯色的加载页一点层次 */
+.page-loader__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vw, 34rem);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--loader-glow), transparent 68%);
+  opacity: 0.5;
+  filter: blur(18px);
+
+  animation: loader-glow var(--loader-fill) var(--ease-apple) forwards;
+}
+
+@keyframes loader-glow {
+  from {
+    opacity: 0.28;
+    scale: 0.86;
+  }
+  to {
+    opacity: 0.62;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loader__word,
+  .page-loader__glow {
+    animation-duration: 1ms;
+  }
+
+  .page-loader__word {
+    --fill: 100%;
+  }
+}

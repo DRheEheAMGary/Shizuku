@@ -14,7 +14,6 @@
    *  提升成自己的图层后，重绘互不影响。 */
   transform: translateZ(0);
 
-  grid-column: span var(--card-span, 4);
   display: flex;
   flex-direction: column;
   min-height: var(--card-min-h, 168px);
@@ -64,28 +63,59 @@
   min-height: 0;
 }
 
-/* ---------- 栅格 ---------- */
+/* ---------- 横向卡片排 ---------- */
+/*  卡片排成一横排，宽度按原来的 12 栅格比例折算：
+ *    宽 = (跨度/12) × (容器宽 - 11个缝) + (跨度-1)个缝
+ *  跨 8 列的卡和跨 4 列的卡，比例跟之前竖排时一模一样。 */
+.card-track {
+  position: relative;
+  /*  沉到主区底部：上面留出空白画布 */
+  margin-top: auto;
+}
+
 .card-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  display: flex;
+  align-items: stretch;
   gap: var(--sp-4);
+
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /*  不用 scroll-snap：吸附会把滚轮的连续滚动拽回整卡位置，
+   *  滚一下就卡一下，手感很差。 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /*  横向滚动条藏起来，但两端留一点内边距，
+   *  让首尾卡片不贴着屏幕边。 */
+  padding: 2px var(--sp-2) var(--sp-2);
+  margin: -2px calc(-1 * var(--sp-2)) 0;
+}
+
+.card-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.glass-card {
+  flex: 0 0 auto;
+  width: calc(
+    (var(--card-span, 4) / 12) * (100% - 11 * var(--sp-4)) +
+      (var(--card-span, 4) - 1) * var(--sp-4)
+  );
 }
 
 @media (max-width: 900px) {
-  .card-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-  /* 平板上最宽占满 6 列 */
+  /*  平板上按 6 列折算，最宽的卡正好占满一屏 */
   .glass-card {
-    grid-column: span min(var(--card-span, 4), 6);
+    width: calc(
+      (min(var(--card-span, 4), 6) / 6) * (100% - 5 * var(--sp-4)) +
+        (min(var(--card-span, 4), 6) - 1) * var(--sp-4)
+    );
   }
 }
 
 @media (max-width: 640px) {
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
+  /*  手机上给个固定宽度，一屏一张半的样子，横向滑着看 */
   .glass-card {
-    grid-column: span 1;
+    width: 78vw;
   }
 }

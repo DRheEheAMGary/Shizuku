@@ -21,8 +21,8 @@ export const site = {
   avatar: 'https://r.dreamgary.cn/images/headround.jpg',
   favicon: 'https://r.dreamgary.cn/images/headround.png',
   icp: {
-    text: '',
-    url: 'https://example.com',
+    text: '萌ICP备20260513号',
+    url: 'https://icp.gov.moe/?keyword=20260513',
   },
   footerQuote: '',
 } as const

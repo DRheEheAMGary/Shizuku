@@ -42,9 +42,11 @@ export function PageShell({ children, marginText, title, subtitle, wide }: PageS
 
       <footer className="site-footer">
         <div className="site-footer__inner">
-          <span className="site-footer__quote" lang="ja">
-            {site.footerQuote}
-          </span>
+          {site.footerQuote && (
+            <span className="site-footer__quote" lang="ja">
+              {site.footerQuote}
+            </span>
+          )}
           <span className="site-footer__meta">
             © {new Date().getFullYear()} {site.author}
             {site.icp.text && (

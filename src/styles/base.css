@@ -44,6 +44,14 @@ body {
     color var(--dur-base) var(--ease-apple);
 }
 
+/*  顶栏有 margin-top，如果让它从 #root 里穿透出去，
+ *  会变成 body 的外边距 —— 整个 body 被顶下去 16px，
+ *  文档就比视口高出 16px，多出一根细滚动条。
+ *  flow-root 让 #root 自己成为包含块，外边距留在里面。 */
+#root {
+  display: flow-root;
+}
+
 /* ---------- 背景层：原图，不加任何遮罩 ---------- */
 /*  光晕、模糊、白色/黑色遮罩都去掉了 —— 背景就是原图本身。 */
 body::before {

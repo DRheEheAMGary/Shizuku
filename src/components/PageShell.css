@@ -6,10 +6,12 @@
   position: relative;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
   margin: 0 auto;
-  padding: var(--sp-8) 0 var(--sp-7);
+  padding: var(--sp-8) 0 0;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 8rem);
+  /*  顶栏是 sticky、占着文档流里的位置，所以整页高度要减掉它那一段，
+   *  卡片排才能正好落在视口底部，不多出一根细滚动条。 */
+  min-height: calc(100vh - 4.5rem);
 }
 
 /* ---------- 页边竖排小字 ---------- */
@@ -32,6 +34,10 @@
 .page-shell__main {
   flex: 1;
   max-width: var(--content-max);
+  /*  纵向 flex：里面那块卡片排用 margin-top:auto 沉到页面下方，
+   *  中间留出空白画布。 */
+  display: flex;
+  flex-direction: column;
 }
 
 /* 卡片栅格用的宽版：阅读型页面保持 46rem，栅格页放到 --page-max */
@@ -58,20 +64,25 @@
 }
 
 /* ---------- 页脚 ---------- */
+/*  极简：没有分隔线、没有底色、没有块面。
+ *  就是一行很淡的小字，贴在右下角 —— 像耳语，不像一个"页脚区块"。
+ *  参考 ooliver.cn 的处理。 */
 .site-footer {
-  margin-top: var(--sp-9);
-  padding-top: var(--sp-5);
-  border-top: 1px solid var(--hairline);
+  margin-top: var(--sp-6);
+  padding-bottom: var(--sp-4);
 }
 
 .site-footer__inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
+  justify-content: flex-end;
+  gap: var(--sp-2);
   flex-wrap: wrap;
-  font-size: var(--fs-xs);
+
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
   color: var(--text-muted);
+  opacity: 0.72;
 }
 
 .site-footer__quote {

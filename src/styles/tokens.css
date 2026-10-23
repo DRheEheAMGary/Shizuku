@@ -101,6 +101,11 @@ html,
   --bg-veil: rgba(255, 255, 255, 0.35);
 
   --danger: #b8412c;          /* 危险操作（退出登录等），白字可读 */
+  /* 首屏加载页 */
+  --loader-bg: #f2f6f8;
+  --loader-glow: rgba(63, 125, 140, 0.12);
+  --loader-fill: 900ms;
+  --loader-fade: 480ms;
   --glass-bg: rgba(255, 255, 255, 0.68);
   --glass-bg-strong: rgba(255, 255, 255, 0.84);
   --glass-text-shadow: none;
@@ -165,6 +170,11 @@ html,
    * 白色 tint 罩不住亮背景，顶栏会变成一条亮带。 */
   --bg-veil: rgba(14, 20, 24, 0.35);
   --danger: #e0705a;
+  /* 首屏加载页 */
+  --loader-bg: #0a0f14;
+  --loader-glow: rgba(111, 179, 194, 0.13);
+  --loader-fill: 900ms;
+  --loader-fade: 480ms;
   --glass-bg: rgba(10, 15, 19, 0.52);
   /*  顶栏玻璃：0.58 太透（白花瓣透上来洗掉文字），0.72 又太实（没有磨砂感）。
    *  取中间值，靠 --glass-text-shadow 给文字补一层保险，
