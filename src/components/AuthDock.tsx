@@ -52,6 +52,8 @@ export function AuthDock() {
   const [heatFull, setHeatFull] = useState(false)
   /** 退出登录的二次确认 */
   const [confirmLogout, setConfirmLogout] = useState(false)
+  /** 悬停预览：收起态下悬浮头像，圆往右撑开露出名字和邮箱 */
+  const [peek, setPeek] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const { weather, locate, failed, request, address } = useWeather()
 
@@ -89,8 +91,13 @@ export function AuthDock() {
       className="auth-dock"
       data-open={open}
       data-auth={user ? 'in' : 'out'}
+      data-peek={peek && !open}
       data-heat={heatFull ? 'year' : 'half'}
       ref={rootRef}
+      /*  监听整个坞而不只是头像：撑开之后指针移到文字上时，
+       *  面板不该立刻缩回去 */
+      onMouseEnter={() => setPeek(true)}
+      onMouseLeave={() => setPeek(false)}
     >
       <div className="auth-dock__panel">
         <div className="auth-dock__head">

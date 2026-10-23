@@ -33,6 +33,9 @@
    *  顺带热力图也顺势多露出几周：容器变宽 → 露出的周数变多。 */
   --dock-w-in: 380px;
   --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
+  /*  悬停预览：撑开成能放下「头像 + 竖线 + 名字 + 完整邮箱」的宽度。
+   *  46(头像) + 11(竖线) + 174(邮箱) + 8(内边距) ≈ 240，留点余量。 */
+  --dock-w-peek: 262px;
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
   --dock-h-half: 282px;
   /*  展开时头行内边距从 4px 变成 8/8px，会把头像推走 (4,4)。
@@ -109,6 +112,30 @@
   margin: 0 5px;
   /*  用更实的那档：1px 的线用普通描边色几乎看不见 */
   background: var(--hairline-bold);
+
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+
+.auth-dock[data-open='true'] .auth-dock__divider,
+.auth-dock[data-peek='true'] .auth-dock__divider {
+  opacity: 1;
+  /*  文字先出来、底座跟着长：延迟一点，线才不会抢在前面 */
+  transition: opacity 240ms linear 120ms;
+}
+
+/* ---------- 悬停预览：圆往右撑开 ---------- */
+/*  收起态悬浮在头像上 → 圆形向右长开，把名字和邮箱露出来。
+ *  高度不变（56px），只是横向长开。 */
+.auth-dock[data-auth='in'][data-open='false'][data-peek='true'] .auth-dock__panel {
+  width: var(--dock-w-peek);
+}
+
+/*  右侧那组（主题开关 + 退出）在预览态是透明的，
+ *  但它照样占着 102px 的宽度 —— 收掉，文字才有地方放。 */
+.auth-dock[data-open='false'][data-peek='true'] .auth-dock__head-right {
+  width: 0;
+  gap: 0;
 }
 
 /* ---------- 头行 ---------- */
@@ -204,13 +231,24 @@
    *  宽度不够时才截断 */
   flex: 1;
   min-width: 0;
+
   opacity: 0;
-  transition: opacity 180ms linear;
+  /*  收起时略微偏左，展开/预览时归位 ——
+   *  底座往右长，文字跟着「推进来」 */
+  transform: translateX(-5px);
+  transition:
+    opacity 180ms linear,
+    transform 220ms var(--ease-apple);
 }
 
-.auth-dock[data-open='true'] .auth-dock__ident {
+.auth-dock[data-open='true'] .auth-dock__ident,
+.auth-dock[data-peek='true'] .auth-dock__ident {
   opacity: 1;
-  transition: opacity 240ms linear 120ms;
+  transform: none;
+  /*  延迟一点：先让底座长开，文字再跟上 */
+  transition:
+    opacity 240ms linear 120ms,
+    transform 320ms var(--ease-apple) 120ms;
 }
 
 .auth-dock__ident strong {
@@ -240,9 +278,14 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(6px);
+  overflow: hidden;
+  /*  宽度也要过渡：预览态把它收成 0，位置要让文字平滑地补上来，
+   *  而不是一下子跳过去 */
   transition:
     opacity 160ms linear,
-    transform 240ms var(--ease-dock);
+    transform 240ms var(--ease-dock),
+    width var(--dur-dock) var(--ease-dock),
+    gap var(--dur-dock) var(--ease-dock);
 }
 
 .auth-dock[data-open='true'] .auth-dock__head-right {
