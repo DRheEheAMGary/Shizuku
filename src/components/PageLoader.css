@@ -46,12 +46,15 @@
   line-height: 1;
 
   /*  手写体的墨迹探出 1em 行框：Edu QLD Hand 的字体上下界是 1.33em / 0.6em，
-   *  行高 1em 时基线落在 0.865em 处，墨迹顶部还要再往上 0.114em。
+   *  行高 1em 时基线落在 0.898em 处，墨迹顶部还要再往上 0.081em
+   *  （按 88px 算就是 7.2px）。
    *  这里用 background-clip: text + 透明字色做渐变填充，
    *  背景只画在背景盒里 —— 探出去的部分拿不到渐变，就是「被切掉」。
-   *  上方补一段 padding 把背景盒撑开，再用等量负 margin 抵消占位。 */
-  padding-top: 0.16em;
-  margin-top: -0.16em;
+   *  上下补一段 padding 把背景盒撑开，再用等量负 margin 抵消占位：
+   *  padding 只扩背景盒，排版位置一点不动，所以给足倍数不心疼。
+   *  0.3em ≈ 需要量的 3.7 倍。 */
+  padding: 0.3em 0;
+  margin: -0.3em 0;
 
   color: transparent;
   background: linear-gradient(90deg, var(--primary) var(--fill), #fff var(--fill));
