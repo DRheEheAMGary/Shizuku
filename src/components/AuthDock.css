@@ -29,9 +29,9 @@
   --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
   --dock-h-half: 282px;
-  /*  展开时头行内边距从 4px 变成 8/10px，会把头像推走 (6,4)。
+  /*  展开时头行内边距从 4px 变成 8/8px，会把头像推走 (4,4)。
    *  让面板反向挪同样多，头像在屏幕上就一动不动。 */
-  --dock-lift-x: 6px;
+  --dock-lift-x: 4px;
   --dock-lift-y: 4px;
   --dur-dock: 420ms;
   --ease-dock: cubic-bezier(0.32, 0.72, 0, 1);
@@ -100,7 +100,7 @@
   flex-shrink: 0;
   width: 1px;
   height: 18px;
-  margin: 0 var(--sp-2);
+  margin: 0 5px;
   background: var(--hairline-strong);
 }
 
@@ -119,7 +119,7 @@
 }
 
 .auth-dock[data-open='true'] .auth-dock__head {
-  padding: 8px 10px 6px;
+  padding: 8px 8px 6px;
 }
 
 /* 收起态就是那枚圆：46 + 3×2 内边距 = 52 → 56（含边框） */
