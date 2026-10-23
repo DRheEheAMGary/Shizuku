@@ -576,3 +576,76 @@
   font-size: 11px;
   background: color-mix(in srgb, var(--bg) 45%, transparent);
 }
+
+/* ---------- 退出二次确认 ---------- */
+/*  位置在面板内部：面板有 overflow:hidden（展开动画需要），
+ *  浮层放到外面会被裁掉。 */
+.auth-dock__confirm {
+  position: absolute;
+  top: 52px;
+  right: 10px;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px 7px 12px;
+  border-radius: var(--r-full);
+
+  font-size: var(--fs-xs);
+  color: var(--text);
+  background: var(--glass-bg-menu);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 10px 30px rgba(31, 45, 61, 0.22);
+
+  animation: auth-confirm-in 200ms var(--ease-apple);
+}
+
+@keyframes auth-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+
+.auth-dock__confirm-q {
+  white-space: nowrap;
+}
+
+.auth-dock__confirm-acts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.auth-dock__confirm-acts button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--hairline);
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__confirm-acts button:hover {
+  background: var(--hairline-strong);
+  color: var(--text);
+}
+
+.auth-dock__confirm-acts .is-danger {
+  background: var(--danger, #c0563f);
+  color: #fff;
+}
+
+.auth-dock__confirm-acts .is-danger:hover {
+  filter: brightness(1.08);
+  color: #fff;
+}

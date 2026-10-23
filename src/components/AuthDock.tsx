@@ -50,6 +50,8 @@ export function AuthDock() {
   const [open, setOpen] = useState(false)
   /** 热力图展开：最近一个月 ↔ 最近半年 */
   const [heatFull, setHeatFull] = useState(false)
+  /** 退出登录的二次确认 */
+  const [confirmLogout, setConfirmLogout] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const { weather, failed, city } = useWeather()
 
@@ -95,7 +97,10 @@ export function AuthDock() {
           <button
             type="button"
             className="auth-dock__trigger"
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => {
+              setConfirmLogout(false)
+              setOpen((v) => !v)
+            }}
             aria-expanded={open}
             aria-label={open ? '收起' : user ? '账号菜单' : '登录'}
           >
@@ -128,7 +133,7 @@ export function AuthDock() {
               <button
                 type="button"
                 className="auth-dock__logout"
-                onClick={logout}
+                onClick={() => setConfirmLogout(true)}
                 aria-label="退出登录"
                 title="退出登录"
               >
@@ -137,6 +142,21 @@ export function AuthDock() {
             )}
           </div>
         </div>
+
+        {/* 退出二次确认：点在面板内部，不会被 overflow:hidden 裁掉 */}
+        {confirmLogout && (
+          <div className="auth-dock__confirm" role="alertdialog" aria-label="确认退出登录">
+            <span className="auth-dock__confirm-q">确认退出登录？</span>
+            <div className="auth-dock__confirm-acts">
+              <button type="button" onClick={() => setConfirmLogout(false)}>
+                取消
+              </button>
+              <button type="button" className="is-danger" onClick={logout}>
+                退出
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="auth-dock__body" aria-hidden={!open}>
           {error && (
