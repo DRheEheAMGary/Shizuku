@@ -619,8 +619,15 @@
   color: var(--text);
 }
 
+/*  图标本身是朝下的箭头，转 -90° 让它指向右边 ——
+ *  热力图是往右展开的，箭头该指向展开的方向。
+ *  展开后转 +90° 指回左边，表示「收回去」。 */
+.auth-dock__heat-toggle {
+  transform: rotate(-90deg);
+}
+
 .auth-dock__heat-toggle.is-open {
-  transform: rotate(180deg);
+  transform: rotate(90deg);
 }
 
 .auth-dock__heat .heat {
