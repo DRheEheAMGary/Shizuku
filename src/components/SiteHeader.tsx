@@ -8,6 +8,7 @@
 
 import { profile, site } from '@/content/site'
 import { AuthDock } from './AuthDock'
+import { SearchButton } from './SearchButton'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
@@ -18,6 +19,9 @@ export function SiteHeader() {
     <div className={`site-header-wrap${collapsed ? ' is-collapsed' : ''}`}>
       {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
       <AuthDock />
+
+      {/* 顶栏左侧的搜索按钮：独立的圆形玻璃钮 */}
+      <SearchButton />
 
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar">
@@ -44,9 +48,10 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* 平衡块：左下角的坞和它是左右对称的一对占位。
+      {/* 平衡块：左边的搜索按钮和它是左右对称的一对占位。
           主题开关搬进坞里之后，中间这组会变窄、整体往右挪 37px；
-          放一块与开关等宽的透明占位，头像才会停在原来的位置。 */}
+          左边又多了搜索按钮，再加一块等宽的透明占位，
+          胶囊和头像才会停在原来的位置。 */}
       <span className="site-header__balance" aria-hidden="true" />
 
     </div>

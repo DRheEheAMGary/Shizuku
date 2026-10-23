@@ -7,3 +7,6 @@ dist
 
 # 背景图原图（已转成 webp 进 public/，原图不入库）
 assets/
+
+# 搜索索引由服务器上的 tools/build_search_index.py 生成，不入库
+public/search-index.json

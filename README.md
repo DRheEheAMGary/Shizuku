@@ -270,6 +270,42 @@ WebP 在同画质下只有 JPEG 的 40%，6000 宽覆盖了从 1440@2x 到 4K �
 
 只有一张图：`cover` 本身就按视口裁切，竖屏不需要单独的版本。
 
+### 全域搜索
+
+顶栏左侧一枚圆形玻璃钮（⌘K / Ctrl+K 直接开），跨博客与 MC 文档搜索。
+
+**索引是一份静态 JSON，不做服务端搜索**：
+
+```
+tools/build_search_index.py  →  /www/wwwroot/shizuku/search-index.json
+```
+
+脚本在服务器上跑，产出 `search-index.json`（约 88KB），
+前端拉一次缓存住，之后的搜索全在浏览器里跑 —— 静态站不用加 PHP，搜索也没有网络往返。
+
+```bash
+# 服务器上
+python3 /www/wwwroot/shizuku/tools/build_search_index.py          # 重建
+python3 /www/wwwroot/shizuku/tools/build_search_index.py --dry-run  # 只看统计
+```
+
+服务器上装了计划任务，每天 04:17 重建一次。
+
+**收录范围**（各站规则不同，脚本里 `SITES` 一处改）：
+
+| 站 | 收录 | 排除 |
+|---|---|---|
+| 博客 | 已发布的文章 + 页面 | 修订、附件、自动草稿、导航菜单项、micropost 等一切非 post/page 的 post_type |
+| MC 文档 | `docs/**/*.md` 页面 | `.vitepress/`、`public/`、README、配置 |
+
+主站（`dreamgary.cn`）以后要换成 shizuku，所以整站暂时不收。
+
+**两个坑**：
+
+- 博客正文里有裸 CR 和 `\n` 字面量，`mysql --batch` 的行切分会把一条记录拆成多行 ——
+  改用 `HEX()` 取原始字节、在 Python 侧解码，绕开客户端转义。
+- 博客公式是 MathML，`<annotation>` 里的 TeX 源码会跟渲染文本重复（`f(x)f(x)`），整段丢弃。
+
 ### 暗色模式的玻璃
 
 暗色下玻璃是**深色 tint**（`rgba(10,15,19,.45/.58)`）而不是白色 tint ——
