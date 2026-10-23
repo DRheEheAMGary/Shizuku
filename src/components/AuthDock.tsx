@@ -71,6 +71,9 @@ export function AuthDock() {
   useEffect(() => {
     if (!open) return
     const onPointerDown = (e: PointerEvent) => {
+      /*  主题切换动画期间，命中测试不落在真实 DOM 上（事件目标会是 <html>），
+       *  这里会误判成「点了外面」把坞收了 —— 动画期间直接忽略。 */
+      if (transitioning) return
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
@@ -82,7 +85,7 @@ export function AuthDock() {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, transitioning])
 
   const displayName = user?.name || user?.preferred_username || ''
   // 首字母与回退色优先用 SSO 给的，和账号页保持一致
