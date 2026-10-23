@@ -158,7 +158,9 @@
 }
 
 .auth-dock[data-open='true'] .auth-dock__head {
-  padding: 8px 8px 6px;
+  /*  右边距跟内容行一样是 12px：
+   *  顶行的主题开关和下面那行的退出按钮，右边缘才在同一条线上。 */
+  padding: 8px 12px 6px 8px;
 }
 
 /* 收起态就是那枚圆：46 + 3×2 内边距 = 52 → 56（含边框） */
@@ -544,28 +546,35 @@
   color: var(--text-faint);
 }
 
-/* 退出：顶行一枚小圆钮，和主题开关并排 */
+/* 退出：内容行最右一枚小圆钮，和顶行的主题开关右侧对齐 */
 .auth-dock__logout {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  margin-left: 6px;
+  margin-left: 8px;
   border: 1px solid var(--hairline);
   border-radius: var(--r-full);
   background: var(--hairline);
-  color: var(--text-soft);
+  /*  危险操作：图标直接给红色，不用等到悬停才提示 */
+  color: var(--danger);
   cursor: pointer;
+  /*  压在天气未授权的遮罩之上：没授权地点也得能退出登录 */
+  position: relative;
+  z-index: 2;
 
   transition:
     color var(--dur-fast) var(--ease-apple),
-    background-color var(--dur-fast) var(--ease-apple);
+    background-color var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple);
 }
 
 .auth-dock__logout:hover {
-  color: var(--appdanger, #c0563f);
-  background: var(--hairline-strong);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
 }
 
 /* ---------- 坞内热力图 ---------- */

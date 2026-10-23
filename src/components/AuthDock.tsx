@@ -140,17 +140,6 @@ export function AuthDock() {
 
           <div className="auth-dock__head-right">
             <ThemeSwitch />
-            {user && (
-              <button
-                type="button"
-                className="auth-dock__logout"
-                onClick={() => setConfirmLogout(true)}
-                aria-label="退出登录"
-                title="退出登录"
-              >
-                <Icon name="logout" size={15} />
-              </button>
-            )}
           </div>
         </div>
 
@@ -223,6 +212,18 @@ export function AuthDock() {
                   {weather ? weather.label : failed ? '暂不可用' : '--'}
                 </span>
                 <span className="auth-dock__wcity">{address || '--'}</span>
+
+                {/*  退出按钮放在这一行最右边：
+                 *  和上面的主题开关右侧对齐，一列两个小圆钮。 */}
+                <button
+                  type="button"
+                  className="auth-dock__logout"
+                  onClick={() => setConfirmLogout(true)}
+                  aria-label="退出登录"
+                  title="退出登录"
+                >
+                  <Icon name="logout" size={15} />
+                </button>
 
                 {/*  没授权就盖一层，写清楚要授权什么 */}
                 {locate !== 'granted' && (
