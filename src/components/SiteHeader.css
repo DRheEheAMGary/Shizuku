@@ -350,7 +350,7 @@
 
 /* ---------- 胶囊撑开 ---------- */
 /*  撑开后的宽度和左右外边距都是量出来的：
- *  左缘对齐头像左缘，右缘对齐搜索钮右缘，
+ *  以胶囊原来的中心为基准向两边等量扩展，
  *  整组的宽度不变，居中关系也就不会跑。 */
 .site-header-wrap[data-search='true'] .site-header {
   z-index: 42;
@@ -374,8 +374,9 @@
 .site-header-wrap[data-search='true'] .site-header__search {
   opacity: 1;
   pointer-events: auto;
-  /*  等图标飞过来再亮起文字 */
-  transition-delay: 180ms;
+  /*  等图标飞过来落位再亮起文字，
+   *  不然图标会从占位文字上飞过去，两层字叠在一起 */
+  transition-delay: 400ms;
 }
 
 /*  放大镜的落点 */
@@ -419,13 +420,11 @@
 }
 
 .site-header__avatar {
-  transition:
-    opacity 260ms var(--ease-apple),
-    transform 340ms var(--ease-apple);
+  transition: opacity 260ms var(--ease-apple);
 }
 
+/*  原地淡出：不缩不挪 */
 .site-header-wrap[data-search='true'] .site-header__avatar {
   opacity: 0;
-  transform: scale(0.8);
   pointer-events: none;
 }

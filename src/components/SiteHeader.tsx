@@ -90,11 +90,18 @@ export function SiteHeader() {
     // 按钮（连它那圈玻璃）在顶栏里的位置
     const btnRect = icon.closest('.search-btn')!.getBoundingClientRect()
 
-    // 胶囊撑开后：从头像左缘一直铺到搜索钮右缘
-    wrap.style.setProperty('--field-w', `${btnRect.right - avatarRect.left}px`)
-    // 负外边距把胶囊拉到该在的位置，同时把右侧的东西原样拉回来
-    wrap.style.setProperty('--field-ml', `${-(pillRect.left - avatarRect.left)}px`)
-    wrap.style.setProperty('--field-mr', `${-(btnRect.right - pillRect.right)}px`)
+    /*  撑开：以胶囊原来的中心为基准，向两边等量扩展，
+     *  宽度取「头像左缘 ↔ 搜索钮右缘」那么宽。
+     *  头像和按钮都留在原地不动，只是被扩开的玻璃盖过去
+     *  （它们各自淡出，但位置一点没变）。
+     *  左右外边距取一样的负值，扩展才是对称的；
+     *  外边距的总和又跟原来的相等，整组的宽度不变，居中不跑。 */
+    const fieldW = btnRect.right - avatarRect.left
+    const center = (pillRect.left + pillRect.right) / 2
+    const half = fieldW / 2
+    wrap.style.setProperty('--field-w', `${fieldW}px`)
+    wrap.style.setProperty('--field-ml', `${center - half - pillRect.left}px`)
+    wrap.style.setProperty('--field-mr', `${center + half - (pillRect.left + fieldW)}px`)
 
     // 落点的基准：胶囊左内缘的槽位
     baseRef.current = {
