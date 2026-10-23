@@ -13,7 +13,9 @@
   transform: translateX(-50%);
   z-index: 55;
 
-  width: min(560px, calc(100% - var(--page-gutter) * 2));
+  /*  跟搜索栏同宽：撑开后的搜索栏就是 --field-w，
+   *  卡片跟它对齐才不像两块拼的 */
+  width: min(max(var(--field-w, 560px), 340px), calc(100% - var(--page-gutter) * 2));
   max-height: min(60vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
