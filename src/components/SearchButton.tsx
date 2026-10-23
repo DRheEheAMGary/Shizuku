@@ -1,39 +1,40 @@
 /* ============================================================================
- *  Shizuku · 顶栏左侧的搜索按钮
+ *  Shizuku · 顶栏右侧的搜索按钮
  * ----------------------------------------------------------------------------
- *  一枚独立的圆形磨砂玻璃按钮，点了浮出搜索面板。
- *  快捷键 ⌘K / Ctrl+K 也能直接开。
+ *  一枚圆形磨砂玻璃钮。点开之后：
+ *    · 按钮的玻璃溶进顶栏的玻璃（圆形淡出）
+ *    · 放大镜图标一路向左飞进顶栏的胶囊里，落成输入框左侧的图标
+ *    · 左侧的头像也溶进顶栏
+ *  所以视觉上是「整个顶栏变成了搜索框」。
  * ========================================================================== */
 
-import { useEffect, useState } from 'react'
-import { SearchOverlay } from './SearchOverlay'
-import './SearchOverlay.css'
+import { forwardRef } from 'react'
 
-export function SearchButton() {
-  const [open, setOpen] = useState(false)
+interface SearchButtonProps {
+  searching: boolean
+  onOpen: () => void
+}
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // ⌘K / Ctrl+K：直接开搜索
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setOpen(true)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [])
-
-  return (
-    <>
+export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
+  function SearchButton({ searching, onOpen }, iconRef) {
+    return (
       <button
         type="button"
         className="search-btn"
-        onClick={() => setOpen(true)}
+        data-flying={searching}
+        onClick={onOpen}
         aria-label="全域搜索"
         title="搜索（⌘K）"
+        aria-hidden={searching}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+          ref={iconRef}
+          className="search-btn__icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path
             d="M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M15.4 15.4 20 20"
             fill="none"
@@ -43,8 +44,6 @@ export function SearchButton() {
           />
         </svg>
       </button>
-
-      <SearchOverlay open={open} onClose={() => setOpen(false)} />
-    </>
-  )
-}
+    )
+  },
+)

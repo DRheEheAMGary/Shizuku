@@ -51,6 +51,7 @@
 
 .site-header__avatar {
   position: relative;
+  z-index: 41;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -96,6 +97,8 @@
 
 /* ---------- 胶囊 ---------- */
 .site-header {
+  position: relative;
+  z-index: 41;
   width: fit-content;
   max-width: 100%;
   --glass-radius: var(--r-full);   /* 正圆胶囊：圆角取到高度的一半 */
@@ -251,4 +254,162 @@
   .brand__sig {
     display: none;
   }
+}
+
+/* ============================================================================
+ *  搜索态：顶栏自己变成搜索框
+ * ----------------------------------------------------------------------------
+ *  点一下右侧的搜索钮：
+ *    · 钮的玻璃溶进顶栏的玻璃（圆形淡出）
+ *    · 放大镜图标一路向左飞进胶囊，落成输入框左侧的图标
+ *    · 左侧头像也溶进顶栏
+ *    · 签名字迹淡出，输入框浮现
+ *    · 背后整页糊上一层
+ * ========================================================================== */
+
+/* ---------- 背景的模糊遮罩 ---------- */
+.search-backdrop {
+  position: fixed;
+  inset: 0;
+  /*  和顶栏是同一个 flex 容器里的兄弟：容器内部比层级，
+   *  这个值必须小于下面几个「要留在遮罩之上」的元素 */
+  z-index: 40;
+  background: rgba(16, 24, 32, 0.16);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+  animation: search-blur 340ms var(--ease-apple);
+}
+
+@keyframes search-blur {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- 圆形搜索钮 ---------- */
+.search-btn {
+  position: relative;
+  z-index: 41;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 37px;
+  height: 37px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/*  玻璃单独放在伪元素上：打开时只让它淡出，图标还要留着飞 */
+.search-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition: opacity 300ms var(--ease-apple);
+}
+
+.search-btn:hover::before {
+  box-shadow:
+    0 8px 24px rgba(31, 45, 61, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+/*  钮溶进顶栏 */
+.search-btn[data-flying='true']::before {
+  opacity: 0;
+}
+
+/*  放大镜图标：飞进胶囊 */
+.search-btn__icon {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  transition: transform 460ms var(--ease-apple);
+}
+
+.search-btn[data-flying='true'] .search-btn__icon {
+  transform: translate(var(--fly-x, 0px), var(--fly-y, 0px));
+}
+
+/* ---------- 胶囊里的输入框 ---------- */
+.site-header__search {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-apple);
+}
+
+.site-header-wrap[data-search='true'] .site-header__search {
+  opacity: 1;
+  pointer-events: auto;
+  /*  等图标飞过来再亮起文字 */
+  transition-delay: 180ms;
+}
+
+/*  放大镜的落点 */
+.site-header__search-slot {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+}
+
+.site-header__search-input {
+  width: 100%;
+  /*  图标落在左边 18px 处，占位文字别跟它挤在一起 */
+  padding-left: 30px;
+  border: 0;
+  outline: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.site-header__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ---------- 签名淡出、头像溶进顶栏 ---------- */
+.brand {
+  transition:
+    opacity 180ms var(--ease-apple),
+    transform 320ms var(--ease-apple);
+}
+
+.site-header-wrap[data-search='true'] .brand {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
+
+.site-header__avatar {
+  transition:
+    opacity 260ms var(--ease-apple),
+    transform 340ms var(--ease-apple);
+}
+
+.site-header-wrap[data-search='true'] .site-header__avatar {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
 }
