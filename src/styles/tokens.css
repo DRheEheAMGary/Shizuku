@@ -102,7 +102,10 @@ html,
 
   --glass-bg: rgba(255, 255, 255, 0.68);
   --glass-bg-strong: rgba(255, 255, 255, 0.84);
-  --glass-bg-menu: rgba(252, 253, 254, 0.92);   /* 浮层菜单：更实，保证可读 */
+  /*  卡片专用：面积大，用普通玻璃的浓度会显得奶白、底图透不出来。
+   *  单独一档，卡片比顶栏胶囊更透，磨砂感更强。 */
+  --glass-bg-card: rgba(255, 255, 255, 0.62);
+  --glass-bg-menu: rgba(252, 253, 254, 0.86);   /* 浮层菜单：比卡片略实，保证小字可读 */
   --glass-border: rgba(28, 37, 48, 0.07);
   --glass-shadow: 0 8px 32px rgba(31, 45, 61, 0.06);
   --glass-shadow-hover: 0 12px 40px rgba(31, 45, 61, 0.1);
@@ -159,9 +162,13 @@ html,
   /* 暗色下用暗色底当薄纱；同理玻璃也该是深色 tint ——
    * 白色 tint 罩不住亮背景，顶栏会变成一条亮带。 */
   --bg-veil: rgba(14, 20, 24, 0.35);
-  --glass-bg: rgba(10, 15, 19, 0.45);
-  --glass-bg-strong: rgba(10, 15, 19, 0.58);
-  --glass-bg-menu: rgba(16, 23, 29, 0.92);
+  --glass-bg: rgba(10, 15, 19, 0.52);
+  /*  顶栏这块要更实：背景图里有大片白色花瓣，
+   *  玻璃太透的话花瓣会亮到盖住白色文字。 */
+  --glass-bg-strong: rgba(10, 15, 19, 0.72);
+  /*  暗色下 0.58 已经够透，磨砂效果很足，只比原来的略收一点 */
+  --glass-bg-card: rgba(10, 15, 19, 0.54);
+  --glass-bg-menu: rgba(16, 23, 29, 0.88);
   --glass-border: rgba(255, 255, 255, 0.13);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);

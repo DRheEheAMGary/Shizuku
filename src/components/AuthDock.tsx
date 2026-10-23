@@ -78,7 +78,8 @@ export function AuthDock() {
   }, [open])
 
   const displayName = user?.name || user?.preferred_username || ''
-  const initial = displayName ? displayName[0].toUpperCase() : ''
+  // 首字母与回退色优先用 SSO 给的，和账号页保持一致
+  const initial = user?.initial || (displayName ? displayName[0].toUpperCase() : '')
   const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   return (
@@ -103,7 +104,12 @@ export function AuthDock() {
             ) : user?.picture ? (
               <img className="auth-dock__pic" src={user.picture} alt="" />
             ) : user ? (
-              <span className="auth-dock__initial">{initial}</span>
+              <span
+                className="auth-dock__initial"
+                style={user?.avatar_color ? { background: user.avatar_color } : undefined}
+              >
+                {initial}
+              </span>
             ) : (
               <Icon name="user" size={20} />
             )}

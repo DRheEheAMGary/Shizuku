@@ -30,6 +30,10 @@ export interface SsoUser {
   name?: string
   preferred_username?: string
   picture?: string
+  /** 无头像时的回退首字母（由 SSO 生成，与账号页一致） */
+  initial?: string
+  /** 无头像时的回退配色（由 SSO 生成，同名同色） */
+  avatar_color?: string
   email?: string
   email_verified?: boolean
   updated_at?: number

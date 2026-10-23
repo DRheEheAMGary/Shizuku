@@ -14,9 +14,8 @@
   padding: var(--sp-4);
 
   border-radius: var(--r-lg);
-  /*  比顶栏更实：卡片面积大，太透会让底图透上来抢内容；
-   *  但也不能太实，否则一片死白、失去玻璃感 —— 取 0.84 那档。 */
-  background: var(--glass-bg-strong);
+  /*  卡片用自己那档浓度：比顶栏胶囊更透，底图能透上来，磨砂感更强 */
+  background: var(--glass-bg-card);
   -webkit-backdrop-filter: blur(20px) saturate(175%);
   backdrop-filter: blur(20px) saturate(175%);
   border: 1px solid var(--hairline);
