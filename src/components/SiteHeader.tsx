@@ -34,18 +34,41 @@ export function SiteHeader() {
   const avatarRef = useRef<HTMLSpanElement>(null)
   const slotRef = useRef<HTMLSpanElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // 图标飞行量：量一次，之后每次开合都用它
+  // 图标飞行量：开的时候现算（偏移要跟着点击次数走）
   const flyRef = useRef({ x: 0, y: 0 })
+  // 量好的基准位置：落点槽位、图标当前位置
+  const baseRef = useRef({ slotOffset: 0, slotW: 16, avatarLeft: 0, pillTop: 0, pillH: 0, iconX: 0, iconY: 0 })
+
+  /*  点击次数：点开并关上算一轮。
+   *  奇数次 = 开着，搜索栏是正常（撑开）的大小，图标偏在顶栏左侧；
+   *  偶数次 = 关着，搜索栏回到原先菜单的大小，图标偏在右侧（按钮上）。
+   *  每多点一次，图标开着时的偏移就更大一点。 */
+  const clicksRef = useRef(0)
+  const STEP = 16 // 每多一轮，图标多偏这么远
+  const MAX_STEPS = 6
+  const measureRef = useRef<() => void>(() => {})
 
   const close = useCallback(() => {
     setSearching(false)
     setQuery('')
   }, [])
 
+  /*  任何一次开合都记一次数：奇偶始终跟开着/关着对得上 */
+  const open = useCallback(() => {
+    clicksRef.current += 1
+    setSearching(true)
+  }, [])
+
   const toggle = useCallback(() => {
-    if (searching) close()
-    else setSearching(true)
-  }, [searching, close])
+    clicksRef.current += 1
+    if (clicksRef.current % 2 === 1) {
+      measureRef.current() // 开之前量：这时布局是稳的
+      setSearching(true)
+    } else {
+      setSearching(false)
+      setQuery('')
+    }
+  }, [])
 
   /*  量两件事（都在收起状态下量，量完存起来）：
    *    · 胶囊撑开后的宽度与左右外边距
@@ -75,21 +98,32 @@ export function SiteHeader() {
     wrap.style.setProperty('--field-ml', `${-(pillRect.left - avatarRect.left)}px`)
     wrap.style.setProperty('--field-mr', `${-(btnRect.right - pillRect.right)}px`)
 
-    // 飞行的落点：胶囊左内缘的槽位
-    const slotOffset = slotRect.left - pillRect.left
-    const targetX = avatarRect.left + slotOffset + slotRect.width / 2
-    const targetY = pillRect.top + pillRect.height / 2
-    flyRef.current = {
-      x: targetX - (iconRect.left + iconRect.width / 2),
-      y: targetY - (iconRect.top + iconRect.height / 2),
+    // 落点的基准：胶囊左内缘的槽位
+    baseRef.current = {
+      slotOffset: slotRect.left - pillRect.left,
+      slotW: slotRect.width,
+      avatarLeft: avatarRect.left,
+      pillTop: pillRect.top,
+      pillH: pillRect.height,
+      iconX: iconRect.left + iconRect.width / 2,
+      iconY: iconRect.top + iconRect.height / 2,
     }
   }, [])
+
+  measureRef.current = measure
 
   /*  打开 / 收起：图标飞过去 / 飞回来 */
   useLayoutEffect(() => {
     const icon = iconRef.current
     if (!icon) return
     if (searching) {
+      // 开着：图标落在顶栏左侧，越点越偏
+      const base = baseRef.current
+      const steps = Math.min(Math.floor((clicksRef.current - 1) / 2), MAX_STEPS)
+      const offset = steps * STEP
+      const targetX = base.avatarLeft + base.slotOffset + base.slotW / 2 - offset
+      const targetY = base.pillTop + base.pillH / 2
+      flyRef.current = { x: targetX - base.iconX, y: targetY - base.iconY }
       icon.style.setProperty('--fly-x', `${flyRef.current.x}px`)
       icon.style.setProperty('--fly-y', `${flyRef.current.y}px`)
       // 等输入框真的在页面上了再聚焦
@@ -114,16 +148,12 @@ export function SiteHeader() {
     const onResize = () => remeasure()
     window.addEventListener('resize', onResize)
 
-    // 胶囊尺寸变了（字体到位、窗口变化）就重量一次
-    let ro: ResizeObserver | null = null
-    if (pillRef.current && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(remeasure)
-      ro.observe(pillRef.current)
-    }
+    /*  这里不挂 ResizeObserver：胶囊在展开/收起的过渡里会不停改变尺寸，
+     *  观察者会在动画中途触发，量到的是动画中间值（宽、外边距全是歪的）。
+     *  真正需要重新量的时机：首帧、字体到位、窗口变化、以及每次点开之前。 */
 
     return () => {
       window.removeEventListener('resize', onResize)
-      ro?.disconnect()
     }
   }, [measure])
 
@@ -132,15 +162,19 @@ export function SiteHeader() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setSearching(true)
+        if (!searching) {
+          measureRef.current()
+          open()
+        }
       } else if (e.key === 'Escape' && searching) {
         e.preventDefault()
+        clicksRef.current += 1
         close()
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [close, searching])
+  }, [close, open, searching])
 
   return (
     <div
