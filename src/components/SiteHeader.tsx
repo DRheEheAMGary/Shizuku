@@ -99,6 +99,8 @@ export function SiteHeader() {
     const fieldW = btnRect.right - avatarRect.left
     const center = (pillRect.left + pillRect.right) / 2
     const half = fieldW / 2
+    // 收起时的宽度也要写成具体长度，不然 fit-content → 长度值过渡不了
+    wrap.style.setProperty('--pill-w', `${pillRect.width}px`)
     wrap.style.setProperty('--field-w', `${fieldW}px`)
     wrap.style.setProperty('--field-ml', `${center - half - pillRect.left}px`)
     wrap.style.setProperty('--field-mr', `${center + half - (pillRect.left + fieldW)}px`)

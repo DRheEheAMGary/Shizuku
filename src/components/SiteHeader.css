@@ -51,7 +51,9 @@
 
 .site-header__avatar {
   position: relative;
-  z-index: 41;
+  /*  要在胶囊（42）之上：胶囊向两边展开时，
+   *  玻璃要从头像底下长过去，而不是把头像盖住 */
+  z-index: 43;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -99,7 +101,10 @@
 .site-header {
   position: relative;
   z-index: 41;
-  width: fit-content;
+  /*  宽度必须是一个具体的长度：fit-content 没法参与过渡
+   *  （浏览器会把整条 width transition 丢掉，展开就变成一帧跳完）。
+   *  这个值由 JS 量出来写进 --pill-w。 */
+  width: var(--pill-w, fit-content);
   max-width: 100%;
   --glass-radius: var(--r-full);   /* 正圆胶囊：圆角取到高度的一半 */
   background: var(--glass-bg-strong);
