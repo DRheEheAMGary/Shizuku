@@ -202,6 +202,10 @@
     grid-template-rows var(--dur-base) var(--ease-apple),
     grid-template-columns var(--dur-base) var(--ease-apple),
     opacity var(--dur-base) var(--ease-apple);
+
+  /*  见 .brand__text-inner 的说明 */
+  padding: 2px 0;
+  margin: -2px 0;
 }
 
 .brand__text-inner {
@@ -211,6 +215,14 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+
+  /*  这一层和外面的 .brand__text 都带 overflow:hidden（折叠动画必须裁切），
+   *  而 overflow 是在 padding 盒上裁的 —— 手写体「Shizuku」的墨迹比行框
+   *  高出一点点，低分屏上就会把「S」的顶部切掉一条。
+   *  上下各留 2px 绘制余量，再用等量负 margin 抵消：
+   *  裁切范围变大了，占位高度一点没变（折叠时也照样收得干净）。 */
+  padding: 2px 0;
+  margin: -2px 0;
 }
 
 .site-header-wrap.is-collapsed .brand__text {
@@ -232,12 +244,6 @@
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.2;
-
-  /*  上层的 .brand__text-inner 为了折叠动画必须 overflow:hidden，
-   *  手写体的字体上下界比行框大（1.33em + 0.6em > 1.2em），
-   *  上下各留一点绘制余量，再用等量负 margin 抵消，占位不变。 */
-  padding: 0.12em 0;
-  margin: -0.12em 0;
 }
 
 .brand__sub {
