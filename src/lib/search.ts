@@ -113,12 +113,16 @@ export function searchItems(items: SearchItem[], rawQuery: string): SearchResult
       const first = textHits[0].start
       const start = Math.max(0, first - SNIPPET_RADIUS)
       const end = Math.min(item.text.length, first + SNIPPET_RADIUS * 2)
-      snippet = item.text.slice(start, end)
+      /*  省略号也算进片段长度里：先在前面补上 '…'，再按补完之后的
+       *  坐标系算高亮位置。之前是先算位置再补 '…'，所有命中都往前串了一个字
+       *  （截中段的结果里，高亮会盖到命中词左边那个字上）。 */
+      const head = start > 0 ? '…' : ''
+      const tail = end < item.text.length ? '…' : ''
+      snippet = head + item.text.slice(start, end) + tail
+      const shift = head.length - start
       snippetHits = textHits
         .filter((h) => h.start >= start && h.end <= end)
-        .map((h) => ({ start: h.start - start, end: h.end - start }))
-      if (start > 0) snippet = '…' + snippet
-      if (end < item.text.length) snippet = snippet + '…'
+        .map((h) => ({ start: h.start + shift, end: h.end + shift }))
     } else {
       snippet = item.text.slice(0, SNIPPET_RADIUS * 2)
     }
