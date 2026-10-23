@@ -3,17 +3,20 @@
  * ----------------------------------------------------------------------------
  *  组件化 + 卡片化：正文由一块块玻璃卡片组成。
  *
+ *  ⚠️ 正文暂时清空 —— 版式还在重新设计，画布先空着。
+ *  下面的 .card-grid 骨架留着：横排、滚轮可横向滚动的逻辑都还在，
+ *  版式定下来之后，把卡片放回 grid 里就能直接用。
+ *
  *  卡片排成**一横排**，可以横向滚动：
  *    - 鼠标滚轮纵向滚动 → 转成横向位移（到头了就把滚动交还给页面）
  *    - 触控板横向滑动 → 浏览器原生支持
  *
- *  宽度仍按原来的 12 栅格比例算：跨 8 列的卡就是宽，跨 4 列的就是窄，
+ *  宽度仍按 12 栅格比例算：跨 8 列的卡就是宽，跨 4 列的就是窄，
  *  只是把它们从「上下堆叠」换成了「左右排开」。
  * ========================================================================== */
 
 import { useEffect, useRef } from 'react'
 import { PageShell } from '@/components/PageShell'
-import { GlassCard } from '@/components/GlassCard'
 
 export function Home() {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -43,24 +46,9 @@ export function Home() {
 
   return (
     <PageShell marginText="しずく" wide>
+      {/*  正文待定：先把画布留着，版式定了再往里放卡片 */}
       <div className="card-track">
-        <div className="card-grid" ref={trackRef}>
-          {/* 第一组：主卡 + 侧卡 */}
-          <GlassCard span={8} minH={240} />
-          <GlassCard span={4} minH={240} />
-
-          {/* 第二组：三张等宽 */}
-          <GlassCard span={4} minH={180} />
-          <GlassCard span={4} minH={180} />
-          <GlassCard span={4} minH={180} />
-
-          {/* 第三组：一窄一宽 */}
-          <GlassCard span={5} minH={200} />
-          <GlassCard span={7} minH={200} />
-
-          {/* 第四组：通栏 */}
-          <GlassCard span={12} minH={160} />
-        </div>
+        <div className="card-grid" ref={trackRef} />
       </div>
     </PageShell>
   )

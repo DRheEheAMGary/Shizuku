@@ -11,24 +11,28 @@
 .auth-dock {
   position: absolute;
   left: 0;
-  /*  顶边钉住：收起态垂直居中，展开时向下生长。
-   *  用 top: 50% + translate 居中会让面板向上、向下同时长，
-   *  208px 高时直接顶出视口。 */
-  top: calc(50% - var(--dock-size) / 2);
+  /*  贴住顶栏的上沿。
+   *  原来用 top: calc(50% - 尺寸/2) 在顶栏里垂直居中 ——
+   *  顶栏折叠后会变矮，居中基准跟着变，坞就会上下偏。
+   *  贴顶对齐就稳了：顶栏怎么折叠，坞的顶边都不动。 */
+  top: 0;
   z-index: 3;
 
-  --dock-size: 46px;
+  /*  和顶栏等高（顶栏 = 头像 46 + 磨砂边 5×2 = 56）。
+   *  这个变量定义在 .auth-dock 自己的作用域里，
+   *  顶栏折叠时改的是 --avatar-size，影响不到这里 —— 坞不跟着缩。 */
+  --dock-size: 56px;
   /*  未登录只放一个主按钮，尺寸收紧；已登录多两行，另给一套 */
   --dock-w: 200px;
   --dock-h: 116px;
   --dock-w-in: 300px;      /* 已登录 · 半年 26 周 = 258 + 内边距 */
-  --dock-h-in: 272px;
+  --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
-  --dock-h-half: 272px;
-  /*  展开时头行内边距从 3px 变成 8/10px，会把头像推走 (7,5)。
+  --dock-h-half: 282px;
+  /*  展开时头行内边距从 4px 变成 8/10px，会把头像推走 (6,4)。
    *  让面板反向挪同样多，头像在屏幕上就一动不动。 */
-  --dock-lift-x: 7px;
-  --dock-lift-y: 5px;
+  --dock-lift-x: 6px;
+  --dock-lift-y: 4px;
   --dur-dock: 420ms;
   --ease-dock: cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -91,12 +95,24 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
+/* ---------- 头像与名字之间的细竖线 ---------- */
+.auth-dock__divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 18px;
+  margin: 0 var(--sp-2);
+  background: var(--hairline-strong);
+}
+
 /* ---------- 头行 ---------- */
 .auth-dock__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px;
+  /*  收起态的面板 56px 含 1px 边框 → 内层 54px；
+   *  触发器 46px，所以内边距得是 (54-46)/2 = 4px 才会正好居中。
+   *  用 3px 的话头像会偏左、偏上各 1px。 */
+  padding: 4px;
   /*  过渡写在基础规则上，展开和收起都生效。
    *  只写在展开态的话，收起那一瞬间内边距会瞬跳，头像被甩一下。 */
   transition: padding var(--dur-dock) var(--ease-dock);
@@ -106,13 +122,14 @@
   padding: 8px 10px 6px;
 }
 
-/* 收起态就是那枚圆：40 + 3×2 内边距 = 46 */
+/* 收起态就是那枚圆：46 + 3×2 内边距 = 52 → 56（含边框） */
 .auth-dock__trigger {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  /*  和顶栏的头像一样大，外面那圈就是玻璃边 */
+  width: 46px;
+  height: 46px;
   padding: 0;
   border: 0;
   border-radius: var(--r-full);
@@ -650,4 +667,48 @@
 .auth-dock__confirm-acts .is-danger:hover {
   filter: brightness(1.08);
   color: #fff;
+}
+
+/* ---------- 天气：未授权时的遮罩 ---------- */
+.auth-dock__weather {
+  position: relative;
+}
+
+.auth-dock__wveil {
+  position: absolute;
+  inset: -4px -6px;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: var(--r-sm);
+  background: var(--glass-bg-menu);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--hairline);
+
+  font-size: var(--fs-xs);
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.auth-dock__wgrant {
+  padding: 3px 10px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: filter var(--dur-fast) var(--ease-apple);
+}
+
+.auth-dock__wgrant:hover {
+  filter: brightness(1.08);
 }

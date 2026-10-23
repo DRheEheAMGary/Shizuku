@@ -53,7 +53,7 @@ export function AuthDock() {
   /** 退出登录的二次确认 */
   const [confirmLogout, setConfirmLogout] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const { weather, failed, city } = useWeather()
+  const { weather, locate, failed, request, address } = useWeather()
 
   // 本地时间，每分钟刷新一次就够（显示到分钟）
   const [now, setNow] = useState(() => new Date())
@@ -119,6 +119,10 @@ export function AuthDock() {
               <Icon name="user" size={20} />
             )}
           </button>
+
+          {user && (
+            <span className="auth-dock__divider" aria-hidden="true" />
+          )}
 
           {user && (
             <div className="auth-dock__ident">
@@ -201,17 +205,36 @@ export function AuthDock() {
               </div>
 
               <div className="auth-dock__weather">
-                {weather ? (
-                  <>
-                    <span className="auth-dock__wicon" aria-hidden="true">
-                      <Icon name={weatherIcon(weather.code, weather.isDay)} size={17} />
+                <span className="auth-dock__wicon" aria-hidden="true">
+                  <Icon
+                    name={weather ? weatherIcon(weather.code, weather.isDay) : 'wind'}
+                    size={17}
+                  />
+                </span>
+                <strong>{weather ? `${weather.temp}°` : '--°'}</strong>
+                <span className="auth-dock__wlabel">
+                  {weather ? weather.label : failed ? '暂不可用' : '--'}
+                </span>
+                <span className="auth-dock__wcity">{address || '--'}</span>
+
+                {/*  没授权就盖一层，写清楚要授权什么 */}
+                {locate !== 'granted' && (
+                  <div className="auth-dock__wveil">
+                    <span className="auth-dock__wveil-text">
+                      {locate === 'denied'
+                        ? '已拒绝定位权限'
+                        : locate === 'unsupported'
+                          ? '浏览器不支持定位'
+                          : locate === 'asking'
+                            ? '正在请求定位…'
+                            : '当前无法获取地址'}
                     </span>
-                    <strong>{weather.temp}°</strong>
-                    <span className="auth-dock__wlabel">{weather.label}</span>
-                    <span className="auth-dock__wcity">{city}</span>
-                  </>
-                ) : (
-                  <span className="auth-dock__wlabel">{failed ? '天气暂不可用' : '正在获取天气…'}</span>
+                    {locate !== 'asking' && locate !== 'unsupported' && (
+                      <button type="button" className="auth-dock__wgrant" onClick={request}>
+                        授权
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </>
