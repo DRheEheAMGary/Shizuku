@@ -70,12 +70,21 @@ interface ThemeApi {
   setMode: (mode: ThemeMode) => void
   /** 带揭示动画的切换。origin 是触发元素，决定圆形揭示的圆心。 */
   toggle: (origin?: HTMLElement | null) => void
+  /**
+   * 揭示动画进行中。
+   *
+   * 揭示期间整个根节点是一张静态快照 —— 真实 DOM 根本不画，
+   * 所以图标的变化会被冻住，看到的是「啪一下换掉」而不是变形。
+   * 图标要等这个变回 false 之后再切，变形动画才看得见。
+   */
+  revealing: boolean
 }
 
 const ThemeContext = createContext<ThemeApi | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>(getStoredMode)
+  const [revealing, setRevealing] = useState(false)
 
   useEffect(() => {
     applyTheme(mode)
@@ -121,6 +130,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty('--knob-dir', next === 'dark' ? '1' : '-1')
 
       try {
+        // 揭示期间不让图标跟着变 —— 快照里是静态的，改了也看不见，
+        // 反而会在揭示结束的瞬间「啪」一下跳过去。
+        flushSync(() => setRevealing(true))
+
         const vt = doc.startViewTransition(() => {
           // applyTheme 同步改 DOM，浏览器才能拍到新状态的快照；
           // flushSync 让 React 的状态也同步跟上，图标才不会慢半拍。
@@ -128,10 +141,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           flushSync(() => setMode(next))
         })
 
-        if (vt.finished) vt.finished.finally(clearTransitionVars)
-        else clearTransitionVars()
+        if (vt.finished) {
+          vt.finished.finally(() => {
+            setRevealing(false)
+            clearTransitionVars()
+          })
+        } else {
+          setRevealing(false)
+          clearTransitionVars()
+        }
       } catch {
         // 出任何问题都退化成直接切换，绝不把开关点坏
+        setRevealing(false)
         setMode(next)
         clearTransitionVars()
       }
@@ -139,7 +160,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [mode, setMode],
   )
 
-  const value = useMemo<ThemeApi>(() => ({ mode, setMode, toggle }), [mode, setMode, toggle])
+  const value = useMemo<ThemeApi>(
+    () => ({ mode, setMode, toggle, revealing }),
+    [mode, setMode, toggle, revealing],
+  )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

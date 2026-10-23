@@ -31,11 +31,11 @@
   /*  已登录展开态：宽度按「邮箱能完整显示」来定 ——
    *  身份块会 flex:1 吃掉剩余空间，邮箱短了就不截断。
    *  顺带热力图也顺势多露出几周：容器变宽 → 露出的周数变多。 */
-  --dock-w-in: 380px;
+  --dock-w-in: 400px;
   --dock-h-in: 282px;   /* 触发器大了 10px，头行也跟着高 10px */
   /*  悬停预览：撑开成能放下「头像 + 竖线 + 名字 + 完整邮箱」的宽度。
    *  46(头像) + 11(竖线) + 174(邮箱) + 8(内边距) ≈ 240，留点余量。 */
-  --dock-w-peek: 272px;
+  --dock-w-peek: 290px;
   --dock-w-half: 560px;    /* 热力图展开 · 一年 53 周 = 528 + 内边距 */
   --dock-h-half: 282px;
   /*  展开时头行内边距从 4px 变成 8/8px，会把头像推走 (4,4)。
@@ -120,8 +120,8 @@
 .auth-dock[data-open='true'] .auth-dock__divider,
 .auth-dock[data-peek='true'] .auth-dock__divider {
   opacity: 1;
-  /*  文字先出来、底座跟着长：延迟一点，线才不会抢在前面 */
-  transition: opacity 240ms linear 120ms;
+  /*  和文字一起出现，线才不会抢在前面 */
+  transition: opacity 200ms linear 330ms;
 }
 
 /* ---------- 悬停预览：圆往右撑开 ---------- */
@@ -232,10 +232,12 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  /*  吃掉剩余宽度：面板加宽后邮箱就能完整显示，
-   *  宽度不够时才截断 */
+  /*  吃掉剩余宽度 */
   flex: 1;
-  min-width: 0;
+  /*  但不小于内容本身：邮箱永远不出现省略号。
+   *  展开过程中面板是变窄的，若允许收缩，邮箱会被截成「dream20110513ga…」，
+   *  看上去就像被右边那组按钮挡住了。 */
+  min-width: max-content;
 
   opacity: 0;
   /*  收起时略微偏左，展开/预览时归位 ——
@@ -250,10 +252,13 @@
 .auth-dock[data-peek='true'] .auth-dock__ident {
   opacity: 1;
   transform: none;
-  /*  延迟一点：先让底座长开，文字再跟上 */
+  /*  淡入推迟到面板快长开时：
+   *  文字块要 195px，加上头像、竖线和右边那组，
+   *  面板没长到位之前根本放不下 —— 与其让文字被挤成省略号，
+   *  不如等面板到位了再让它完整地出现。 */
   transition:
-    opacity 240ms linear 120ms,
-    transform 320ms var(--ease-apple) 120ms;
+    opacity 200ms linear 330ms,
+    transform 260ms var(--ease-apple) 330ms;
 }
 
 .auth-dock__ident strong {
@@ -297,9 +302,11 @@
   opacity: 1;
   pointer-events: auto;
   transform: none;
+  /*  右边那组比文字再晚一点：它要占 102px，
+   *  面板没长到位时先把位置让给文字。 */
   transition:
-    opacity 240ms linear 160ms,
-    transform 320ms var(--ease-dock) 140ms;
+    opacity 200ms linear 350ms,
+    transform 260ms var(--ease-dock) 350ms;
 }
 
 /* ---------- 内容 ---------- */
