@@ -47,8 +47,8 @@ export function Home() {
 
   return (
     <PageShell marginText="しずく" wide>
-      {/*  第一行大标题：用户名，顶栏同款手写体 + 主题色 */}
-      <h1 className="home-title intro" style={{ '--i': 0 } as React.CSSProperties}>
+      {/*  第一行大标题：用户名，顶栏署名同款连笔体 + 主题色，玻璃胶囊沉底 */}
+      <h1 className="home-title glass intro" style={{ '--i': 0 } as React.CSSProperties}>
         DRheEheAM_Gary
       </h1>
 

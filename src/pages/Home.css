@@ -26,21 +26,27 @@
 }
 
 /* ---------- 首页大标题 ---------- */
-/*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充。
- *  切换 accent / 明暗时颜色跟着 --primary 缓动。 */
+/*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充，
+ *  套一层全圆角玻璃胶囊，沉到正文底部。切换 accent / 明暗时颜色跟着 --primary 缓动。 */
 .home-title {
   font-family: var(--font-hand);
-  /*  Pacifico 墨迹宽度 ≈ 字号 × 8.9：8.5vw 在 390px 屏上 ≈ 33px → 295px，
-   *  留白充足；1.75rem 兜住 320px 小屏。 */
-  font-size: clamp(1.75rem, 8.5vw, 4.5rem);
+  /*  Pacifico 墨迹宽度 ≈ 字号 × 8.9：8.5vw 在 390px 屏上 ≈ 33px → 字 295px
+   *  + 胶囊 padding ≈ 332px < 350px 正文宽；1.65rem 兜住 320px 小屏。 */
+  font-size: clamp(1.65rem, 8.5vw, 4.5rem);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: 0.01em;
   color: var(--primary);
-  /*  贴在壁纸上容易糊，垫一层柔和投影：近处一道细的，远处一团软的 */
+  /*  文字压在壁纸上容易糊，垫一层柔和投影：近处一道细的，远处一团软的 */
   text-shadow:
     0 1px 3px rgba(0, 0, 0, 0.2),
     0 6px 24px rgba(0, 0, 0, 0.12);
+
+  --glass-radius: var(--r-full);
+  align-self: flex-start;  /* 胶囊只包住文字，不撑满整行 */
+  margin-top: auto;        /* 沉到正文底部，上面留空画布 */
+  padding: 0.4em 0.55em;   /* em 随字号走，Pacifico 下伸部的墨迹也罩得住 */
+
   transition: color var(--dur-base) var(--ease-apple);
 }
 

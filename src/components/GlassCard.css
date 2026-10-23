@@ -69,8 +69,9 @@
  *  跨 8 列的卡和跨 4 列的卡，比例跟之前竖排时一模一样。 */
 .card-track {
   position: relative;
-  /*  沉到主区底部：上面留出空白画布 */
-  margin-top: auto;
+  /*  沉底的位置现在归首页大标题（.home-title 的 margin-top:auto）。
+   *  两条 auto 外边距会平分剩余空间，所以这里先不交回；
+   *  卡片回来时如果也要沉底，再把 margin-top:auto 还回来。 */
 }
 
 .card-grid {
