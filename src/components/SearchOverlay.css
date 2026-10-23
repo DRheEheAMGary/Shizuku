@@ -236,7 +236,7 @@
 .search-hit-row__snippet {
   grid-column: 1 / -1;
   font-size: var(--fs-xs);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -248,10 +248,13 @@
 /* 命中高亮 */
 .search-hit {
   /*  光靠加粗不够，底色也要看得出来 */
-  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  background: color-mix(in srgb, var(--primary) 26%, transparent);
   color: var(--primary);
   border-radius: 3px;
   padding: 0 2px;
+  /*  命中跨行断开时，两半都保留圆角和底色 */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* 底部提示 */
