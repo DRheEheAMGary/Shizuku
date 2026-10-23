@@ -55,6 +55,35 @@
   z-index: 10;
 }
 
+/*  滑块里图标要换（太阳 ⇄ 月牙），但不能糊着叠太久：
+ *  旧快照里的太阳快退干净，新快照里的月牙跟着进来。
+ *  玻璃部分两层一模一样，叠出来的透明度始终是 1，不会发虚。 */
+::view-transition-old(theme-switch-knob) {
+  animation: knob-swap-out 160ms linear both;
+}
+
+::view-transition-new(theme-switch-knob) {
+  animation: knob-swap-in 200ms linear 60ms both;
+}
+
+@keyframes knob-swap-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes knob-swap-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ---------- 兜底 ---------- */
 /*  不支持 View Transitions 时，颜色平滑过渡，滑块用 CSS 过渡拨动。
  *  只在切换的这半秒内挂上，避免污染其它常态过渡。 */

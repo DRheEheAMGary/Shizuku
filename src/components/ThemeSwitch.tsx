@@ -18,7 +18,6 @@
  *  形变动画才演得出来。
  * ========================================================================== */
 
-import { useEffect, useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import './ThemeSwitch.css'
 
@@ -47,7 +46,7 @@ function ThemeGlyph({
         /* 月牙：一弯真的凹进去的月牙 */
         <path
           className="theme-switch__moon"
-          d="M18.39 12.79A5.4 5.4 0 1 1 11.21 5.61A5.4 5.4 0 0 0 18.39 12.79Z"
+          d="M16 7.2A9 9 0 0 0 16 16.8A4.8 4.8 0 0 1 16 7.2Z"
         />
       ) : (
         /* 太阳：空心圆 + 八条短线 */
@@ -63,25 +62,22 @@ function ThemeGlyph({
 }
 
 export function ThemeSwitch() {
-  const { mode, toggle, revealing } = useTheme()
+  const { mode, toggle } = useTheme()
   const isDark = mode === 'dark'
   const label = isDark ? '切换到浅色' : '切换到深色'
 
-  /*  图标的状态单独放一份：揭示期间不动，揭示结束才切，
-   *  这样太阳→月牙的形变才看得见。 */
-  const [iconMode, setIconMode] = useState<'light' | 'dark'>(mode)
-
-  useEffect(() => {
-    if (revealing) return
-    setIconMode(mode)
-  }, [mode, revealing])
+  /*  图标直接跟着主题走。
+   *
+   *  滑块有独立的 view-transition-name，揭示动画期间它被抬到揭示层
+   *  之上单独拍 —— 所以图标这一换，是跟整个揭示同步交叉淡入的，
+   *  不会出现「点完半秒后图标才自己动一下」的卡顿。 */
 
   return (
     <button
       type="button"
       className="theme-switch"
       data-on={isDark ? 'dark' : 'light'}
-      data-icon={iconMode}
+      data-icon={mode}
       onClick={(e) => toggle(e.currentTarget)}
       aria-label={label}
       title={label}
@@ -89,7 +85,7 @@ export function ThemeSwitch() {
       aria-checked={isDark}
     >
       <span className="theme-switch__knob">
-        <ThemeGlyph mode={iconMode} />
+        <ThemeGlyph mode={mode} />
       </span>
     </button>
   )
