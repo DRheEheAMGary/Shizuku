@@ -15,16 +15,16 @@
   width: 37px;
   height: 37px;
   padding: 0;
-  border: 1px solid var(--glass-edge);
+  /*  和顶栏的玻璃是同一套：同样的底色、同样的描边、同样的高光，
+   *  这样按钮和旁边的胶囊才像一块材料做的 */
+  border: 1px solid var(--hairline-strong);
   border-radius: var(--r-full);
-  /*  玻璃要透：底下的背景透上来才像玻璃，太实就是一枚白圆片 */
-  background: var(--glass-bg-dot);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  backdrop-filter: blur(16px) saturate(180%);
-  /*  内沿一道高光 + 底下投影，撑出玻璃的厚度 */
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
   box-shadow:
-    0 4px 14px rgba(31, 45, 61, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
   color: var(--text-secondary);
   cursor: pointer;
 
