@@ -7,6 +7,8 @@
  *
  *  Pacifico —— 连笔手写体（Google Fonts），给顶栏的署名用。
  *
+ *  Florida Vibes —— 首页副标题用，只有 Regular 一个字重。
+ *
  *  这里自托管而不是引 Google Fonts CDN：
  *  国内访问 fonts.googleapis.com 不可靠，而 gstatic 的 woff2 又只有 22KB，
  *  一次请求就能拿到，直接放进 public/ 最省事。
@@ -26,6 +28,15 @@
   font-family: 'Edu QLD Hand';
   src: url('/fonts/eduqld-hand-bold.woff2') format('woff2');
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 首页副标题专用：Florida Vibes，只有 400 一个字重 */
+@font-face {
+  font-family: 'Florida Vibes';
+  src: url('/fonts/florida-vibes.otf') format('opentype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }

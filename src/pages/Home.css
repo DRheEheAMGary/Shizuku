@@ -57,10 +57,10 @@
 /*  大名下方的小副标题：亮色黑、暗色白 */
 .home-subtitle {
   margin-top: var(--sp-2);
-  font-family: var(--font-sans);
-  font-size: clamp(0.8125rem, 1.05vw, 1rem);
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-family: 'Florida Vibes', var(--font-sans);
+  font-size: clamp(0.9375rem, 1.25vw, 1.1875rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
   color: var(--text);
 }
 
