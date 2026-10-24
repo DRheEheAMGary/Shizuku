@@ -153,12 +153,12 @@
   color: var(--text-muted);
 }
 
-/*  句前的主题色小圆点（直径 10px） */
+/*  句前的主题色小圆点（直径 4px） */
 .home-card__quote::before {
   content: '';
   flex-shrink: 0;
-  width: 10px;
-  height: 10px;
+  width: 4px;
+  height: 4px;
   border-radius: var(--r-full);
   background: var(--primary);
 }
