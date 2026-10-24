@@ -63,6 +63,24 @@
   color: var(--primary-shade);
 }
 
+/*  左侧短竖线：距标题左边界 20px，长度取大写字母高度的一半，与标题中线对齐。
+ *  Pacifico 实测：大写高 0.86em（半高即 0.43em），而大写字母的光学中心
+ *  正好落在行框中心上（0.545em vs 0.55em，差 0.3px），所以按 50% 居中即可。
+ *  颜色取 --text：亮色下近黑，暗色下近白。 */
+.home-title::after {
+  content: '';
+  position: absolute;
+  right: 100%;        /* 右缘贴住标题左边界…… */
+  margin-right: 20px; /* ……再往左让出 20px */
+  top: 50%;
+  translate: 0 -50%;
+  width: 2px;
+  height: 0.43em;
+  border-radius: 1px;
+  background: var(--text);
+  pointer-events: none;
+}
+
 /* ---------- 下方 1/2 的遮罩 ---------- */
 /*  白（暗色下黑）从底部 1 渐隐到 1/2 线上的 0，外加 1px 模糊。
  *  z-index:-1：盖住壁纸，但在所有正文之下（body::before 是 -2，在这层下面）。 */
@@ -152,10 +170,18 @@
     width: 100%;
   }
 
-  /*  竖堆后标题回到文档流，独占一行并放大 */
+  /*  竖堆后标题回到文档流，独占一行并放大。
+   *  relative 不脱离文档流，同时让 ::before / ::after 仍以标题自身为基准 */
   .home-title {
-    position: static;
+    position: relative;
     font-size: clamp(1.65rem, 8.5vw, 3.5rem);
+  }
+}
+
+/* ---------- 手机：页面左右留白只有 20px，竖线间距收窄 ---------- */
+@media (max-width: 720px) {
+  .home-title::after {
+    margin-right: 12px;
   }
 }
 
