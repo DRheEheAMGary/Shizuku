@@ -216,6 +216,10 @@ html[data-accent='blue'] {
   --primary-soft: rgba(63, 125, 140, 0.1);
   --primary-ring: rgba(63, 125, 140, 0.28);
 
+  /*  同色的浅 / 深对应：标题后面那层描边按明暗各取一只 */
+  --primary-tint: #bcdde4;
+  --primary-shade: #15333a;
+
   --accent: #d99429;
   --accent-hover: #c07f1c;
   --accent-soft: rgba(217, 148, 41, 0.12);
@@ -230,6 +234,10 @@ html[data-accent='yellow'] {
   --primary-hover: #a5760f;
   --primary-soft: rgba(197, 143, 29, 0.12);
   --primary-ring: rgba(197, 143, 29, 0.3);
+
+  /*  同色的浅 / 深对应：标题后面那层描边按明暗各取一只 */
+  --primary-tint: #f1d79b;
+  --primary-shade: #4a3510;
 
   /*  点缀换成玫瑰粉，跟背景里的草莓和蝴蝶结是一路 */
   --accent: #c34d78;
@@ -250,6 +258,10 @@ html[data-accent='purple'] {
   --primary-hover: #7351b8;
   --primary-soft: rgba(138, 104, 206, 0.14);
   --primary-ring: rgba(138, 104, 206, 0.3);
+
+  /*  同色的浅 / 深对应：标题后面那层描边按明暗各取一只 */
+  --primary-tint: #d8c7f2;
+  --primary-shade: #2d1e49;
 
   /*  点缀换成青，跟背景里的霓虹青是一路 */
   --accent: #2f97a6;
