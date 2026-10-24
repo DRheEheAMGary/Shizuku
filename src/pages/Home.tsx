@@ -51,18 +51,23 @@ export function Home() {
       {/*  下方 1/3 的渐隐遮罩：给下沉的大名和页脚垫一层底 */}
       <div className="home-scrim" aria-hidden="true" />
 
-      {/*  首屏分栏：左侧用户名大名，右侧一列玻璃卡片 */}
+      {/*  首屏分栏：左侧用户名大名 + 副标题，右侧一列玻璃卡片 */}
       <div className="home-hero">
-        <h1
-          className="home-title intro"
-          data-text={profile.name}
-          style={{ '--i': 0 } as React.CSSProperties}
-        >
-          {profile.name}
-        </h1>
+        <div className="home-title-block">
+          <h1
+            className="home-title intro"
+            data-text={profile.name}
+            style={{ '--i': 0 } as React.CSSProperties}
+          >
+            {profile.name}
+          </h1>
+          <p className="home-subtitle intro" style={{ '--i': 1 } as React.CSSProperties}>
+            love hanser forever
+          </p>
+        </div>
 
         <div className="home-side">
-          <section className="glass home-card intro" style={{ '--i': 1 } as React.CSSProperties}>
+          <section className="glass home-card intro" style={{ '--i': 2 } as React.CSSProperties}>
             <h2 className="home-card__title">About</h2>
             <p className="home-card__line">{profile.description}</p>
             <p className="home-card__meta">

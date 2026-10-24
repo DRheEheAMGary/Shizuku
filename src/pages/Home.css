@@ -26,9 +26,24 @@
 }
 
 /* ---------- 首页大标题 ---------- */
+/*  左侧一列：大名 + 一行小副标题。
+ *  字顶落在「下方 1/3」分界线上：正文区顶端距视口顶 = 顶栏 72px + 壳 padding 64px，
+ *  页脚那块约 68px，两下相抵后 66.667% 与 2/3 视口几乎重合（误差 < 1px）。 */
+.home-title-block {
+  position: absolute;
+  left: 0;
+  top: 66.667%;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 /*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充。
  *  没有玻璃底板 —— 靠页面下方 1/3 的渐隐遮罩托住对比度。 */
 .home-title {
+  position: relative;
+  z-index: 0;   /* 自成层叠上下文，垫底那层字才能稳稳压在正文后面 */
   font-family: var(--font-hand);
   font-size: clamp(1.65rem, 5vw, 4rem);
   font-weight: 400;
@@ -36,14 +51,17 @@
   letter-spacing: 0.01em;
   color: var(--primary);
 
-  /*  字顶落在「下方 1/3」分界线上：正文区顶端距视口顶 = 顶栏 72px + 壳 padding 64px，
-   *  页脚那块约 68px，两下相抵后 66.667% 与 2/3 视口几乎重合（误差 < 1px）。 */
-  position: absolute;
-  left: 0;
-  top: 66.667%;
-  z-index: 0;   /* 自成层叠上下文，垫底那层字才能稳稳压在正文后面 */
-
   transition: color var(--dur-base) var(--ease-apple);
+}
+
+/*  大名下方的小副标题：亮色黑、暗色白 */
+.home-subtitle {
+  margin-top: var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: clamp(0.8125rem, 1.05vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text);
 }
 
 /*  底部垫一层：同字同号，向右下各偏 1px。
@@ -177,8 +195,12 @@
     width: 100%;
   }
 
-  /*  竖堆后标题回到文档流，独占一行并放大。
-   *  relative 不脱离文档流，同时让 ::before / ::after 仍以标题自身为基准 */
+  /*  竖堆后标题列回到文档流，独占一行并放大。
+   *  .home-title 保持 relative，::before / ::after 仍以标题自身为基准 */
+  .home-title-block {
+    position: static;
+  }
+
   .home-title {
     position: relative;
     font-size: clamp(1.65rem, 8.5vw, 3.5rem);
