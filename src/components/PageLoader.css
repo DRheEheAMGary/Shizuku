@@ -18,8 +18,9 @@
   display: grid;
   place-items: center;
 
-  /*  纯色底：亮色纯白、暗色纯黑，不再叠任何柔光 */
-  background: var(--loader-bg);
+  /*  不用纯白/纯黑：把主题色极淡地混进底色，
+   *  color-mix 出来是实色，不是渐变。 */
+  background: color-mix(in oklab, var(--primary) 5%, #fff);
 
   transition:
     opacity var(--loader-fade) var(--ease-apple),
@@ -30,6 +31,11 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+/*  暗色：把主题色以 8% 混进纯黑，得到一点极淡的色调 */
+[data-theme='dark'] .page-loader {
+  background: color-mix(in oklab, var(--primary) 8%, #000);
 }
 
 /*  站名：由文字色填成主题色，从左到右填。
