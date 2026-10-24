@@ -145,9 +145,22 @@
 }
 
 .home-card__quote {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;   /* 主句往后让约 2~3 个空格宽 */
   margin-top: var(--sp-2);
   font-size: var(--fs-xs);
   color: var(--text-muted);
+}
+
+/*  句前的主题色小圆点（直径 10px） */
+.home-card__quote::before {
+  content: '';
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--primary);
 }
 
 /*  窄屏竖堆：一行要 ≈ 大名 + 340px 卡列 + 48px 缝，1081px 起才放得下 */
