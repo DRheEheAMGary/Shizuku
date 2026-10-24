@@ -1,14 +1,9 @@
 /* ============================================================================
  *  Shizuku · 主题切换钮样式
  * ----------------------------------------------------------------------------
- *  和登录坞同一套展开方式：整块玻璃从 37×37 的圆向下长成一块面板 ——
- *  高度 420ms 用 Apple 缓动，圆角固定 28px 不插值
- *  （37px 时被浏览器夹成正圆，长大后自然成胶囊），内容随后淡入。
- *  中间没有两块玻璃拼接，也就没有接缝。
- *
- *  收起：圆钮里是当前那一档的图标。
- *  展开：圆钮不动，下面浮出 浅色 / 深色 / 跟随系统 三个选项；
- *        再点按钮（或点外面 / Esc）整块缩回圆钮，显示当前激活态。
+ *  三个选项共三个位置（0 / 37 / 74px），展开后也只有这三项。
+ *  收起时非激活项透明，激活项回到第 0 位；展开时激活项移到自己的槽位。
+ *  玻璃仍按登录坞的方式长开：高度 420ms，圆角固定 28px。
  * ========================================================================== */
 
 .theme-switch {
@@ -28,10 +23,8 @@
   height: 37px;
   overflow: hidden;
 
-  /*  圆角固定不做过渡：37px 时被夹成正圆，长高了自然变成胶囊
-   *  （学登录坞：插值圆角的话中途会先缩一下再张开）。 */
+  /*  圆角固定不做过渡：37px 时被夹成正圆，长高了自然变成胶囊 */
   border-radius: 28px;
-
   background: var(--glass-bg-strong);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
   backdrop-filter: blur(14px) saturate(170%);
@@ -40,18 +33,15 @@
     0 6px 20px rgba(31, 45, 61, 0.16),
     var(--glass-topline);
 
-  /*  独立合成层：backdrop-filter 元素共处一面时，
-   *  别处重绘会让整页 backdrop 重新分块，露出横向接缝 */
+  /*  独立合成层，避免 backdrop 分块接缝 */
   transform: translateZ(0);
-
   transition:
     height 420ms var(--ease-apple),
     box-shadow 420ms var(--ease-apple);
 }
 
 .theme-switch[data-open='true'] .theme-switch__panel {
-  /*  37（圆钮）+ 109（三个选项 + 内边距） */
-  height: 146px;
+  height: 111px;   /* 三个 37px 槽位，不再多一个触发钮的位置 */
   box-shadow:
     0 18px 48px rgba(31, 45, 61, 0.2),
     var(--glass-topline);
@@ -63,23 +53,73 @@
     var(--glass-topline);
 }
 
-/* ---------- 圆钮：一直在面板顶部，不动 ---------- */
-.theme-switch__trigger {
+/* ---------- 三个选项 ---------- */
+.theme-switch__opt {
+  position: absolute;
+  /*  绝对定位以面板的 padding box 为基准：-1px 抵消面板边框，
+   *  否则收起时图标会比玻璃圆心偏右 1px、偏下 1px。 */
+  left: -1px;
+  top: var(--slot);
+  z-index: 1;
   width: 37px;
   height: 37px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
+  border-radius: var(--r-full);
   background: none;
   color: var(--text-secondary);
   cursor: pointer;
+
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    top 420ms var(--ease-apple),
+    opacity 140ms linear,
+    background-color 200ms var(--ease-apple),
+    color 200ms var(--ease-apple);
 }
 
-/*  图标层挂着 view-transition-name（见 theme-transition.css）：
- *  揭示期间被抬到揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
- *  所以这里只装图标，不画玻璃、不加投影。 */
-.theme-switch__knob {
+/*  激活项移动时压在另外两项之上 */
+.theme-switch__opt[data-on='true'] {
+  z-index: 2;
+}
+
+/*  收起：只有激活项可见，并回到圆钮的位置 */
+.theme-switch:not([data-open='true']) .theme-switch__opt[data-on='true'] {
+  top: -1px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/*  展开：三项都显示；激活项用 top 过渡到自己的槽位 */
+.theme-switch[data-open='true'] .theme-switch__opt {
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    top 420ms var(--ease-apple),
+    opacity 200ms linear 120ms,
+    background-color 200ms var(--ease-apple),
+    color 200ms var(--ease-apple);
+}
+
+.theme-switch[data-open='true'] .theme-switch__opt:hover {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+/*  激活高亮只留在展开列表里；收起时保持干净的圆钮 */
+.theme-switch[data-open='true'] .theme-switch__opt[data-on='true'] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ---------- 图标 ---------- */
+/*  __knob 挂着 view-transition-name，全页只能有一个，所以只给激活项。
+ *  拍快照的元素会丢圆角裁切，因此这层只装图标，不带模糊和投影。 */
+.theme-switch__knob,
+.theme-switch__icon {
   display: grid;
   place-items: center;
   pointer-events: none;
@@ -89,55 +129,5 @@
   display: block;
 }
 
-/* ---------- 选项：面板长出来之后再淡入 ---------- */
-.theme-switch__menu {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 0 8px;
-
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    opacity 140ms linear,
-    transform 200ms var(--ease-apple);
-}
-
-.theme-switch[data-open='true'] .theme-switch__menu {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 220ms linear 150ms,
-    transform 300ms var(--ease-apple) 120ms;
-}
-
-.theme-switch__opt {
-  width: 31px;
-  height: 31px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-full);
-  background: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background-color 200ms var(--ease-apple),
-    color 200ms var(--ease-apple);
-}
-
-.theme-switch__opt:hover {
-  background: var(--primary-soft);
-  color: var(--text);
-}
-
-.theme-switch__opt[data-on='true'] {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
 /* ---------- 太阳 ⇄ 月牙 ⇄ 自动 ---------- */
-/*  描边/实心图形都跟着文字色走（currentColor）；三档直接切换，不做形变动画 ——
- *  揭示期间图标不动，揭示一结束就硬切过去。 */
+/*  描边/实心图形都跟着文字色走（currentColor）；三档直接切换，不做形变动画。 */

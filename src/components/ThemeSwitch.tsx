@@ -1,18 +1,16 @@
 /* ============================================================================
  *  Shizuku · 主题切换钮
  * ----------------------------------------------------------------------------
- *  收起时是一枚圆形玻璃钮（和搜索钮同尺寸），里面是当前那一档的图标：
- *  浅色＝太阳，深色＝月牙，自动＝半明半暗的圆。
+ *  总共只有三个选项，没有「触发钮 + 三个选项」的第四份重复内容。
+ *  收起时只显示当前激活项；展开时它移动到自己在列表里的位置，
+ *  另外两个选项淡入。再点激活项 / 点外面 / Esc 收回去。
  *
- *  点一下，整块玻璃向下长开（学登录坞：高度 420ms + 内容延迟淡入），
- *  露出三个选项；选中即应用并收起；再点按钮本身也能收起 ——
- *  圆钮随即换成当前激活态的图标。
- *
- *  图标层挂着 view-transition-name：揭示动画期间它被抬到揭示层之上单独拍，
- *  太阳 ⇄ 月牙的换图才跟得上整场动画。
+ *  展开方式仍学登录坞：整块玻璃从 37px 的圆向下长开，
+ *  高度 420ms，圆角固定 28px，激活项随面板一起移动。
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import type { ThemeMode } from '@/hooks/useTheme'
 import './ThemeSwitch.css'
@@ -22,10 +20,6 @@ const OPTIONS: { id: ThemeMode; label: string }[] = [
   { id: 'dark', label: '深色' },
   { id: 'auto', label: '跟随系统' },
 ]
-
-function labelOf(mode: ThemeMode) {
-  return OPTIONS.find((o) => o.id === mode)?.label ?? '浅色'
-}
 
 /** 主题图标：太阳 / 月牙 / 自动 */
 function ThemeGlyph({ size = 20, mode }: { size?: number; mode: ThemeMode }) {
@@ -81,7 +75,6 @@ export function ThemeSwitch() {
   const { mode, chooseMode, transitioning } = useTheme()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
 
   // 点外面 / Esc 收起
   useEffect(() => {
@@ -103,44 +96,50 @@ export function ThemeSwitch() {
     }
   }, [open, transitioning])
 
-  return (
-    <div className="theme-switch" data-open={open} ref={rootRef}>
-      <div className="theme-switch__panel">
-        <button
-          ref={triggerRef}
-          type="button"
-          className="theme-switch__trigger"
-          data-icon={mode}
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-haspopup="true"
-          aria-label={`主题：${labelOf(mode)}`}
-          title={`主题：${labelOf(mode)}`}
-        >
-          <span className="theme-switch__knob">
-            <ThemeGlyph mode={mode} />
-          </span>
-        </button>
+  const select = (next: ThemeMode) => {
+    if (!open) {
+      setOpen(true)
+      return
+    }
+    chooseMode(next, rootRef.current)
+    setOpen(false)
+  }
 
-        <div className="theme-switch__menu" aria-hidden={!open}>
-          {OPTIONS.map((o) => (
+  return (
+    <div
+      className="theme-switch"
+      data-open={open}
+      ref={rootRef}
+      role="group"
+      aria-label="明暗模式"
+    >
+      <div className="theme-switch__panel">
+        {OPTIONS.map((o, index) => {
+          const active = mode === o.id
+          return (
             <button
               key={o.id}
               type="button"
               className="theme-switch__opt"
-              data-on={mode === o.id}
-              tabIndex={open ? 0 : -1}
-              onClick={() => {
-                chooseMode(o.id, triggerRef.current)
-                setOpen(false)
-              }}
+              data-on={active}
+              data-icon={o.id}
+              style={{ '--slot': `${index * 37 - 1}px` } as CSSProperties}
+              tabIndex={open || active ? 0 : -1}
+              aria-hidden={!open && !active}
+              aria-pressed={active}
+              aria-expanded={active ? open : undefined}
+              aria-haspopup={active ? true : undefined}
+              onClick={() => select(o.id)}
               aria-label={o.label}
               title={o.label}
             >
-              <ThemeGlyph size={18} mode={o.id} />
+              {/*  view-transition-name 全页只能有一个，只给当前激活项 */}
+              <span className={active ? 'theme-switch__knob' : 'theme-switch__icon'}>
+                <ThemeGlyph mode={o.id} />
+              </span>
             </button>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </div>
   )

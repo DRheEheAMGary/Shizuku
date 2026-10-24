@@ -1,11 +1,11 @@
 /* ============================================================================
  *  Shizuku · 主题色选择样式
  * ----------------------------------------------------------------------------
- *  和登录坞同一套展开方式：整块玻璃从 37×37 的圆向下长成一块面板 ——
- *  高度 420ms 用 Apple 缓动，圆角固定 28px 不插值，内容随后淡入。
+ *  三个色点共三个位置（0 / 37 / 74px），展开后也只有这三项。
+ *  收起时激活色回到第 0 位；展开时移动到自己的槽位，另外两个色点淡入。
  *
- *  收起：圆钮正中一颗色点＝当前激活色。
- *  展开：圆钮不动，下面浮出三个色点；再点按钮（或点外面 / Esc）缩回去。
+ *  激活态沿用以前的样式：10px 小色点 + 一圈同色柔光；
+ *  非激活态只有 10px 小色点，不再用更大的圆点。
  * ========================================================================== */
 
 .accent-picker {
@@ -27,7 +27,6 @@
 
   /*  圆角固定不做过渡：37px 时被夹成正圆，长高了自然变成胶囊 */
   border-radius: 28px;
-
   background: var(--glass-bg-strong);
   -webkit-backdrop-filter: blur(14px) saturate(170%);
   backdrop-filter: blur(14px) saturate(170%);
@@ -36,17 +35,14 @@
     0 6px 20px rgba(31, 45, 61, 0.16),
     var(--glass-topline);
 
-  /*  独立合成层，避免 backdrop 分块接缝 */
   transform: translateZ(0);
-
   transition:
     height 420ms var(--ease-apple),
     box-shadow 420ms var(--ease-apple);
 }
 
 .accent-picker[data-open='true'] .accent-picker__panel {
-  /*  37（圆钮）+ 109（三个色点 + 内边距） */
-  height: 146px;
+  height: 111px;   /* 三个 37px 槽位 */
   box-shadow:
     0 18px 48px rgba(31, 45, 61, 0.2),
     var(--glass-topline);
@@ -58,69 +54,55 @@
     var(--glass-topline);
 }
 
-/* ---------- 圆钮：一直在面板顶部，不动 ---------- */
-.accent-picker__trigger {
+/* ---------- 三个色点 ---------- */
+.accent-picker__opt {
+  position: absolute;
+  /*  -1px 抵消面板边框，收起时色点与玻璃圆心重合 */
+  left: -1px;
+  top: var(--slot);
+  z-index: 1;
   width: 37px;
   height: 37px;
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
+  border-radius: var(--r-full);
   background: none;
   cursor: pointer;
-}
-
-/*  激活色：圆钮正中那颗色点 */
-.accent-picker__ink {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--r-full);
-  background: var(--dot);
-  box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);
-  transition: background-color 240ms var(--ease-apple);
-}
-
-/* ---------- 色点：面板长出来之后再淡入 ---------- */
-.accent-picker__menu {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 0 8px;
 
   opacity: 0;
-  transform: translateY(-4px);
+  pointer-events: none;
   transition:
-    opacity 140ms linear,
-    transform 200ms var(--ease-apple);
+    top 420ms var(--ease-apple),
+    opacity 140ms linear;
 }
 
-.accent-picker[data-open='true'] .accent-picker__menu {
+.accent-picker__opt[data-on='true'] {
+  z-index: 2;
+}
+
+/*  收起：只有激活色可见，并回到圆钮的位置 */
+.accent-picker:not([data-open='true']) .accent-picker__opt[data-on='true'] {
+  top: -1px;
   opacity: 1;
-  transform: none;
+  pointer-events: auto;
+}
+
+/*  展开：三项都显示；激活项用 top 过渡到自己的槽位 */
+.accent-picker[data-open='true'] .accent-picker__opt {
+  opacity: 1;
+  pointer-events: auto;
   transition:
-    opacity 220ms linear 150ms,
-    transform 300ms var(--ease-apple) 120ms;
+    top 420ms var(--ease-apple),
+    opacity 200ms linear 120ms;
 }
 
-.accent-picker__opt {
-  position: relative;
-  width: 31px;
-  height: 31px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-full);
-  background: none;
-  cursor: pointer;
-}
-
-/*  激活态：色点后面垫一圈大一圈的半透明同色圆 */
+/*  激活态：10px 色点后面垫一圈大一些的同色柔光（沿用以前的观感） */
 .accent-picker__opt::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 7px;
   border-radius: var(--r-full);
   background: var(--dot);
   opacity: 0;
@@ -137,8 +119,8 @@
 
 .accent-picker__swatch {
   position: relative;
-  width: 13px;
-  height: 13px;
+  width: 10px;
+  height: 10px;
   border-radius: var(--r-full);
   background: var(--dot);
   box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);

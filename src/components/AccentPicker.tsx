@@ -1,25 +1,23 @@
 /* ============================================================================
  *  Shizuku · 主题色选择
  * ----------------------------------------------------------------------------
- *  收起时缩成一枚圆形玻璃钮，正中一颗色点＝当前激活色。
- *  点一下，整块玻璃向下长开（学登录坞：高度 420ms + 内容延迟淡入），
- *  露出三个色点；选中即应用并收起；再点按钮本身也能收起。
+ *  总共只有三个色点。收起时只显示当前激活色；展开时它移动到自己的位置，
+ *  另外两个色点淡入。再点激活项 / 点外面 / Esc 收回去。
  *
- *  和明暗钮同一套玻璃、同样的展开方式（见 ThemeSwitch.css）。
+ *  激活态沿用以前的样式：小色点 + 后面一圈大一些的同色柔光；
+ *  非激活态只留小色点。展开方式与明暗钮一致。
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { ACCENTS, useTheme } from '@/hooks/useTheme'
+import type { AccentId } from '@/hooks/useTheme'
 import './AccentPicker.css'
 
 export function AccentPicker() {
   const { accent, setAccent, transitioning } = useTheme()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-
-  const active = ACCENTS.find((a) => a.id === accent) ?? ACCENTS[0]
 
   // 点外面 / Esc 收起
   useEffect(() => {
@@ -41,46 +39,46 @@ export function AccentPicker() {
     }
   }, [open, transitioning])
 
-  return (
-    <div className="accent-picker" data-open={open} ref={rootRef}>
-      <div className="accent-picker__panel">
-        <button
-          ref={triggerRef}
-          type="button"
-          className="accent-picker__trigger"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-haspopup="true"
-          aria-label={`主题色：${active.label}`}
-          title={`主题色：${active.label}`}
-        >
-          <span
-            className="accent-picker__ink"
-            style={{ '--dot': active.color } as CSSProperties}
-          />
-        </button>
+  const select = (next: AccentId) => {
+    if (!open) {
+      setOpen(true)
+      return
+    }
+    setAccent(next, rootRef.current)
+    setOpen(false)
+  }
 
-        <div className="accent-picker__menu" aria-hidden={!open}>
-          {ACCENTS.map((a) => (
+  return (
+    <div
+      className="accent-picker"
+      data-open={open}
+      ref={rootRef}
+      role="group"
+      aria-label="主题色"
+    >
+      <div className="accent-picker__panel">
+        {ACCENTS.map((a, index) => {
+          const active = accent === a.id
+          return (
             <button
               key={a.id}
               type="button"
               className="accent-picker__opt"
-              data-on={accent === a.id}
-              tabIndex={open ? 0 : -1}
-              style={{ '--dot': a.color } as CSSProperties}
-              onClick={() => {
-                setAccent(a.id, triggerRef.current)
-                setOpen(false)
-              }}
+              data-on={active}
+              style={{ '--dot': a.color, '--slot': `${index * 37 - 1}px` } as CSSProperties}
+              tabIndex={open || active ? 0 : -1}
+              aria-hidden={!open && !active}
+              aria-pressed={active}
+              aria-expanded={active ? open : undefined}
+              aria-haspopup={active ? true : undefined}
+              onClick={() => select(a.id)}
               aria-label={`主题色：${a.label}`}
-              aria-pressed={accent === a.id}
               title={a.label}
             >
               <span className="accent-picker__swatch" />
             </button>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </div>
   )
