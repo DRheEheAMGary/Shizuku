@@ -81,9 +81,11 @@
     color 200ms var(--ease-apple);
 }
 
-/*  激活项移动时压在另外两项之上 */
+/*  激活项：压在另外两项之上（移动时叠着走），图标始终用主题色 ——
+ *  收起时也一样，圆钮里那一枚就是主题色的 */
 .theme-switch__opt[data-on='true'] {
   z-index: 2;
+  color: var(--primary);
 }
 
 /*  收起：只有激活项可见，并回到圆钮的位置 */
@@ -104,16 +106,30 @@
     color 200ms var(--ease-apple);
 }
 
-.theme-switch[data-open='true'] .theme-switch__opt:hover {
+/*  悬停反馈：一块比槽位小一圈（29px）的圆底板，只给非激活项 ——
+ *  激活项已经有主题色图标，不再垫底板。 */
+.theme-switch__opt::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: var(--r-full);
   background: var(--primary-soft);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms var(--ease-apple);
+}
+
+.theme-switch[data-open='true'] .theme-switch__opt:not([data-on='true']):hover {
   color: var(--text);
 }
 
-/*  激活态只把图标线条/填充改成主题色，不垫半透明底板；
- *  这条高亮只留在展开列表里，收起时保持干净的圆钮。 */
+.theme-switch[data-open='true'] .theme-switch__opt:not([data-on='true']):hover::before {
+  opacity: 1;
+}
+
+/*  激活态：任何状态下都不垫半透明底板（收起时也一样） */
 .theme-switch[data-open='true'] .theme-switch__opt[data-on='true'] {
   background: none;
-  color: var(--primary);
 }
 
 /* ---------- 图标 ---------- */
