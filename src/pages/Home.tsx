@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  组件化 + 卡片化：正文由一块块玻璃卡片组成。
  *
- *  布局：左侧用户名大胶囊，右侧一列玻璃卡片（关于我 / 去处）。
+ *  布局：左侧用户名大胶囊，右侧一张「关于我」玻璃卡片。
  *  下面的 .card-grid 骨架留着：横排、滚轮可横向滚动的逻辑都还在，
  *  以后想加横向卡片排时，把卡片放回 grid 里就能直接用。
  *
@@ -69,17 +69,6 @@ export function Home() {
               {profile.mbti} · {profile.location}
             </p>
             <p className="home-card__quote">{profile.quote}</p>
-          </section>
-
-          <section className="glass home-card intro" style={{ '--i': 2 } as React.CSSProperties}>
-            <h2 className="home-card__title">去处</h2>
-            <div className="home-card__links">
-              {profile.links.map((l) => (
-                <a key={l.url} className="chip" href={l.url} target="_blank" rel="noreferrer noopener">
-                  {l.name}
-                </a>
-              ))}
-            </div>
           </section>
         </div>
       </div>

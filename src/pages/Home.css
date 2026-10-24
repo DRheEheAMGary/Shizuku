@@ -150,12 +150,6 @@
   color: var(--text-muted);
 }
 
-.home-card__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
-}
-
 /*  窄屏竖堆：一行要 ≈ 大名 + 340px 卡列 + 48px 缝，1081px 起才放得下 */
 @media (max-width: 1080px) {
   .home-hero {

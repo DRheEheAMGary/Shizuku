@@ -42,13 +42,6 @@ export const profile = {
     '我是一名高一生，现居 JX-NC，是一名 OIer & 二次元',
     '很开心与你做朋友！',
   ],
-  /** 首页「去处」卡片的链接 */
-  links: [
-    { name: 'GitHub', url: 'https://github.com/DRheEheAMGary' },
-    { name: '博客', url: 'https://blog.dreamgary.cn' },
-    { name: '哔哩哔哩', url: 'https://space.bilibili.com/3493283116353785' },
-  ],
-
   /* ↓↓↓ 还没用到的字段，等后续版式定了再填 ↓↓↓ */
   tags: [] as { icon: string; text: string }[],
   lyric: '',
