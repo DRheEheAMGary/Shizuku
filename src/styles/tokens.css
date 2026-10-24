@@ -170,7 +170,7 @@ html,
   --danger: #e0705a;
   /* 首屏加载页 */
   --loader-bg: #0a0f14;
-  --loader-glow: rgba(111, 179, 194, 0.13);
+  --loader-glow: rgba(111, 179, 194, 0.07);
   --loader-fill: 900ms;
   --loader-fade: 480ms;
   --glass-bg: rgba(10, 15, 19, 0.52);
@@ -301,7 +301,7 @@ html[data-accent='yellow'][data-theme='dark'] {
   --accent-soft: rgba(232, 132, 168, 0.16);
 
   --loader-bg: #14100a;
-  --loader-glow: rgba(230, 180, 69, 0.14);
+  --loader-glow: rgba(230, 180, 69, 0.07);
 }
 
 html[data-accent='purple'][data-theme='dark'] {
@@ -317,5 +317,5 @@ html[data-accent='purple'][data-theme='dark'] {
   --accent-soft: rgba(98, 195, 210, 0.16);
 
   --loader-bg: #0d0a16;
-  --loader-glow: rgba(183, 154, 232, 0.14);
+  --loader-glow: rgba(183, 154, 232, 0.08);
 }
