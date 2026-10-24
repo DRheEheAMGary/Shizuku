@@ -109,9 +109,10 @@
   color: var(--text);
 }
 
-/*  激活高亮只留在展开列表里；收起时保持干净的圆钮 */
+/*  激活态只把图标线条/填充改成主题色，不垫半透明底板；
+ *  这条高亮只留在展开列表里，收起时保持干净的圆钮。 */
 .theme-switch[data-open='true'] .theme-switch__opt[data-on='true'] {
-  background: var(--primary-soft);
+  background: none;
   color: var(--primary);
 }
 
