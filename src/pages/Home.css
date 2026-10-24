@@ -41,8 +41,24 @@
   position: absolute;
   left: 0;
   top: 66.667%;
+  z-index: 0;   /* 自成层叠上下文，垫底那层字才能稳稳压在正文后面 */
 
   transition: color var(--dur-base) var(--ease-apple);
+}
+
+/*  底部垫一层：同字同号、亮色白 / 暗色黑，向右下各偏 1px */
+.home-title::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  z-index: -1;
+  color: #fff;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .home-title::before {
+  color: #000;
 }
 
 /* ---------- 下方 1/2 的遮罩 ---------- */
@@ -65,17 +81,19 @@
 }
 
 /* ---------- 首屏分栏：左大名，右卡片列 ---------- */
-/*  撑满正文区：大名绝对定位在下方 1/3，卡列在这块里垂直居中 */
+/*  撑满正文区，两块都咬住「下方 1/3」那条线：
+ *  大名的字顶在线上（top: 66.667%），卡列的底边贴线（bottom: 33.333%）。 */
 .home-hero {
   position: relative;
   flex: 1;
-  display: flex;
-  align-items: center;
+  display: flex;   /* 窄屏竖堆时才真的用上 */
 }
 
 .home-side {
-  flex: 0 0 340px;
-  margin-left: auto;  /* 顶到正文右缘，和标题拉开距离 */
+  position: absolute;
+  right: 0;
+  bottom: 33.333%;
+  width: 340px;
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
@@ -125,9 +143,8 @@
   }
 
   .home-side {
-    flex: none;
+    position: static;
     width: 100%;
-    margin-left: 0;
   }
 
   /*  竖堆后标题回到文档流，独占一行并放大 */

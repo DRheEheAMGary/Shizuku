@@ -53,7 +53,11 @@ export function Home() {
 
       {/*  首屏分栏：左侧用户名大名，右侧一列玻璃卡片 */}
       <div className="home-hero">
-        <h1 className="home-title intro" style={{ '--i': 0 } as React.CSSProperties}>
+        <h1
+          className="home-title intro"
+          data-text={profile.name}
+          style={{ '--i': 0 } as React.CSSProperties}
+        >
           {profile.name}
         </h1>
 
