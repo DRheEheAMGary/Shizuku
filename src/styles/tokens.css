@@ -95,9 +95,8 @@ html,
   --bg-veil: rgba(255, 255, 255, 0.35);
 
   --danger: #b8412c;          /* 危险操作（退出登录等），白字可读 */
-  /* 首屏加载页 */
-  --loader-bg: #f2f6f8;
-  --loader-glow: rgba(63, 125, 140, 0.12);
+  /* 首屏加载页：纯白 */
+  --loader-bg: #ffffff;
   --loader-fill: 900ms;
   --loader-fade: 480ms;
   --glass-bg: rgba(255, 255, 255, 0.68);
@@ -168,9 +167,8 @@ html,
    * 白色 tint 罩不住亮背景，顶栏会变成一条亮带。 */
   --bg-veil: rgba(14, 20, 24, 0.35);
   --danger: #e0705a;
-  /* 首屏加载页 */
-  --loader-bg: #0a0f14;
-  --loader-glow: rgba(111, 179, 194, 0.07);
+  /* 首屏加载页：纯黑 */
+  --loader-bg: #000000;
   --loader-fill: 900ms;
   --loader-fade: 480ms;
   --glass-bg: rgba(10, 15, 19, 0.52);
@@ -243,10 +241,6 @@ html[data-accent='yellow'] {
   --accent: #c34d78;
   --accent-hover: #a83f64;
   --accent-soft: rgba(195, 77, 120, 0.14);
-
-  /*  首屏加载页也得跟主色走，不然蓝底配黄字很奇怪 */
-  --loader-bg: #faf6ec;
-  --loader-glow: rgba(197, 143, 29, 0.13);
 }
 
 html[data-accent='purple'] {
@@ -267,10 +261,6 @@ html[data-accent='purple'] {
   --accent: #2f97a6;
   --accent-hover: #267c89;
   --accent-soft: rgba(47, 151, 166, 0.16);
-
-  /*  首屏加载页也得跟主色走 */
-  --loader-bg: #f4f1fa;
-  --loader-glow: rgba(138, 104, 206, 0.13);
 }
 
 /* ---------- 暗色下的三套 ---------- */
@@ -299,9 +289,6 @@ html[data-accent='yellow'][data-theme='dark'] {
   --accent: #e884a8;
   --accent-hover: #f19cba;
   --accent-soft: rgba(232, 132, 168, 0.16);
-
-  --loader-bg: #14100a;
-  --loader-glow: rgba(230, 180, 69, 0.07);
 }
 
 html[data-accent='purple'][data-theme='dark'] {
@@ -315,7 +302,4 @@ html[data-accent='purple'][data-theme='dark'] {
   --accent: #62c3d2;
   --accent-hover: #86d4e0;
   --accent-soft: rgba(98, 195, 210, 0.16);
-
-  --loader-bg: #0d0a16;
-  --loader-glow: rgba(183, 154, 232, 0.08);
 }

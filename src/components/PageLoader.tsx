@@ -6,7 +6,7 @@
  *  在这之前先渲染页面，看到的就是一层没糊开的底图 —— 挺奇怪的。
  *
  *  所以盖一层加载页，等「字体到位 + 图片解码完 + 浏览器算完这一帧」，
- *  再让站名 Shizuku 从左到右由白转蓝地填出来，最后淡出。
+ *  再让站名 Shizuku 从左到右由文字色填成主题色，最后淡出。
  * ========================================================================== */
 
 import { useEffect, useState } from 'react'
@@ -76,7 +76,7 @@ export function PageLoader() {
 
   return (
     /*  淡出时保留 is-fill —— 否则动画类一撤，--fill 归零，
-     *  会在淡出的那一瞬闪回全白。 */
+     *  会在淡出的那一瞬闪回未填充色。 */
     <div
       className={`page-loader ${phase === 'wait' ? 'is-wait' : 'is-fill'}${
         phase === 'out' ? ' is-out' : ''
@@ -85,7 +85,6 @@ export function PageLoader() {
       aria-label="正在载入"
     >
       <span className="page-loader__word">Shizuku</span>
-      <span className="page-loader__glow" aria-hidden="true" />
     </div>
   )
 }
