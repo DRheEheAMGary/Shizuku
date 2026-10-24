@@ -4,8 +4,9 @@
  *  收起时是一枚圆形玻璃钮（和搜索钮同尺寸），里面是当前那一档的图标：
  *  浅色＝太阳，深色＝月牙，自动＝半明半暗的圆。
  *
- *  点一下向下展开三个选项；选中即应用并收起；
- *  再点按钮本身也能收起 —— 圆钮随即换成当前激活态的图标。
+ *  点一下，整块玻璃向下长开（学登录坞：高度 420ms + 内容延迟淡入），
+ *  露出三个选项；选中即应用并收起；再点按钮本身也能收起 ——
+ *  圆钮随即换成当前激活态的图标。
  *
  *  图标层挂着 view-transition-name：揭示动画期间它被抬到揭示层之上单独拍，
  *  太阳 ⇄ 月牙的换图才跟得上整场动画。
@@ -104,40 +105,42 @@ export function ThemeSwitch() {
 
   return (
     <div className="theme-switch" data-open={open} ref={rootRef}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="theme-switch__trigger"
-        data-icon={mode}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        aria-label={`主题：${labelOf(mode)}`}
-        title={`主题：${labelOf(mode)}`}
-      >
-        <span className="theme-switch__knob">
-          <ThemeGlyph mode={mode} />
-        </span>
-      </button>
+      <div className="theme-switch__panel">
+        <button
+          ref={triggerRef}
+          type="button"
+          className="theme-switch__trigger"
+          data-icon={mode}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-label={`主题：${labelOf(mode)}`}
+          title={`主题：${labelOf(mode)}`}
+        >
+          <span className="theme-switch__knob">
+            <ThemeGlyph mode={mode} />
+          </span>
+        </button>
 
-      <div className="theme-switch__menu" aria-hidden={!open}>
-        {OPTIONS.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            className="theme-switch__opt"
-            data-on={mode === o.id}
-            tabIndex={open ? 0 : -1}
-            onClick={() => {
-              chooseMode(o.id, triggerRef.current)
-              setOpen(false)
-            }}
-            aria-label={o.label}
-            title={o.label}
-          >
-            <ThemeGlyph size={18} mode={o.id} />
-          </button>
-        ))}
+        <div className="theme-switch__menu" aria-hidden={!open}>
+          {OPTIONS.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              className="theme-switch__opt"
+              data-on={mode === o.id}
+              tabIndex={open ? 0 : -1}
+              onClick={() => {
+                chooseMode(o.id, triggerRef.current)
+                setOpen(false)
+              }}
+              aria-label={o.label}
+              title={o.label}
+            >
+              <ThemeGlyph size={18} mode={o.id} />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

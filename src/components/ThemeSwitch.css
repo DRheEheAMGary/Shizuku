@@ -1,12 +1,14 @@
 /* ============================================================================
  *  Shizuku · 主题切换钮样式
  * ----------------------------------------------------------------------------
- *  收起：37px 圆形玻璃钮（和搜索钮同一套玻璃），里面是当前那一档的图标。
- *  展开：按钮正下方接出一段同款玻璃，三个选项竖排 ——
- *        从按钮底边长出来、收起时缩回按钮里，看起来就是按钮自己向下展开。
+ *  和登录坞同一套展开方式：整块玻璃从 37×37 的圆向下长成一块面板 ——
+ *  高度 420ms 用 Apple 缓动，圆角固定 28px 不插值
+ *  （37px 时被浏览器夹成正圆，长大后自然成胶囊），内容随后淡入。
+ *  中间没有两块玻璃拼接，也就没有接缝。
  *
- *  玻璃画在按钮和面板上；图标层挂着 view-transition-name，拍快照的元素
- *  会丢圆角裁切，所以那层不能带 backdrop-filter、也不能带投影。
+ *  收起：圆钮里是当前那一档的图标。
+ *  展开：圆钮不动，下面浮出 浅色 / 深色 / 跟随系统 三个选项；
+ *        再点按钮（或点外面 / Esc）整块缩回圆钮，显示当前激活态。
  * ========================================================================== */
 
 .theme-switch {
@@ -15,49 +17,67 @@
   flex-shrink: 0;
   width: 37px;
   height: 37px;
+}
+
+/* ---------- 会「长大」的那块玻璃 ---------- */
+.theme-switch__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 37px;
+  height: 37px;
+  overflow: hidden;
+
+  /*  圆角固定不做过渡：37px 时被夹成正圆，长高了自然变成胶囊
+   *  （学登录坞：插值圆角的话中途会先缩一下再张开）。 */
+  border-radius: 28px;
+
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  border: 1px solid var(--hairline-strong);
+  box-shadow:
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    var(--glass-topline);
+
   /*  独立合成层：backdrop-filter 元素共处一面时，
    *  别处重绘会让整页 backdrop 重新分块，露出横向接缝 */
   transform: translateZ(0);
+
+  transition:
+    height 420ms var(--ease-apple),
+    box-shadow 420ms var(--ease-apple);
 }
 
-/* ---------- 收起态的圆钮 ---------- */
+.theme-switch[data-open='true'] .theme-switch__panel {
+  /*  37（圆钮）+ 109（三个选项 + 内边距） */
+  height: 146px;
+  box-shadow:
+    0 18px 48px rgba(31, 45, 61, 0.2),
+    var(--glass-topline);
+}
+
+.theme-switch:not([data-open='true']) .theme-switch__panel:hover {
+  box-shadow:
+    0 8px 24px rgba(31, 45, 61, 0.18),
+    var(--glass-topline);
+}
+
+/* ---------- 圆钮：一直在面板顶部，不动 ---------- */
 .theme-switch__trigger {
   width: 37px;
   height: 37px;
   display: grid;
   place-items: center;
   padding: 0;
-  border-radius: var(--r-full);
-  border: 1px solid var(--hairline-strong);
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  backdrop-filter: blur(14px) saturate(170%);
-  box-shadow:
-    0 6px 20px rgba(31, 45, 61, 0.16),
-    var(--glass-topline);
+  border: 0;
+  background: none;
   color: var(--text-secondary);
   cursor: pointer;
-  transition:
-    box-shadow 260ms var(--ease-apple),
-    border-radius 300ms var(--ease-apple),
-    border-bottom-color 200ms var(--ease-apple);
 }
 
-.theme-switch__trigger:hover {
-  box-shadow:
-    0 8px 24px rgba(31, 45, 61, 0.18),
-    var(--glass-topline);
-}
-
-/*  展开时按钮下半截变方，和下面那段玻璃接成一体 */
-.theme-switch[data-open='true'] .theme-switch__trigger {
-  border-radius: 18px 18px 0 0;
-  border-bottom-color: transparent;
-}
-
-/* ---------- 图标层 ---------- */
-/*  挂着 view-transition-name（见 theme-transition.css）：揭示期间被抬到
- *  揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
+/*  图标层挂着 view-transition-name（见 theme-transition.css）：
+ *  揭示期间被抬到揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
  *  所以这里只装图标，不画玻璃、不加投影。 */
 .theme-switch__knob {
   display: grid;
@@ -69,41 +89,27 @@
   display: block;
 }
 
-/* ---------- 向下展开的选项 ---------- */
-/*  紧接按钮下沿（-1px 让两段玻璃的描边接上），
- *  展开时从顶边铺开、收起时缩回按钮里。 */
+/* ---------- 选项：面板长出来之后再淡入 ---------- */
 .theme-switch__menu {
-  position: absolute;
-  top: calc(100% - 1px);
-  left: 0;
-  width: 37px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 0;
+  padding: 4px 0 8px;
 
-  border: 1px solid var(--hairline-strong);
-  border-top: 0;
-  border-radius: 0 0 18px 18px;
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(14px) saturate(170%);
-  backdrop-filter: blur(14px) saturate(170%);
-  box-shadow: 0 14px 30px rgba(31, 45, 61, 0.2);
-
-  transform-origin: top center;
-  transform: scaleY(0.35);
   opacity: 0;
-  pointer-events: none;
+  transform: translateY(-4px);
   transition:
-    transform 320ms var(--ease-apple),
-    opacity 180ms var(--ease-apple);
+    opacity 140ms linear,
+    transform 200ms var(--ease-apple);
 }
 
 .theme-switch[data-open='true'] .theme-switch__menu {
-  transform: none;
   opacity: 1;
-  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 220ms linear 150ms,
+    transform 300ms var(--ease-apple) 120ms;
 }
 
 .theme-switch__opt {
