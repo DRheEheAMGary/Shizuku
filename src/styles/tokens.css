@@ -236,10 +236,10 @@ html[data-accent='yellow'] {
   /*  这张背景又亮又艳，压一层深色的才压得住白玻璃 */
   --bg-veil: rgba(54, 32, 8, 0.38);
 
-  --primary: #9c7117;
-  --primary-hover: #7f5c11;
-  --primary-soft: rgba(156, 113, 23, 0.12);
-  --primary-ring: rgba(156, 113, 23, 0.3);
+  --primary: #c58f1d;
+  --primary-hover: #a5760f;
+  --primary-soft: rgba(197, 143, 29, 0.12);
+  --primary-ring: rgba(197, 143, 29, 0.3);
 
   /*  点缀换成玫瑰粉，跟背景里的草莓和蝴蝶结是一路 */
   --accent: #c34d78;
@@ -248,7 +248,7 @@ html[data-accent='yellow'] {
 
   /*  首屏加载页也得跟主色走，不然蓝底配黄字很奇怪 */
   --loader-bg: #faf6ec;
-  --loader-glow: rgba(156, 113, 23, 0.13);
+  --loader-glow: rgba(197, 143, 29, 0.13);
 }
 
 html[data-accent='purple'] {
@@ -256,10 +256,10 @@ html[data-accent='purple'] {
   /*  这张本身就是夜色，保持它的暗 */
   --bg-veil: rgba(14, 7, 30, 0.42);
 
-  --primary: #6f4fa8;
-  --primary-hover: #5b3f8c;
-  --primary-soft: rgba(111, 79, 168, 0.14);
-  --primary-ring: rgba(111, 79, 168, 0.3);
+  --primary: #8a68ce;
+  --primary-hover: #7351b8;
+  --primary-soft: rgba(138, 104, 206, 0.14);
+  --primary-ring: rgba(138, 104, 206, 0.3);
 
   /*  点缀换成青，跟背景里的霓虹青是一路 */
   --accent: #2f97a6;
@@ -268,7 +268,7 @@ html[data-accent='purple'] {
 
   /*  首屏加载页也得跟主色走 */
   --loader-bg: #f4f1fa;
-  --loader-glow: rgba(111, 79, 168, 0.13);
+  --loader-glow: rgba(138, 104, 206, 0.13);
 }
 
 /* ---------- 暗色下的三套 ---------- */
