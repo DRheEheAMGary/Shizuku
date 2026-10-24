@@ -7,9 +7,14 @@
  *
  *  未绑定时不请求、不报错 —— 直接渲染一整年的空格子，
  *  在上面盖一句提示，版式不会因为状态不同而跳动。
+ *
+ *  鼠标悬浮在格子上会浮出一块提示框（日期 + 贡献次数），做法参考 Gary-Homepage：
+ *  挂到 body 上、fixed 定位、贴边收敛、上方放不下就翻到下方、滚动即收起。
  * ========================================================================== */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { SSO_ISSUER } from '@/auth/config'
 import './GithubHeatmap.css'
 
@@ -99,6 +104,49 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
     | { status: 'ready'; weeks: Slot[][]; total: number }
   >({ status: 'loading' })
 
+  /** 当前悬浮的格子；null 表示收起（内容留着，好让它原地淡出） */
+  const [tip, setTip] = useState<{ date: string; count: number; anchor: DOMRect } | null>(null)
+  /** 提示框落点：量完它自己的尺寸才算得出来 */
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
+  const tipRef = useRef<HTMLDivElement>(null)
+
+  /*  位置在绘制之前算好（useLayoutEffect 早于浏览器 paint），
+   *  换格子时不会先闪一下旧位置。 */
+  useLayoutEffect(() => {
+    if (!tip || !tipRef.current) return
+    const box = tipRef.current.getBoundingClientRect()
+    const a = tip.anchor
+    // 水平：与格子中心对齐，再收进视口内边距
+    const left = Math.max(
+      8,
+      Math.min(window.innerWidth - box.width - 8, a.left + a.width / 2 - box.width / 2),
+    )
+    // 垂直：优先放上方；顶上放不下就翻到下方
+    let top = a.top - box.height - 8
+    if (top < 8) top = a.bottom + 8
+    setPos({ left, top })
+  }, [tip])
+
+  /*  滚动 / 改窗口之后格子的位置就不准了，直接收起来（和 Gary-Homepage 一致） */
+  useEffect(() => {
+    if (!tip) return
+    const hide = () => setTip(null)
+    window.addEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+    }
+  }, [tip])
+
+  const showTip = (e: MouseEvent<HTMLSpanElement>, day: Contribution) => {
+    setTip({
+      date: day.date,
+      count: day.count,
+      anchor: e.currentTarget.getBoundingClientRect(),
+    })
+  }
+
   useEffect(() => {
     if (!login) return
     const controller = new AbortController()
@@ -175,7 +223,8 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
                 key={day?.date ?? `blank-${wi}-${di}`}
                 className={`heat__day${day ? '' : ' is-blank'}`}
                 data-level={day?.level ?? 0}
-                title={day ? `${day.date}：${day.count} 次` : undefined}
+                onMouseEnter={day ? (e) => showTip(e, day) : undefined}
+                onMouseLeave={day ? () => setTip(null) : undefined}
               />
             ))}
           </div>
@@ -193,6 +242,22 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
           多
         </span>
       </div>
+      )}
+
+      {/*  提示框挂到 body 上：坞的面板是 overflow:hidden，
+          而且它带 backdrop-filter，会把 fixed 定位拉回面板自己身上 ——
+          留在里面既会被裁，位置也会错。 */}
+      {createPortal(
+        <div
+          ref={tipRef}
+          className="heat__tip"
+          data-visible={!!tip && !!pos}
+          style={pos ? { left: `${pos.left}px`, top: `${pos.top}px` } : undefined}
+          role="tooltip"
+        >
+          {tip ? `${tip.date} 共计 ${tip.count} 次贡献` : ''}
+        </div>,
+        document.body,
       )}
     </div>
   )

@@ -77,6 +77,42 @@
   text-underline-offset: 2px;
 }
 
+/* ---------- 悬浮提示：日期 + 贡献次数 ---------- */
+/*  挂在 body 上（不在坞里）：坞的面板是 overflow:hidden，
+ *  而且它带 backdrop-filter —— 会把 fixed 定位拉回面板自己身上。
+ *  留在里面既会被裁掉，位置也会错。 */
+.heat__tip {
+  position: fixed;
+  z-index: 1001;   /* 与 Gary-Homepage 对齐：压过顶栏和登录坞的 backdrop 合成层 */
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+
+  color: var(--text);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 6px 20px rgba(31, 45, 61, 0.18),
+    var(--glass-topline);
+
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 120ms var(--ease-apple),
+    transform 120ms var(--ease-apple);
+}
+
+.heat__tip[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
 /* ---------- 未绑定：整年空格子 + 上层提示 ---------- */
 .heat {
   position: relative;
