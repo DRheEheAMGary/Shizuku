@@ -63,7 +63,7 @@ export function Home() {
 
         <div className="home-side">
           <section className="glass home-card intro" style={{ '--i': 1 } as React.CSSProperties}>
-            <h2 className="home-card__title">关于我</h2>
+            <h2 className="home-card__title">About</h2>
             <p className="home-card__line">{profile.description}</p>
             <p className="home-card__meta">
               {profile.mbti} · {profile.location}

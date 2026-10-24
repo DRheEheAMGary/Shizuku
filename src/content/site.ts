@@ -35,8 +35,8 @@ export const profile = {
   /* 正文内容：从 Gary-Homepage/data/profile.php 迁回 */
   mbti: 'ESFJ',
   location: 'JX-NC',
-  description: '高一生 | OIer | 二次元',
-  quote: '爱如果太猛烈 / 注定是要毁灭',
+  description: 'Student/OIer | hanser 单推人',
+  quote: '轻盈点 我们学习纸鸢 才飘得更远',
   about: [
     '欢迎来到我的主页 (awa',
     '我是一名高一生，现居 JX-NC，是一名 OIer & 二次元',
