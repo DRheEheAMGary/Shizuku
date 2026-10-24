@@ -26,55 +26,24 @@
 }
 
 /* ---------- 首页大标题 ---------- */
-/*  一整行：用户名（Pacifico 连笔）+ 短竖线 + 站名（Edu QLD Hand）。
- *  没有玻璃底板 —— 靠页面下方 1/3 的渐隐遮罩托住对比度。
- *  行顶落在「下方 1/3」分界线上：正文区顶端距视口顶 = 顶栏 72px + 壳 padding 64px，
- *  页脚那块约 68px，两下相抵后 66.667% 与 2/3 视口几乎重合（误差 < 1px）。 */
-.home-title-row {
-  position: absolute;
-  left: 0;
-  top: 66.667%;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;   /* 窄屏放不下时，竖线 + 站名整体折到下一行 */
-  gap: var(--sp-5);
-}
-
+/*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充。
+ *  没有玻璃底板 —— 靠页面下方 1/3 的渐隐遮罩托住对比度。 */
 .home-title {
-  /*  只做 ::before 垫底字的定位基准；行位置由 .home-title-row 决定 */
-  position: relative;
-  z-index: 0;
   font-family: var(--font-hand);
   font-size: clamp(1.65rem, 5vw, 4rem);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: 0.01em;
   color: var(--primary);
+
+  /*  字顶落在「下方 1/3」分界线上：正文区顶端距视口顶 = 顶栏 72px + 壳 padding 64px，
+   *  页脚那块约 68px，两下相抵后 66.667% 与 2/3 视口几乎重合（误差 < 1px）。 */
+  position: absolute;
+  left: 0;
+  top: 66.667%;
+  z-index: 0;   /* 自成层叠上下文，垫底那层字才能稳稳压在正文后面 */
+
   transition: color var(--dur-base) var(--ease-apple);
-}
-
-/*  短竖线 + 站名：与顶栏同一套样式 */
-.home-title-tail {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-4);
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
-}
-
-.home-title-divider {
-  flex-shrink: 0;
-  width: 1px;
-  height: 0.95em;
-  background: var(--hairline-strong);
-}
-
-.home-title-mark {
-  font-family: var(--font-wordmark);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
-  /*  亮色下就是黑色（顶栏同款 --text）；暗色跟随 --text，免得黑字看不见 */
-  color: var(--text);
 }
 
 /*  底部垫一层：同字同号，向右下各偏 1px。
@@ -183,14 +152,9 @@
     width: 100%;
   }
 
-  /*  竖堆后标题行回到文档流 */
-  .home-title-row {
-    position: static;
-  }
-
-  /*  标题独占一行并放大；relative 要留着，::before 垫底字才有定位基准 */
+  /*  竖堆后标题回到文档流，独占一行并放大 */
   .home-title {
-    position: relative;
+    position: static;
     font-size: clamp(1.65rem, 8.5vw, 3.5rem);
   }
 }
