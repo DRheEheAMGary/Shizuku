@@ -1,0 +1,78 @@
+/* ============================================================================
+ *  Shizuku · 顶栏的主题色选择
+ * ----------------------------------------------------------------------------
+ *  三个色点排成一排，共用一块圆形玻璃底座 ——
+ *  玻璃和搜索钮、明暗钮是同一套（同样的描边、模糊、投影、37px 高）。
+ *
+ *  激活的那个色点后面垫一圈大一圈的半透明同色圆。
+ * ========================================================================== */
+
+.accent-picker {
+  /*  和搜索钮、明暗钮同层（43）：胶囊展开时玻璃从它们底下过去 */
+  position: relative;
+  z-index: 43;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 37px;
+  padding: 0 7px;
+
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    var(--glass-topline);
+
+  /*  独立合成层：backdrop-filter 的元素共处一个渲染面时，
+   *  别处重绘会让整页 backdrop 重新分块，露出横向接缝 */
+  transform: translateZ(0);
+}
+
+.accent-picker__dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/*  激活态：色点后面垫一圈大一圈的半透明同色圆 */
+.accent-picker__dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  background: var(--dot);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 260ms var(--ease-apple),
+    transform 300ms var(--ease-apple);
+}
+
+.accent-picker__dot[data-on='true']::before {
+  opacity: 0.22;
+  transform: scale(1);
+}
+
+.accent-picker__ink {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--dot);
+  box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);
+  transition: transform 240ms var(--ease-apple);
+}
+
+.accent-picker__dot:hover .accent-picker__ink {
+  transform: scale(1.15);
+}

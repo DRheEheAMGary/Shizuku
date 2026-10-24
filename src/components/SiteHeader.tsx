@@ -14,8 +14,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { profile, site } from '@/content/site'
 import { AuthDock } from './AuthDock'
+import { AccentPicker } from './AccentPicker'
 import { SearchButton } from './SearchButton'
 import { SearchPanel } from './SearchPanel'
+import { ThemeSwitch } from './ThemeSwitch'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
@@ -185,8 +187,14 @@ export function SiteHeader() {
       // 等输入框真的在页面上了再聚焦
       window.setTimeout(() => inputRef.current?.focus(), 80)
     } else {
+      /*  回来不做动画：先把过渡关掉，图标瞬间落回按钮原位，
+       *  下一帧再把过渡还回去 —— 只废掉「飞回来」，飞出去照旧。 */
+      icon.style.transition = 'none'
       icon.style.setProperty('--fly-x', '0px')
       icon.style.setProperty('--fly-y', '0px')
+      requestAnimationFrame(() => {
+        icon.style.transition = ''
+      })
       /*  这里刻意不测量。收起的那一刻胶囊正在回缩途中：measure() 会把
        *  transition 关掉、把宽度直接按到收起值，回缩动画就没了
        *  （实测关闭瞬间宽度从 415 直接跳到 278，没有任何中间帧）。
@@ -247,6 +255,10 @@ export function SiteHeader() {
       {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
       <AuthDock />
 
+      {/* 左侧占位：右边新添的明暗钮 + 色板会把中间这组往左挤，
+          补一块等宽透明占位，头像和胶囊就停在原来的位置 */}
+      <span className="site-header__lead" aria-hidden="true" />
+
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar" ref={avatarRef}>
         <span className="site-header__avatar-halo" aria-hidden="true" />
@@ -299,13 +311,14 @@ export function SiteHeader() {
         </div>
       </header>
 
-      {/* 平衡块：左下角的坞和它是左右对称的一对占位。
-          主题开关搬进坞里之后，中间这组会变窄、整体往右挪 37px；
-          放一块与开关等宽的透明占位，头像才会停在原来的位置。 */}
+      {/* 平衡块：右边这组工具比头像宽，补一块透明占位，
+          中间的头像 + 胶囊才会停在原来的居中位置 */}
       <span className="site-header__balance" aria-hidden="true" />
 
-      {/* 顶栏右侧的搜索按钮：点开，顶栏自己变成搜索框 */}
+      {/* 右侧工具组：搜索钮 → 明暗钮 → 主题色板 */}
       <SearchButton ref={iconRef} searching={searching} onToggle={toggle} />
+      <ThemeSwitch />
+      <AccentPicker />
 
       {/* 背景的模糊遮罩（一直在，只是开着才不透明、才拦得住鼠标） */}
       <div className="search-backdrop" onMouseDown={close} role="presentation" />

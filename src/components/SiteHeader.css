@@ -6,16 +6,48 @@
  *  滚动后收窄：只折叠连笔署名，Shizuku / 个人主页 两行的相对位置不变。
  * ========================================================================== */
 
-/* ---------- 右侧平衡块 ---------- */
-/*  纯占位、不可见：原来用来顶住左边的头像，让胶囊保持居中。
- *  现在搜索按钮挪到了右边，它比头像窄一点，平衡块相应缩到 12px。 */
+/* ---------- 两侧占位 ---------- */
+/*  纯占位、不可见。
+ *  [头像 + 胶囊] 这组是靠 justify-content:center 居中的，
+ *  右边一长（搜索钮、明暗钮、色板）就会把中间这组往左挤。
+ *  右侧补 12px、左侧补 140px，把头像和胶囊按回原来的位置：
+ *  左侧占位 = 明暗钮 37 + 色板 89 + 一个 14px 的间距。 */
 .site-header__balance {
   flex-shrink: 0;
   width: 12px;
 }
 
+.site-header__lead {
+  flex-shrink: 0;
+  width: 140px;
+}
+
+/*  窄屏先撤掉左侧占位，把宽度让给右边的工具组 */
+@media (max-width: 1080px) {
+  .site-header__lead {
+    display: none;
+  }
+}
+
+/*  再窄就只留搜索钮和明暗钮：色板最占地方，先撤它；
+ *  间距也从 14px 收到 10px，给 375px 的手机腾出位置 */
 @media (max-width: 720px) {
+  .site-header-wrap {
+    gap: 10px;
+  }
+
   .site-header__balance {
+    display: none;
+  }
+
+  .accent-picker {
+    display: none;
+  }
+}
+
+/*  小屏（≤360px）连明暗钮也放不下，一起撤 */
+@media (max-width: 360px) {
+  .theme-switch {
     display: none;
   }
 }

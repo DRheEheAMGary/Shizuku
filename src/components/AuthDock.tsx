@@ -18,9 +18,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
-import { AccentPicker } from './AccentPicker'
 import { useTheme } from '@/hooks/useTheme'
-import { ThemeSwitch } from './ThemeSwitch'
 import { GithubHeatmap } from './GithubHeatmap'
 import { useAuth } from '@/hooks/useAuth'
 import { useWeather } from '@/hooks/useWeather'
@@ -146,10 +144,6 @@ export function AuthDock() {
               {user.email && <span title={user.email}>{user.email}</span>}
             </div>
           )}
-
-          <div className="auth-dock__head-right">
-            <ThemeSwitch />
-          </div>
         </div>
 
         <div className="auth-dock__body" aria-hidden={!open}>
@@ -185,7 +179,6 @@ export function AuthDock() {
               <div className="auth-dock__clock">
                 <strong>{time}</strong>
                 <span>{greetingOf(now.getHours())}</span>
-                <AccentPicker />
               </div>
 
               <div className="auth-dock__heat">

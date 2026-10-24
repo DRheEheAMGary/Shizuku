@@ -91,15 +91,6 @@ html,
   --glass-blur: 24px;
   --glass-sat: 180%;
 
-  /* 主题拨动开关 */
-  --switch-w: 60px;
-  --switch-h: 34px;
-  --switch-knob: 22px;
-  --switch-pad: 6px;
-  --switch-travel: 26px;    /* 轨道宽 - 滑块宽 - 左右各 6px */
-  /* 轨道也是磨砂玻璃，只是比滑块淡一点，两层压出层次 */
-  --switch-track: rgba(255, 255, 255, 0.42);
-
   /* 背景图上的薄纱 */
   --bg-veil: rgba(255, 255, 255, 0.35);
 
@@ -200,7 +191,6 @@ html,
   /*  暗色下不要"打光"：深玻璃配亮上沿会显得发亮发脏，
    *  顶部亮线直接去掉，只留投影和极细的边框来界定边缘 */
   --glass-topline: inset 0 1px 0 rgba(255, 255, 255, 0);
-  --switch-track: rgba(255, 255, 255, 0.12);
 
 
   /* 暗色下换成深色遮罩，同一张图压成夜色 */

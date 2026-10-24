@@ -1,18 +1,15 @@
 /* ============================================================================
- *  Shizuku · 主题拨动开关样式
+ *  Shizuku · 主题切换钮样式
  * ----------------------------------------------------------------------------
- *  一条浅浅的轨道 + 一枚磨砂玻璃滑块。滑块本身就是玻璃，不另垫底座。
+ *  顶栏右侧的一枚圆形玻璃钮：和搜索钮同尺寸（37px）、同一套玻璃
+ *  （同样的描边、模糊浓度、投影）。里面是太阳 ⇄ 月牙的描边图形。
  *
- *  滑块的垂直居中用 translate 属性、水平拨动用 transform ——
- *  两者是独立的属性，互不干扰，也不用写死偏移。
- *
- *  滑块的颜色不带过渡：主题切换时 DOM 变量会突变，而快照是在突变
- *  「之后」拍的 —— 若带过渡，快照会拍到中间色，动画结束切回实时
- *  元素时就会闪一下。
+ *  玻璃画在按钮上；里面那层只装图标、挂着 view-transition-name ——
+ *  拍快照的元素会丢圆角裁切，所以那层不能带 backdrop-filter、也不能带
+ *  投影，否则主题揭示过程中会露出一块矩形色斑。
  * ========================================================================== */
 
 .theme-switch {
-
   /*  独立合成层：backdrop-filter 的元素如果和别的玻璃元素共处一个渲染面，
    *  一处重绘（比如悬停）会让整页的 backdrop 重新分块采样，
    *  GPU 分块之间就露出横向接缝（"光带"）。
@@ -20,48 +17,41 @@
   transform: translateZ(0);
 
   position: relative;
-  flex-shrink: 0;
-  width: var(--switch-w);
-  height: var(--switch-h);
-  padding: 0;
-  border-radius: var(--r-full);
-  /* 轨道与滑块都是磨砂玻璃：轨道淡、滑块浓，靠浓度差分出层次 */
-  background: var(--switch-track);
-  -webkit-backdrop-filter: blur(14px) saturate(165%);
-  backdrop-filter: blur(14px) saturate(165%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-topline);
-  cursor: pointer;
-}
-
-/* ---------- 磨砂玻璃滑块 ---------- */
-.theme-switch__knob {
-  position: absolute;
-  top: 50%;
-  left: var(--switch-pad);
-  width: var(--switch-knob);
-  height: var(--switch-knob);
-  border-radius: var(--r-full);
+  z-index: 43;   /* 和搜索钮同层：胶囊展开时玻璃从它们底下过去 */
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+  width: 37px;
+  height: 37px;
+  padding: 0;
 
-  /* 垂直居中：用 translate 属性，与拨动用的 transform 分开 */
-  translate: 0 -50%;
-
-  /*  不加 backdrop-filter：滑块同时挂了 view-transition-name，
-   *  浏览器拍快照时会丢掉圆角裁切，退化成一块实心矩形色块，
-   *  正好落在滑块的「目标位置」上。22px 的圆上模糊本来看不出多少，
-   *  玻璃感由半透明底 + 描边 + 投影表达就够了。 */
-  background: var(--glass-bg-strong);
+  border-radius: var(--r-full);
   border: 1px solid var(--hairline-strong);
-  /*  不加 box-shadow：滑块的快照会连投影一起拍进去，
-   *  在逐帧重采样时投影边缘会出现残缺。层次改由描边表达。 */
-  color: var(--text);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    0 6px 20px rgba(31, 45, 61, 0.16),
+    var(--glass-topline);
+  cursor: pointer;
+  transition: box-shadow 260ms var(--ease-apple);
 }
 
-/* 深色：滑块拨到右边 */
-.theme-switch[data-on='dark'] .theme-switch__knob {
-  transform: translateX(var(--switch-travel));
+.theme-switch:hover {
+  box-shadow:
+    0 8px 24px rgba(31, 45, 61, 0.18),
+    var(--glass-topline);
+}
+
+/* ---------- 图标层 ---------- */
+/*  这一层挂着 view-transition-name（见 theme-transition.css），
+ *  揭示期间被抬到揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
+ *  所以这里只装图标，不画玻璃、不加投影。 */
+.theme-switch__knob {
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .theme-switch__glyph {
