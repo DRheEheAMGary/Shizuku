@@ -165,6 +165,7 @@
 
 /* 收起态就是那枚圆：46 + 3×2 内边距 = 52 → 56（含边框） */
 .auth-dock__trigger {
+  position: relative;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -178,8 +179,12 @@
   color: var(--primary);
   cursor: pointer;
   overflow: hidden;
+  /*  未登录展开时，这一枚圆自己拉长、变色成登录按钮 */
   transition:
-    background-color var(--dur-fast) var(--ease-apple),
+    width var(--dur-dock) var(--ease-dock),
+    height var(--dur-dock) var(--ease-dock),
+    background-color 320ms var(--ease-apple),
+    color 320ms var(--ease-apple),
     transform var(--dur-fast) var(--ease-apple);
 }
 
@@ -194,6 +199,84 @@
 .auth-dock__trigger:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* ---------- 未登录：圆头像拉长成登录按钮 ---------- */
+/*  收起：只有那枚占位头像圆。
+ *  展开：圆自己拉长成整行宽的按钮、底色换主题色；
+ *  头像图标缩淡、按钮文字随后浮上来，面板只包住这一颗按钮。 */
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__panel {
+  width: var(--dock-w);
+  height: 66px;
+}
+
+/*  登录失败时把面板让高一点，错误条才有地方显示 */
+.auth-dock[data-auth='out'][data-open='true'][data-error='true'] .auth-dock__panel {
+  height: 116px;
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__head {
+  padding: 8px;
+  justify-content: flex-start;
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger {
+  /*  200 面板 - 2 边框 - 16 内边距 = 182，写成具体长度才能可靠补间 */
+  width: calc(var(--dock-w) - 18px);
+  height: 48px;
+  background: var(--primary);
+  color: var(--bg);
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/*  占位头像图标：展开时缩小淡出 */
+.auth-dock__trigger-icon {
+  display: grid;
+  place-items: center;
+  transition:
+    opacity 140ms linear,
+    transform 220ms var(--ease-dock);
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger-icon {
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 120ms linear,
+    transform 180ms var(--ease-dock);
+}
+
+/*  按钮文字：等面板/圆钮大致拉开之后再浮上来 */
+.auth-dock__trigger-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition:
+    opacity 120ms linear,
+    transform 180ms var(--ease-dock);
+}
+
+.auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger-label {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 200ms linear 160ms,
+    transform 260ms var(--ease-dock) 150ms;
 }
 
 .auth-dock__pic,
@@ -333,40 +416,6 @@
   transition:
     opacity 240ms linear 110ms,
     transform 320ms var(--ease-dock) 90ms;
-}
-
-/* ---------- 未登录：主按钮 ---------- */
-.auth-dock__cta {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 44px;
-  border: 0;
-  border-radius: var(--r-full);
-
-  font-family: var(--font-sans);
-  font-size: var(--fs-base);
-  font-weight: 500;
-  color: var(--bg);
-  background: var(--primary);
-  cursor: pointer;
-
-  transition:
-    filter var(--dur-fast) var(--ease-apple),
-    transform var(--dur-fast) var(--ease-apple);
-}
-
-.auth-dock__cta:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-
-.auth-dock__cta:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.auth-dock__cta:disabled {
-  cursor: progress;
-  opacity: 0.7;
 }
 
 /* ---------- 已登录 ---------- */

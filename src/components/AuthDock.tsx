@@ -95,6 +95,7 @@ export function AuthDock() {
       className="auth-dock"
       data-open={open}
       data-auth={user ? 'in' : 'out'}
+      data-error={!!error}
       data-peek={peek && !open}
       data-heat={heatFull ? 'year' : 'half'}
       ref={rootRef}
@@ -113,10 +114,16 @@ export function AuthDock() {
               //  这时候不响应，坞才不会莫名其妙收起来
               if (transitioning) return
               setConfirmLogout(false)
+              //  未登录且已展开：这颗圆已经拉长成登录按钮，点它就是登录
+              if (!user && open) {
+                login()
+                return
+              }
               setOpen((v) => !v)
             }}
             aria-expanded={open}
-            aria-label={open ? '收起' : user ? '账号菜单' : '登录'}
+            aria-label={!user ? (open ? '登录 / 注册' : '登录') : open ? '收起' : '账号菜单'}
+            disabled={!user && open && loading}
           >
             {loading ? (
               <span className="auth-dock__spin" />
@@ -130,7 +137,14 @@ export function AuthDock() {
                 {initial}
               </span>
             ) : (
-              <Icon name="user" size={20} />
+              <>
+                <span className="auth-dock__trigger-icon" aria-hidden="true">
+                  <Icon name="user" size={20} />
+                </span>
+                <span className="auth-dock__trigger-label" aria-hidden={!open}>
+                  登录 / 注册
+                </span>
+              </>
             )}
           </button>
 
@@ -170,11 +184,7 @@ export function AuthDock() {
                 </button>
               </div>
             </div>
-          ) : !user ? (
-            <button type="button" className="auth-dock__cta" onClick={login} disabled={loading}>
-              {loading ? '登录中…' : '登录 / 注册'}
-            </button>
-          ) : (
+          ) : !user ? null : (
             <>
               <div className="auth-dock__clock">
                 <strong>{time}</strong>
