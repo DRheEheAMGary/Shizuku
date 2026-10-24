@@ -104,8 +104,8 @@
   opacity: 0;
   transform: translateY(4px);
   transition:
-    opacity 120ms var(--ease-apple),
-    transform 120ms var(--ease-apple);
+    opacity 100ms var(--ease-apple),
+    transform 100ms var(--ease-apple);
 }
 
 .heat__tip[data-visible='true'] {

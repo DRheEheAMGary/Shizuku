@@ -104,8 +104,10 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
     | { status: 'ready'; weeks: Slot[][]; total: number }
   >({ status: 'loading' })
 
-  /** 当前悬浮的格子；null 表示收起（内容留着，好让它原地淡出） */
+  /** 最后一次悬浮的格子。收起时保留内容，才能完整淡出。 */
   const [tip, setTip] = useState<{ date: string; count: number; anchor: DOMRect } | null>(null)
+  /** 渐入渐出开关：与内容分开，收起时不清空文字 */
+  const [tipVisible, setTipVisible] = useState(false)
   /** 提示框落点：量完它自己的尺寸才算得出来 */
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
   const tipRef = useRef<HTMLDivElement>(null)
@@ -129,15 +131,15 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
 
   /*  滚动 / 改窗口之后格子的位置就不准了，直接收起来（和 Gary-Homepage 一致） */
   useEffect(() => {
-    if (!tip) return
-    const hide = () => setTip(null)
+    if (!tipVisible) return
+    const hide = () => setTipVisible(false)
     window.addEventListener('scroll', hide, true)
     window.addEventListener('resize', hide)
     return () => {
       window.removeEventListener('scroll', hide, true)
       window.removeEventListener('resize', hide)
     }
-  }, [tip])
+  }, [tipVisible])
 
   const showTip = (e: MouseEvent<HTMLSpanElement>, day: Contribution) => {
     setTip({
@@ -145,7 +147,10 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
       count: day.count,
       anchor: e.currentTarget.getBoundingClientRect(),
     })
+    setTipVisible(true)
   }
+
+  const hideTip = () => setTipVisible(false)
 
   useEffect(() => {
     if (!login) return
@@ -224,7 +229,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
                 className={`heat__day${day ? '' : ' is-blank'}`}
                 data-level={day?.level ?? 0}
                 onMouseEnter={day ? (e) => showTip(e, day) : undefined}
-                onMouseLeave={day ? () => setTip(null) : undefined}
+                onMouseLeave={day ? hideTip : undefined}
               />
             ))}
           </div>
@@ -251,7 +256,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
         <div
           ref={tipRef}
           className="heat__tip"
-          data-visible={!!tip && !!pos}
+          data-visible={tipVisible && !!pos}
           style={pos ? { left: `${pos.left}px`, top: `${pos.top}px` } : undefined}
           role="tooltip"
         >
