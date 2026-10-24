@@ -1,23 +1,26 @@
 /* ============================================================================
- *  Shizuku · 顶栏的主题色选择
+ *  Shizuku · 主题色选择样式
  * ----------------------------------------------------------------------------
- *  三个色点排成一排，共用一块圆形玻璃底座 ——
- *  玻璃和搜索钮、明暗钮是同一套（同样的描边、模糊、投影、37px 高）。
- *
- *  激活的那个色点后面垫一圈大一圈的半透明同色圆。
+ *  收起：37px 圆形玻璃钮，正中一颗色点＝当前激活色。
+ *  展开：按钮正下方接出一段同款玻璃，三个色点竖排 ——
+ *        从按钮底边长出来、收起时缩回按钮里。
  * ========================================================================== */
 
 .accent-picker {
-  /*  和搜索钮、明暗钮同层（43）：胶囊展开时玻璃从它们底下过去 */
   position: relative;
-  z-index: 43;
+  z-index: 43;   /* 和搜索钮同层：胶囊展开时玻璃从它们底下过去 */
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
+  width: 37px;
   height: 37px;
-  padding: 0 7px;
+  transform: translateZ(0);
+}
 
+.accent-picker__trigger {
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border-radius: var(--r-full);
   border: 1px solid var(--hairline-strong);
   background: var(--glass-bg-strong);
@@ -26,26 +29,85 @@
   box-shadow:
     0 6px 20px rgba(31, 45, 61, 0.16),
     var(--glass-topline);
-
-  /*  独立合成层：backdrop-filter 的元素共处一个渲染面时，
-   *  别处重绘会让整页 backdrop 重新分块，露出横向接缝 */
-  transform: translateZ(0);
+  cursor: pointer;
+  transition:
+    box-shadow 260ms var(--ease-apple),
+    border-radius 300ms var(--ease-apple),
+    border-bottom-color 200ms var(--ease-apple);
 }
 
-.accent-picker__dot {
+.accent-picker__trigger:hover {
+  box-shadow:
+    0 8px 24px rgba(31, 45, 61, 0.18),
+    var(--glass-topline);
+}
+
+/*  展开时按钮下半截变方，和下面那段玻璃接成一体 */
+.accent-picker[data-open='true'] .accent-picker__trigger {
+  border-radius: 18px 18px 0 0;
+  border-bottom-color: transparent;
+}
+
+/* ---------- 激活色：圆钮正中那颗色点 ---------- */
+.accent-picker__ink {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: var(--dot);
+  box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);
+  transition: background-color 240ms var(--ease-apple);
+}
+
+/* ---------- 向下展开的三个色点 ---------- */
+.accent-picker__menu {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 0;
+  width: 37px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+
+  border: 1px solid var(--hairline-strong);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow: 0 14px 30px rgba(31, 45, 61, 0.2);
+
+  transform-origin: top center;
+  transform: scaleY(0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 320ms var(--ease-apple),
+    opacity 180ms var(--ease-apple);
+}
+
+.accent-picker[data-open='true'] .accent-picker__menu {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.accent-picker__opt {
   position: relative;
+  width: 31px;
+  height: 31px;
   display: grid;
   place-items: center;
-  width: 23px;
-  height: 23px;
   padding: 0;
   border: 0;
+  border-radius: var(--r-full);
   background: none;
   cursor: pointer;
 }
 
 /*  激活态：色点后面垫一圈大一圈的半透明同色圆 */
-.accent-picker__dot::before {
+.accent-picker__opt::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -58,21 +120,21 @@
     transform 300ms var(--ease-apple);
 }
 
-.accent-picker__dot[data-on='true']::before {
+.accent-picker__opt[data-on='true']::before {
   opacity: 0.22;
   transform: scale(1);
 }
 
-.accent-picker__ink {
+.accent-picker__swatch {
   position: relative;
-  width: 10px;
-  height: 10px;
+  width: 13px;
+  height: 13px;
   border-radius: var(--r-full);
   background: var(--dot);
   box-shadow: 0 1px 3px rgba(28, 37, 48, 0.22);
   transition: transform 240ms var(--ease-apple);
 }
 
-.accent-picker__dot:hover .accent-picker__ink {
+.accent-picker__opt:hover .accent-picker__swatch {
   transform: scale(1.15);
 }

@@ -1,30 +1,32 @@
 /* ============================================================================
  *  Shizuku · 主题切换钮样式
  * ----------------------------------------------------------------------------
- *  顶栏右侧的一枚圆形玻璃钮：和搜索钮同尺寸（37px）、同一套玻璃
- *  （同样的描边、模糊浓度、投影）。里面是太阳 ⇄ 月牙的描边图形。
+ *  收起：37px 圆形玻璃钮（和搜索钮同一套玻璃），里面是当前那一档的图标。
+ *  展开：按钮正下方接出一段同款玻璃，三个选项竖排 ——
+ *        从按钮底边长出来、收起时缩回按钮里，看起来就是按钮自己向下展开。
  *
- *  玻璃画在按钮上；里面那层只装图标、挂着 view-transition-name ——
- *  拍快照的元素会丢圆角裁切，所以那层不能带 backdrop-filter、也不能带
- *  投影，否则主题揭示过程中会露出一块矩形色斑。
+ *  玻璃画在按钮和面板上；图标层挂着 view-transition-name，拍快照的元素
+ *  会丢圆角裁切，所以那层不能带 backdrop-filter、也不能带投影。
  * ========================================================================== */
 
 .theme-switch {
-  /*  独立合成层：backdrop-filter 的元素如果和别的玻璃元素共处一个渲染面，
-   *  一处重绘（比如悬停）会让整页的 backdrop 重新分块采样，
-   *  GPU 分块之间就露出横向接缝（"光带"）。
-   *  提升成自己的图层后，重绘互不影响。 */
-  transform: translateZ(0);
-
   position: relative;
   z-index: 43;   /* 和搜索钮同层：胶囊展开时玻璃从它们底下过去 */
-  display: grid;
-  place-items: center;
   flex-shrink: 0;
   width: 37px;
   height: 37px;
-  padding: 0;
+  /*  独立合成层：backdrop-filter 元素共处一面时，
+   *  别处重绘会让整页 backdrop 重新分块，露出横向接缝 */
+  transform: translateZ(0);
+}
 
+/* ---------- 收起态的圆钮 ---------- */
+.theme-switch__trigger {
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border-radius: var(--r-full);
   border: 1px solid var(--hairline-strong);
   background: var(--glass-bg-strong);
@@ -33,24 +35,33 @@
   box-shadow:
     0 6px 20px rgba(31, 45, 61, 0.16),
     var(--glass-topline);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: box-shadow 260ms var(--ease-apple);
+  transition:
+    box-shadow 260ms var(--ease-apple),
+    border-radius 300ms var(--ease-apple),
+    border-bottom-color 200ms var(--ease-apple);
 }
 
-.theme-switch:hover {
+.theme-switch__trigger:hover {
   box-shadow:
     0 8px 24px rgba(31, 45, 61, 0.18),
     var(--glass-topline);
 }
 
+/*  展开时按钮下半截变方，和下面那段玻璃接成一体 */
+.theme-switch[data-open='true'] .theme-switch__trigger {
+  border-radius: 18px 18px 0 0;
+  border-bottom-color: transparent;
+}
+
 /* ---------- 图标层 ---------- */
-/*  这一层挂着 view-transition-name（见 theme-transition.css），
- *  揭示期间被抬到揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
+/*  挂着 view-transition-name（见 theme-transition.css）：揭示期间被抬到
+ *  揭示层之上单独拍，太阳 ⇄ 月牙才跟得上整场动画 ——
  *  所以这里只装图标，不画玻璃、不加投影。 */
 .theme-switch__knob {
   display: grid;
   place-items: center;
-  color: var(--text-secondary);
   pointer-events: none;
 }
 
@@ -58,7 +69,69 @@
   display: block;
 }
 
-/* ---------- 太阳 ⇄ 月牙 ---------- */
-/*  都是描边的空心图形，颜色跟着文字走（currentColor）。
- *  两者直接切换，不做形变动画 —— 揭示期间图标不动，
- *  揭示一结束就硬切过去。 */
+/* ---------- 向下展开的选项 ---------- */
+/*  紧接按钮下沿（-1px 让两段玻璃的描边接上），
+ *  展开时从顶边铺开、收起时缩回按钮里。 */
+.theme-switch__menu {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 0;
+  width: 37px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+
+  border: 1px solid var(--hairline-strong);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow: 0 14px 30px rgba(31, 45, 61, 0.2);
+
+  transform-origin: top center;
+  transform: scaleY(0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 320ms var(--ease-apple),
+    opacity 180ms var(--ease-apple);
+}
+
+.theme-switch[data-open='true'] .theme-switch__menu {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.theme-switch__opt {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-apple),
+    color 200ms var(--ease-apple);
+}
+
+.theme-switch__opt:hover {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+.theme-switch__opt[data-on='true'] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ---------- 太阳 ⇄ 月牙 ⇄ 自动 ---------- */
+/*  描边/实心图形都跟着文字色走（currentColor）；三档直接切换，不做形变动画 ——
+ *  揭示期间图标不动，揭示一结束就硬切过去。 */

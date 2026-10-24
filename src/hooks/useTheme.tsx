@@ -2,21 +2,21 @@
  *  Shizuku · 主题切换
  * ----------------------------------------------------------------------------
  *  两件独立的事：
- *    1. 浅色 / 深色（只有两态，没有「跟随系统」）
+ *    1. 明暗：浅色 / 深色 / 自动（自动＝跟随系统，系统换了实时跟）
  *    2. 主题色：青蓝（默认）/ 暖黄 / 紫罗兰
  *
  *  两者在首屏渲染之前就写进 <html>，避免闪烁 ——
  *  脚本内联在 index.html 中。
  *
  *  切换都用 View Transitions API 做圆形揭示：从触发点扩散开新主题的圆形裁切，
- *  旧快照垫在下面不动。拨动滑块有自己的快照组，全程可见。
+ *  旧快照垫在下面不动。圆钮里的图标有自己的快照组，全程可见。
  * ========================================================================== */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 
-export type ThemeMode = 'light' | 'dark'
+export type ThemeMode = 'light' | 'dark' | 'auto'
 export type AccentId = 'blue' | 'yellow' | 'purple'
 
 /** 三套主题色：主色、点缀色、背景图各自成套 */
@@ -28,7 +28,7 @@ export const ACCENTS: { id: AccentId; label: string; color: string }[] = [
 
 const STORAGE_KEY = 'shizuku-theme'
 const ACCENT_KEY = 'shizuku-accent'
-const MODES: ThemeMode[] = ['light', 'dark']
+const MODES: ThemeMode[] = ['light', 'dark', 'auto']
 const ACCENT_IDS: AccentId[] = ['blue', 'yellow', 'purple']
 /** 兜底颜色渐变的时长，和 CSS 里的 transition 对齐 */
 const FALLBACK_MS = 500
@@ -43,6 +43,11 @@ type ViewTransitionDocument = Document & {
 
 function systemPrefersDark(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+/** 实际生效的明暗：自动那一档交给系统决定 */
+export function resolveMode(mode: ThemeMode): 'light' | 'dark' {
+  return mode === 'auto' ? (systemPrefersDark() ? 'dark' : 'light') : mode
 }
 
 /** 读取初始模式（在任何 React 代码之前调用） */
@@ -77,7 +82,9 @@ export function getStoredAccent(): AccentId {
 export function applyTheme(mode: ThemeMode) {
   if (typeof document === 'undefined') return
   const root = document.documentElement
-  root.dataset.theme = mode
+  /*  data-theme 是真正生效的明暗（CSS 全靠它）；
+   *  data-theme-mode 记的是用户选的那一档（可能是 auto），图标靠它。 */
+  root.dataset.theme = resolveMode(mode)
   root.dataset.themeMode = mode
 }
 
@@ -147,7 +154,7 @@ function reveal(
     root.style.setProperty('--vt-r', `${radius}px`)
   }
 
-  // 滑块拨动的方向：浅→深往右，深→浅往左。
+  // 图标拨动的方向：浅→深往右，深→浅往左。
   // 新旧两张快照都按这个方向平移，两者始终重合，旧的被新的完全盖住。
   if (knobDir) root.style.setProperty('--knob-dir', knobDir === 1 ? '1' : '-1')
 
@@ -172,8 +179,8 @@ function reveal(
 interface ThemeApi {
   mode: ThemeMode
   setMode: (mode: ThemeMode) => void
-  /** 带揭示动画的切换。origin 是触发元素，决定圆形揭示的圆心。 */
-  toggle: (origin?: HTMLElement | null) => void
+  /** 选一档明暗，带圆形揭示。origin 决定揭示的圆心（一般传那颗圆钮）。 */
+  chooseMode: (mode: ThemeMode, origin?: HTMLElement | null) => void
   /** 当前主题色 */
   accent: AccentId
   /** 切换主题色。origin 是色点按钮，揭示从色点扩散开。 */
@@ -201,22 +208,42 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(STORAGE_KEY, mode)
   }, [mode])
 
+  /*  自动那一档：系统明暗变了要跟着变（不走揭示动画，静默跟随） */
+  useEffect(() => {
+    if (mode !== 'auto') return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => applyTheme('auto')
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [mode])
+
   useEffect(() => {
     applyAccent(accent)
     window.localStorage.setItem(ACCENT_KEY, accent)
   }, [accent])
 
-  const toggle = useCallback(
-    (origin?: HTMLElement | null) => {
-      if (busyRef.current) return
-      const next: ThemeMode = mode === 'dark' ? 'light' : 'dark'
+  const chooseMode = useCallback(
+    (next: ThemeMode, origin?: HTMLElement | null) => {
+      if (busyRef.current || next === mode) return
+
+      const from = resolveMode(mode)
+      const to = resolveMode(next)
+
+      /*  观感没变（比如「浅色 → 自动」而系统正是浅色）：
+       *  没必要演一次揭示动画，换个状态和图标就行。 */
+      if (from === to) {
+        applyTheme(next)
+        setMode(next)
+        return
+      }
+
       reveal(
         origin,
         () => {
           applyTheme(next)
           setMode(next)
         },
-        next === 'dark' ? 1 : -1,
+        to === 'dark' ? 1 : -1,
         () => {
           busyRef.current = true
           setTransitioning(true)
@@ -254,8 +281,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo<ThemeApi>(
-    () => ({ mode, setMode, toggle, accent, setAccent, transitioning }),
-    [mode, setMode, toggle, accent, setAccent, transitioning],
+    () => ({ mode, setMode, chooseMode, accent, setAccent, transitioning }),
+    [mode, setMode, chooseMode, accent, setAccent, transitioning],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

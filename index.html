@@ -38,16 +38,22 @@
         try {
           var root = document.documentElement
 
-          // 浅色 / 深色
+          // 浅色 / 深色 / 自动
           var key = 'shizuku-theme'
-          // ?theme=dark / light 用于预览与分享时强制主题
+          // ?theme=dark / light / auto 用于预览与分享时强制主题
           var q = new URLSearchParams(location.search).get('theme')
           var mode = q || localStorage.getItem(key)
           // 没有存过（或存的值不对）就按系统偏好定一次，此后固定
-          if (mode !== 'dark' && mode !== 'light') {
+          if (mode !== 'dark' && mode !== 'light' && mode !== 'auto') {
             mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
           }
-          root.dataset.theme = mode
+          // 真正生效的明暗：自动那一档交给系统
+          root.dataset.theme =
+            mode === 'auto'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : mode
           root.dataset.themeMode = mode
 
           // 主题色：青蓝 / 暖黄 / 紫罗兰

@@ -1,34 +1,49 @@
 /* ============================================================================
- *  Shizuku · 主题拨动开关
+ *  Shizuku · 主题切换钮
  * ----------------------------------------------------------------------------
- *  一条浅浅的轨道 + 一枚磨砂玻璃滑块（滑块本身就是玻璃，不另垫底座）。
+ *  收起时是一枚圆形玻璃钮（和搜索钮同尺寸），里面是当前那一档的图标：
+ *  浅色＝太阳，深色＝月牙，自动＝半明半暗的圆。
  *
- *  滑块有独立的 view-transition-name，所以在圆形揭示的动画里
- *  它不进快照、被抬到揭示层之上，全程可见并同步拨动。
+ *  点一下向下展开三个选项；选中即应用并收起；
+ *  再点按钮本身也能收起 —— 圆钮随即换成当前激活态的图标。
  *
- *  图标是**太阳 ⇄ 月牙**，都是描边的空心图形，颜色跟着文字走。
- *  两者是**同一条路径**：一个整圆，右半边的圆弧半径变大、凹进去一块，
- *  就成了月牙 —— 中间没有换图，是真的形变。
- *  太阳的八条短线在变成月牙时收起来。
- *
- *  形变时机会卡在滑块动画之后：
- *  揭示期间整个根节点是一张静态快照，真实 DOM 根本不画 ——
- *  这时候改图标是看不见的，只会在揭示结束的瞬间「啪」一下跳过去。
- *  所以图标等 revealing 变回 false（揭示结束）再切，
- *  形变动画才演得出来。
+ *  图标层挂着 view-transition-name：揭示动画期间它被抬到揭示层之上单独拍，
+ *  太阳 ⇄ 月牙的换图才跟得上整场动画。
  * ========================================================================== */
 
+import { useEffect, useRef, useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
+import type { ThemeMode } from '@/hooks/useTheme'
 import './ThemeSwitch.css'
 
-/** 主题图标：太阳 ⇄ 月牙 */
-function ThemeGlyph({
-  size = 20,
-  mode,
-}: {
-  size?: number
-  mode: 'light' | 'dark'
-}) {
+const OPTIONS: { id: ThemeMode; label: string }[] = [
+  { id: 'light', label: '浅色' },
+  { id: 'dark', label: '深色' },
+  { id: 'auto', label: '跟随系统' },
+]
+
+function labelOf(mode: ThemeMode) {
+  return OPTIONS.find((o) => o.id === mode)?.label ?? '浅色'
+}
+
+/** 主题图标：太阳 / 月牙 / 自动 */
+function ThemeGlyph({ size = 20, mode }: { size?: number; mode: ThemeMode }) {
+  /*  自动：一半实心的圆（镂空那半是"跟着系统走"的意思） */
+  if (mode === 'auto') {
+    return (
+      <svg
+        className="theme-switch__glyph"
+        width={size}
+        height={size}
+        viewBox="0 0 1024 1024"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path d="M900.288 512A388.288 388.288 0 1 0 123.648 512a388.288 388.288 0 0 0 776.64 0zM729.6 512a217.6 217.6 0 0 0-179.2-214.208v428.288a217.536 217.536 0 0 0 115.52-60.16A217.6 217.6 0 0 0 729.6 512zm76.8 0A294.4 294.4 0 0 1 512 806.4a38.4 38.4 0 0 1-38.4-38.4V256a38.464 38.464 0 0 1 38.4-38.4A294.4 294.4 0 0 1 806.4 512zm170.688 0A465.088 465.088 0 1 1 46.912 511.936 465.088 465.088 0 0 1 977.088 512z" />
+      </svg>
+    )
+  }
+
   return (
     <svg
       className="theme-switch__glyph"
@@ -39,14 +54,14 @@ function ThemeGlyph({
       stroke="currentColor"
       strokeWidth="1.4"
       strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
     >
-      {/*  直接换，不做形变动画 —— 换的时候是硬切，干净利落 */}
       {mode === 'dark' ? (
-        /* 月牙：一弯真的凹进去的月牙 */
+        /*  月牙：开口朝右上，比原来大一圈 */
         <path
           className="theme-switch__moon"
-          d="M16 7.2A9 9 0 0 0 16 16.8A4.8 4.8 0 0 1 16 7.2Z"
+          d="M18.29 14.3A8.6 8.6 0 1 1 9.11 3.45A8 8 0 0 0 18.29 14.3Z"
         />
       ) : (
         /* 太阳：空心圆 + 八条短线 */
@@ -62,31 +77,68 @@ function ThemeGlyph({
 }
 
 export function ThemeSwitch() {
-  const { mode, toggle } = useTheme()
-  const isDark = mode === 'dark'
-  const label = isDark ? '切换到浅色' : '切换到深色'
+  const { mode, chooseMode, transitioning } = useTheme()
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
-  /*  图标直接跟着主题走。
-   *
-   *  滑块有独立的 view-transition-name，揭示动画期间它被抬到揭示层
-   *  之上单独拍 —— 所以图标这一换，是跟整个揭示同步交叉淡入的，
-   *  不会出现「点完半秒后图标才自己动一下」的卡顿。 */
+  // 点外面 / Esc 收起
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      /*  揭示动画期间命中测试不落在真实 DOM 上（事件目标是 <html>），
+       *  这里会误判成「点了外面」，动画期间直接忽略。 */
+      if (transitioning) return
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, transitioning])
 
   return (
-    <button
-      type="button"
-      className="theme-switch"
-      data-on={isDark ? 'dark' : 'light'}
-      data-icon={mode}
-      onClick={(e) => toggle(e.currentTarget)}
-      aria-label={label}
-      title={label}
-      role="switch"
-      aria-checked={isDark}
-    >
-      <span className="theme-switch__knob">
-        <ThemeGlyph mode={mode} />
-      </span>
-    </button>
+    <div className="theme-switch" data-open={open} ref={rootRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="theme-switch__trigger"
+        data-icon={mode}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={`主题：${labelOf(mode)}`}
+        title={`主题：${labelOf(mode)}`}
+      >
+        <span className="theme-switch__knob">
+          <ThemeGlyph mode={mode} />
+        </span>
+      </button>
+
+      <div className="theme-switch__menu" aria-hidden={!open}>
+        {OPTIONS.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            className="theme-switch__opt"
+            data-on={mode === o.id}
+            tabIndex={open ? 0 : -1}
+            onClick={() => {
+              chooseMode(o.id, triggerRef.current)
+              setOpen(false)
+            }}
+            aria-label={o.label}
+            title={o.label}
+          >
+            <ThemeGlyph size={18} mode={o.id} />
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
