@@ -53,10 +53,12 @@ function ThemeGlyph({ size = 20, mode }: { size?: number; mode: ThemeMode }) {
       aria-hidden="true"
     >
       {mode === 'dark' ? (
-        /*  月牙：开口朝右上，比原来大一圈 */
+        /*  月牙：开口朝右上，比原来大一圈；
+         *  墨迹重心偏左下，单独向右上补一点做光学居中 */
         <path
           className="theme-switch__moon"
           d="M18.29 14.3A8.6 8.6 0 1 1 9.11 3.45A8 8 0 0 0 18.29 14.3Z"
+          transform="translate(1.5 -1)"
         />
       ) : (
         /* 太阳：空心圆 + 八条短线 */
