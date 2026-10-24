@@ -28,6 +28,8 @@
   /*  未登录只放一个主按钮，尺寸收紧；已登录多两行，另给一套 */
   --dock-w: 200px;
   --dock-h: 116px;
+  /*  未登录展开：面板只包一颗登录按钮，比通用宽度窄一点 */
+  --dock-w-out: 176px;
   /*  已登录展开态：宽度按「邮箱能完整显示」来定 ——
    *  身份块会 flex:1 吃掉剩余空间，邮箱短了就不截断。
    *  顺带热力图也顺势多露出几周：容器变宽 → 露出的周数变多。 */
@@ -206,7 +208,7 @@
  *  展开：圆自己拉长成整行宽的按钮、底色换主题色；
  *  头像图标缩淡、按钮文字随后浮上来，面板只包住这一颗按钮。 */
 .auth-dock[data-auth='out'][data-open='true'] .auth-dock__panel {
-  width: var(--dock-w);
+  width: var(--dock-w-out);
   height: 66px;
 }
 
@@ -221,8 +223,8 @@
 }
 
 .auth-dock[data-auth='out'][data-open='true'] .auth-dock__trigger {
-  /*  200 面板 - 2 边框 - 16 内边距 = 182，写成具体长度才能可靠补间 */
-  width: calc(var(--dock-w) - 18px);
+  /*  面板 176 - 2 边框 - 16 内边距 = 158，写成具体长度才能可靠补间 */
+  width: calc(var(--dock-w-out) - 18px);
   height: 48px;
   background: var(--primary);
   color: var(--bg);
