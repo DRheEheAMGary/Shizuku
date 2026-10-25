@@ -48,6 +48,9 @@ interface ApiResponse {
   contributions: Contribution[]
 }
 
+/** 页面切换会重新挂载组件，缓存一份已拿到的数据，避免热力图回到“加载中”。 */
+const contributionsCache = new Map<string, { weeks: Slot[][]; total: number }>()
+
 /** 空位：补齐首尾残缺周用的占位，渲染成透明格子 */
 type Slot = Contribution | null
 
@@ -102,7 +105,10 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
     | { status: 'loading' }
     | { status: 'error' }
     | { status: 'ready'; weeks: Slot[][]; total: number }
-  >({ status: 'loading' })
+  >(() => {
+    const cached = login ? contributionsCache.get(login) : undefined
+    return cached ? { status: 'ready', ...cached } : { status: 'loading' }
+  })
 
   /** 最后一次悬浮的格子。收起时保留内容，才能完整淡出。 */
   const [tip, setTip] = useState<{ date: string; count: number; anchor: DOMRect } | null>(null)
@@ -168,7 +174,9 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
           typeof raw === 'number'
             ? raw
             : Object.values(raw ?? {}).reduce((a, b) => a + b, 0)
-        setState({ status: 'ready', weeks: toWeeks(data.contributions ?? []), total })
+        const weeks = toWeeks(data.contributions ?? [])
+        contributionsCache.set(login, { weeks, total })
+        setState({ status: 'ready', weeks, total })
       })
       .catch(() => setState({ status: 'error' }))
       .finally(() => window.clearTimeout(timer))

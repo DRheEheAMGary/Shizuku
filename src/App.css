@@ -3,42 +3,95 @@
  * ========================================================================== */
 
 /* ----------------------------------------------------------------------------
- *  路由切换：实时 DOM 的纯位移过渡
+ *  路由切换：卡片级形变
  * ----------------------------------------------------------------------------
- *  注意不能给 .page-view 加 opacity：
- *  卡片是 backdrop-filter 做的磨砂，祖先进透明度后 backdrop root 会变，
- *  磨砂会在动画期间消失、结束才突然回来 —— 就是那个“模糊跳变”。
- *  位移不会改变 backdrop root，卡片全程保持真实磨砂。
+ *  旧卡内容先淡出，换页后新卡从旧卡的矩形形变到新布局，最后内容淡入。
+ *
+ *  磨砂红线：
+ *  - 只能动卡片自己的 transform，不能给卡片或祖先加 opacity / filter / 快照
+ *  - 卡片内容单独做 opacity，玻璃本体始终保持不透明
  * -------------------------------------------------------------------------- */
 
-.page-view {
-  transition: transform 200ms var(--ease-apple);
+[data-card] {
+  transition: transform 340ms var(--ease-apple);
 }
 
-.page-view.is-out {
-  transform: translateY(14px);
+[data-card] > * {
+  transition: opacity 120ms linear;
+}
+
+.page-view.is-card-out [data-card] > * {
+  opacity: 0;
+  transition-duration: 40ms;
+}
+
+.page-view.is-card-morph [data-card] > * {
+  animation: card-content-in 160ms var(--ease-apple) both;
+}
+
+.page-view.is-card-in [data-card] > * {
+  opacity: 1;
+  transition: none;
+}
+
+@keyframes card-content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 目标页放不下的旧卡：向下让位，然后在新页出现前卸载 */
+[data-card].is-card-exit {
+  transform: translateY(18px) scale(0.97);
+  transition-duration: 40ms;
+}
+
+.page-view.is-card-out,
+.page-view.is-card-morph,
+.page-view.is-card-in {
   pointer-events: none;
 }
 
-.page-view.is-in {
-  animation: page-in 320ms var(--ease-apple) both;
+.page-view.is-card-out [data-card],
+.page-view.is-card-morph [data-card],
+.page-view.is-card-in [data-card] {
+  will-change: transform;
 }
 
-@keyframes page-in {
+/* 首屏的 .intro 入场只在第一次加载时播放；切回首页时不能再给卡片整体加 opacity */
+.page-view.has-routed .intro {
+  animation: none;
+}
+
+/* 首页标题不是玻璃卡，可以安全地淡出/淡入 */
+.page-view.is-card-out .home-title-block {
+  opacity: 0;
+  transition: opacity 40ms linear;
+}
+
+.page-view.is-card-morph .home-title-block {
+  animation: title-in 160ms var(--ease-apple) both;
+}
+
+@keyframes title-in {
   from {
-    transform: translateY(14px);
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
+    opacity: 1;
     transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-view {
-    transition: none;
-  }
-
-  .page-view.is-in {
-    animation: none;
+  [data-card],
+  [data-card] > *,
+  .home-title-block {
+    transition: none !important;
+    animation: none !important;
   }
 }

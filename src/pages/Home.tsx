@@ -67,7 +67,11 @@ export function Home() {
         </div>
 
         <div className="home-side">
-          <section className="glass home-card intro" style={{ '--i': 2 } as React.CSSProperties}>
+          <section
+            className="glass home-card intro"
+            style={{ '--i': 2 } as React.CSSProperties}
+            data-card
+          >
             <h2 className="home-card__title">About</h2>
             <p className="home-card__line">{profile.description}</p>
             <p className="home-card__meta">
