@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { href: '/', label: 'Main' },
   { href: '/about', label: 'About' },
   { href: '/github', label: 'Github' },
+  { href: '/contact', label: 'Contact' },
 ] as const
 
 interface SiteHeaderProps {

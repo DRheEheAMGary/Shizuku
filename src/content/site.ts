@@ -5,6 +5,8 @@
  *  新的布局定下来之后，把内容加回来即可。
  * ========================================================================== */
 
+import type { IconName } from '@/components/Icon'
+
 export const site = {
   /** 站名（页边竖排小字用） */
   mark: '雫',
@@ -42,6 +44,87 @@ export const profile = {
     '我是一名高一生，现居 JX-NC，是一名 OIer & 二次元',
     '很开心与你做朋友！',
   ],
+
+  /* ---------- About ---------- */
+  games: ['Minecraft', '原神', '崩坏：星穹铁道', '饿殍：明末千里行'],
+  minecraft: '生存 / 冒险 / 建筑 /（微量）生电',
+  gameAccounts: [
+    { game: '原神', uid: '292261202', level: 'Lv.58', icon: 'gamepad' },
+    { game: '星穹铁道', uid: '157154425', level: 'Lv.70', icon: 'gamepad' },
+    { game: 'MC Java', uid: 'DRheEheAM', level: '', icon: 'cube' },
+    { game: 'MC 基岩', uid: 'DreamGary513', level: '', icon: 'cube' },
+  ] as { game: string; uid: string; level: string; icon: IconName }[],
+  links: [
+    { icon: 'blog', name: '博客', url: 'https://blog.dreamgary.cn', desc: 'blog.dreamgary.cn' },
+    { icon: 'folder', name: '资源站', url: 'https://r.dreamgary.cn', desc: 'r.dreamgary.cn' },
+    {
+      icon: 'chess',
+      name: 'OIerTrainer',
+      url: 'https://oitr.dreamgary.cn',
+      desc: 'oitr.dreamgary.cn',
+    },
+    {
+      icon: 'bilibili',
+      name: '哔哩哔哩',
+      url: 'https://space.bilibili.com/3493283116353785',
+      desc: 'DRheEheAM_Gary',
+    },
+    {
+      icon: 'headphones',
+      name: '毛怪俱乐部',
+      url: 'https://2550505.com/space/36571',
+      desc: 'DRheEheAM_Gary',
+    },
+    { icon: 'cube', name: 'Minecraft', url: 'https://www.minecraft.net', desc: 'minecraft.net' },
+    { icon: 'gamepad', name: 'MiHoYo', url: 'https://www.mihoyo.com', desc: 'mihoyo.com' },
+  ] as { icon: IconName; name: string; url: string; desc: string }[],
+
+  /* ---------- Github ---------- */
+  github: {
+    username: 'DRheEheAMGary',
+    url: 'https://github.com/DRheEheAMGary',
+    repos: [
+      {
+        owner: 'DRheEheAMGary',
+        name: 'OI',
+        desc: '信息学代码总结',
+        url: 'https://github.com/DRheEheAMGary/OI',
+      },
+      {
+        owner: 'qifanmaker',
+        name: 'QFM-mcpvp',
+        desc: 'Minecraft PvP 匹配 Mod · 12 种玩法',
+        url: 'https://github.com/qifanmaker/QFM-mcpvp',
+      },
+      {
+        owner: 'DRheEheAMGary',
+        name: 'Shizuku',
+        desc: '现在这个个人主页的源码',
+        url: 'https://github.com/DRheEheAMGary/Shizuku',
+      },
+      {
+        owner: 'DRheEheAMServer',
+        name: 'HubSuite',
+        desc: 'Minecraft 大厅 + 多子服 Fabric 模组',
+        url: 'https://github.com/DRheEheAMServer/HubSuite',
+      },
+    ],
+  },
+
+  /* ---------- Contact ---------- */
+  contacts: {
+    qq: '2366574433',
+    bilibili: {
+      handle: 'DRheEheAM_Gary',
+      url: 'https://space.bilibili.com/3493283116353785',
+    },
+    emails: [
+      'dream20110513Gary@163.com',
+      'dream20110513Gary@gmail.com',
+      'gary0513hanser@gmail.com',
+    ],
+  },
+
   /* ↓↓↓ 还没用到的字段，等后续版式定了再填 ↓↓↓ */
   tags: [] as { icon: string; text: string }[],
   lyric: '',

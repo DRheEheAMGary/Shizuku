@@ -7,6 +7,7 @@ import { flushSync } from 'react-dom'
 import { SiteHeader } from '@/components/SiteHeader'
 import { PageLoader } from '@/components/PageLoader'
 import { About } from '@/pages/About'
+import { Contact } from '@/pages/Contact'
 import { Github } from '@/pages/Github'
 import { Home } from '@/pages/Home'
 import './App.css'
@@ -76,7 +77,16 @@ export function App() {
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
-  const page = path === '/about' ? <About /> : path === '/github' ? <Github /> : <Home />
+  const page =
+    path === '/about' ? (
+      <About />
+    ) : path === '/github' ? (
+      <Github />
+    ) : path === '/contact' ? (
+      <Contact />
+    ) : (
+      <Home />
+    )
 
   return (
     <>

@@ -1,0 +1,454 @@
+/* ============================================================================
+ *  Shizuku · About / Github / Contact
+ * ----------------------------------------------------------------------------
+ *  统一使用玻璃卡片 + 12 栏网格。
+ *  顶栏下面不放页面大标题，内容直接从卡片开始。
+ * ========================================================================== */
+
+.subpage {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: stretch;
+}
+
+/* GlassCard 默认宽度是横向卡片排算的，放进网格里要交回给 grid */
+.page-grid > .glass-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.span-5 { grid-column: span 5; }
+.span-7 { grid-column: span 7; }
+.span-12 { grid-column: span 12; }
+
+/* About 上排两张卡内容量不同，不强行拉成等高，避免游戏卡下半截空着 */
+.about-grid {
+  align-items: start;
+}
+
+.subpage .glass-card {
+  padding: var(--sp-5);
+}
+
+/* ---------- 标签 ---------- */
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 6px 11px;
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+  line-height: 1;
+  color: var(--text-soft);
+  background: var(--hairline);
+}
+
+.tag:first-child {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.sub-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.sub-note svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+/* ---------- 游戏账号 ---------- */
+.account-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--hairline);
+}
+
+.row-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.account-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.account-main strong {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.account-main span {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.level {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  color: var(--text-soft);
+  background: var(--hairline);
+}
+
+/* ---------- 站外链接 ---------- */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.link-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--hairline);
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.link-card:hover {
+  background: var(--hairline-strong);
+  transform: translateY(-1px);
+}
+
+.link-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.link-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.link-main strong {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.link-main span {
+  overflow: hidden;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.link-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.link-card:hover .link-arrow {
+  color: var(--primary);
+  transform: translate(1px, -1px);
+}
+
+/* ---------- Github ---------- */
+.github-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.github-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border: 1px solid var(--hairline);
+}
+
+.github-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.github-id strong {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.github-id span {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.page-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 8px 14px;
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--primary);
+  transition:
+    filter var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.page-cta:hover {
+  filter: brightness(1.08);
+}
+
+.page-cta:active {
+  transform: scale(0.98);
+}
+
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.repo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--hairline);
+  transition:
+    background-color var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.repo-card:hover {
+  background: var(--hairline-strong);
+  border-color: var(--hairline-strong);
+  transform: translateY(-1px);
+}
+
+.repo-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.repo-card__top svg {
+  flex-shrink: 0;
+}
+
+.repo-name {
+  overflow-wrap: anywhere;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.repo-card p {
+  margin-top: 1px;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* 热力图只占内容宽度，桌面端居中，别全堆在左边 */
+@media (min-width: 861px) {
+  .subpage .heat__grid {
+    justify-content: center;
+  }
+}
+
+/* ---------- Contact ---------- */
+.contact-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.contact-row:first-child {
+  padding-top: 0;
+}
+
+.contact-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.contact-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+  color: var(--text);
+}
+
+.contact-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.contact-value {
+  overflow-wrap: anywhere;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.contact-row.is-link:hover .contact-value {
+  color: var(--primary);
+}
+
+.row-arrow {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: color var(--dur-fast) var(--ease-apple);
+}
+
+.contact-row.is-link:hover .row-arrow {
+  color: var(--primary);
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: var(--hairline);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple);
+}
+
+.icon-btn:hover {
+  color: var(--primary);
+  background: var(--hairline-strong);
+}
+
+.icon-btn.is-copied {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.contact-note {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 860px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-5,
+  .span-7,
+  .span-12 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .subpage .glass-card {
+    padding: var(--sp-4);
+  }
+
+  .link-grid,
+  .repo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-list {
+    grid-template-columns: 1fr;
+  }
+
+  .page-cta {
+    margin-left: 0;
+  }
+}
