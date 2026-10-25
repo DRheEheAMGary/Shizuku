@@ -221,21 +221,29 @@
 }
 
 /* ---------- Github ---------- */
+.subpage .github-card {
+  padding: 20px;
+}
+
+.subpage .github-card .glass-card__head {
+  margin-bottom: var(--sp-2);
+}
+
 .github-profile {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   height: 100%;
 }
 
 .github-mark {
   display: grid;
   place-items: center;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
   color: var(--primary);
   background: var(--primary-soft);
   border: 1px solid var(--hairline);
@@ -256,12 +264,6 @@
 
 .github-id span {
   font-size: var(--fs-xs);
-  color: var(--text-muted);
-}
-
-.github-meta {
-  margin-top: 2px;
-  font-size: 11px;
   color: var(--text-muted);
 }
 

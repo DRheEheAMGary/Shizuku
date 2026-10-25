@@ -26,7 +26,6 @@ export function Github() {
               <div className="github-id">
                 <strong>@{github.username}</strong>
                 <span>GitHub 首页 · 开源项目与贡献</span>
-                <span className="github-meta">{github.repos.length} 个公开仓库</span>
               </div>
               <a
                 className="page-cta"
