@@ -18,6 +18,7 @@ function readPath() {
 }
 
 type Phase = 'idle' | 'out' | 'morph' | 'in'
+type TransitionKind = 'normal' | 'split'
 
 interface CardRect {
   x: number
@@ -34,9 +35,33 @@ const CARD_COUNTS: Record<string, number> = {
   '/contact': 2,
 }
 
-const OUT_MS = 40
-const MORPH_MS = 420
-const IN_MS = 80
+const OUT_MS = 60
+const MORPH_MS = 480
+const SPLIT_MS = 700
+const IN_MS = 100
+
+/** 桌面端 About → Contact 走分裂；手机上卡片是单列，保持普通过渡 */
+function getTransitionKind(from: string, to: string): TransitionKind {
+  if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
+  return from === '/about' && to === '/contact' ? 'split' : 'normal'
+}
+
+/** 目标页放不下的旧卡先下沉；分裂时保留被拆的那张，其余先退场 */
+function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
+  cards.forEach((el) => el.classList.remove('is-card-exit'))
+
+  if (kind === 'split' && cards.length >= 3) {
+    cards.forEach((el, i) => {
+      if (i !== 2) el.classList.add('is-card-exit')
+    })
+    return
+  }
+
+  const targetCount = CARD_COUNTS[to] ?? cards.length
+  cards.forEach((el, i) => {
+    if (i >= targetCount) el.classList.add('is-card-exit')
+  })
+}
 
 export function App() {
   const [path, setPath] = useState(readPath)
@@ -48,6 +73,8 @@ export function App() {
   const busyRef = useRef(false)
   const pendingRef = useRef<string | null>(null)
   const oldRectsRef = useRef<CardRect[]>([])
+  const oldPathRef = useRef(shownPath)
+  const kindRef = useRef<TransitionKind>('normal')
 
   const commit = (to: string) => {
     setHasNavigated(true)
@@ -67,6 +94,9 @@ export function App() {
       return
     }
 
+    const from = shownPath
+    oldPathRef.current = from
+
     /* 换页前先记下当前卡片矩形。
      * 新页渲染后，卡片会从这个矩形形变到新布局的位置。 */
     const oldCards = Array.from(
@@ -77,19 +107,25 @@ export function App() {
       return { x: r.x, y: r.y, w: r.width, h: r.height }
     })
 
-    /* 目标页没那么多卡：多出来的旧卡先向下收走 */
-    const targetCount = CARD_COUNTS[to] ?? oldCards.length
-    oldCards.forEach((el, i) => {
-      if (i >= targetCount) el.classList.add('is-card-exit')
-    })
+    const kind = getTransitionKind(from, to)
+    kindRef.current = kind
+    markExitCards(oldCards, kind, to)
 
     setPhase('out')
 
     window.setTimeout(() => {
       const target = pendingRef.current ?? to
       pendingRef.current = null
+
+      /* 退场期间又换了目标：按最终目标重新决定哪些旧卡退场 */
+      const finalKind = getTransitionKind(from, target)
+      kindRef.current = finalKind
+      markExitCards(oldCards, finalKind, target)
+
       commit(target)
       setPhase('morph')
+
+      const morphMs = finalKind === 'split' ? SPLIT_MS : MORPH_MS
 
       window.setTimeout(() => {
         setPhase('in')
@@ -102,7 +138,7 @@ export function App() {
           pendingRef.current = null
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
-      }, MORPH_MS)
+      }, morphMs)
     }, OUT_MS)
   }
 
@@ -115,6 +151,9 @@ export function App() {
       document.querySelectorAll<HTMLElement>('.page-view [data-card]'),
     )
     const old = oldRectsRef.current
+    const kind = kindRef.current
+    const split = kind === 'split' && old.length >= 3
+    const gap = 16
 
     cards.forEach((el, i) => {
       const r = el.getBoundingClientRect()
@@ -123,18 +162,41 @@ export function App() {
       el.style.transition = 'none'
       el.style.transformOrigin = 'top left'
 
-      const source = old[i]
+      let source: CardRect | undefined
+
+      if (split) {
+        /* 一张全宽链接卡，在原来的位置先裂成 4/8 两半 */
+        if (i < 2) {
+          const base = old[2]
+          const splitAt = base.x + base.w * (4 / 12)
+          source =
+            i === 0
+              ? { x: base.x, y: base.y, w: base.w * (4 / 12) - gap / 2, h: base.h }
+              : {
+                  x: splitAt + gap / 2,
+                  y: base.y,
+                  w: base.w * (8 / 12) - gap / 2,
+                  h: base.h,
+                }
+        }
+      } else {
+        source = old[i]
+      }
+
       if (source) {
-        const sx = (source.w / r.width) * 0.95
-        const sy = (source.h / r.height) * 0.95
+        const factor = split ? 0.98 : 0.95
+        const sx = (source.w / r.width) * factor
+        const sy = (source.h / r.height) * factor
         const dx = source.x - r.x
-        const dy = source.y - r.y + 18
+        const dy = source.y - r.y + (split ? 6 : 18)
         el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`
       } else {
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
-      el.style.transitionDelay = `${i * 28}ms`
+      /* 分裂先让空壳在原位停一下，形状看清楚了再移动 */
+      const hold = split ? 120 : 0
+      el.style.setProperty('--card-delay', `${hold + (split ? 0 : i * 30)}ms`)
     })
 
     let raf2 = 0
@@ -162,7 +224,7 @@ export function App() {
       el.style.transform = ''
       el.style.transition = ''
       el.style.transformOrigin = ''
-      el.style.transitionDelay = ''
+      el.style.removeProperty('--card-delay')
     })
     oldRectsRef.current = []
   }, [phase])
@@ -201,7 +263,10 @@ export function App() {
       <Home />
     )
 
-  const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${
+  const kindClass =
+    phase !== 'idle' && kindRef.current === 'split' ? ' is-split' : ''
+
+  const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${kindClass}${
     phase === 'out'
       ? ' is-card-out'
       : phase === 'morph'
