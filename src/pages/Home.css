@@ -58,7 +58,7 @@
 .home-subtitle {
   margin-top: var(--sp-2);
   font-family: 'Florida Vibes', var(--font-sans);
-  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  font-size: clamp(1.25rem, 1.9vw, 1.75rem);
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: 0.04em;
