@@ -14,8 +14,8 @@ export function About() {
   return (
     <PageShell marginText="について" wide>
       <div className="subpage">
-        <div className="page-grid about-grid">
-          <GlassCard span={5} title="游戏" icon="gamepad" className="span-5">
+        <div className="page-grid">
+          <GlassCard span={4} title="游戏" icon="gamepad" className="span-4">
             <div className="tag-row">
               {profile.games.map((game) => (
                 <span className="tag" key={game}>
@@ -29,7 +29,7 @@ export function About() {
             </p>
           </GlassCard>
 
-          <GlassCard span={7} title="游戏账号" icon="cube" className="span-7">
+          <GlassCard span={8} title="游戏账号" icon="cube" className="span-8">
             <div className="account-list">
               {profile.gameAccounts.map((account) => (
                 <div className="account-row" key={account.game}>

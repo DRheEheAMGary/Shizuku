@@ -8,7 +8,8 @@
 .subpage {
   width: 100%;
   max-width: 64rem;
-  margin: 0 auto;
+  /*  内容短时在视口内垂直居中；内容超过一屏时 auto 外边距自动归零。 */
+  margin: auto auto;
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
@@ -28,14 +29,10 @@
   min-height: 0;
 }
 
-.span-5 { grid-column: span 5; }
+.span-4 { grid-column: span 4; }
+.span-8 { grid-column: span 8; }
 .span-7 { grid-column: span 7; }
 .span-12 { grid-column: span 12; }
-
-/* About 上排两张卡内容量不同，不强行拉成等高，避免游戏卡下半截空着 */
-.about-grid {
-  align-items: start;
-}
 
 .subpage .glass-card {
   padding: var(--sp-5);
@@ -427,8 +424,9 @@
     grid-template-columns: 1fr;
   }
 
-  .span-5,
+  .span-4,
   .span-7,
+  .span-8,
   .span-12 {
     grid-column: 1 / -1;
   }

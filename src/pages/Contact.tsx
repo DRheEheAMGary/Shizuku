@@ -72,7 +72,7 @@ export function Contact() {
     <PageShell marginText="れんらく" wide>
       <div className="subpage">
         <div className="page-grid">
-          <GlassCard span={5} title="社交" icon="qq" className="span-5">
+          <GlassCard span={4} title="社交" icon="qq" className="span-4">
             <div className="contact-list">
               <div className="contact-row">
                 <span className="row-icon" aria-hidden="true">
@@ -104,7 +104,7 @@ export function Contact() {
             <p className="contact-note">B 站私信或 QQ 都能找到我。</p>
           </GlassCard>
 
-          <GlassCard span={7} title="邮箱" icon="mail" className="span-7">
+          <GlassCard span={8} title="邮箱" icon="mail" className="span-8">
             <div className="contact-list">
               {contacts.emails.map((email) => (
                 <div className="contact-row" key={email}>
