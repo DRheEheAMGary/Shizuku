@@ -2,18 +2,50 @@
  *  Shizuku · 全局布局
  * ========================================================================== */
 
-/* 路由切换的淡入 —— 退场不做，避免闪烁 */
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+/* ----------------------------------------------------------------------------
+ *  路由切换：旧页退场 + 新页入场
+ * ----------------------------------------------------------------------------
+ *  用 View Transitions 让旧/新页面各成一张快照：
+ *  顶栏和背景不参与（只有 .page-view 有 view-transition-name），
+ *  所以切换时导航栏不动，只有页面内容淡出、上移，再淡入落位。
+ * -------------------------------------------------------------------------- */
+
+html.is-page-transition .page-view {
+  view-transition-name: page;
+}
+
+/*  页面切换时把主题揭示的根快照动画关掉，避免圆形裁切串场 */
+html.is-page-transition::view-transition-old(root),
+html.is-page-transition::view-transition-new(root) {
+  animation: none;
+  clip-path: none;
+}
+
+::view-transition-old(page) {
+  animation: page-out 200ms var(--ease-apple) both;
+}
+
+::view-transition-new(page) {
+  animation: page-in 320ms var(--ease-apple) both;
+}
+
+@keyframes page-out {
   to {
-    opacity: 1;
-    transform: translateY(0);
+    opacity: 0;
+    transform: translateY(-6px);
   }
 }
 
-main > * {
-  animation: page-in var(--dur-slow) var(--ease-apple);
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(page),
+  ::view-transition-new(page) {
+    animation: none;
+  }
 }
