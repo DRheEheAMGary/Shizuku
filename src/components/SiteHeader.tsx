@@ -162,11 +162,32 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       const borX = (parseFloat(ics.borderLeftWidth) || 0) + (parseFloat(ics.borderRightWidth) || 0)
       const gap = parseFloat(ics.columnGap) || 0
       const navInFlow = nav ? getComputedStyle(nav).position !== 'absolute' : false
+
+      /*  这里不能读 .brand 的 getBoundingClientRect：
+       *  收缩/展开的瞬间，brand 还在 420ms 的过渡中间，
+       *  量到的是旧宽度 —— 收缩时会留出一大截空位，展开时又会溢出。
+       *  直接按目标状态算：签名宽 + 目标 gap + 站名块的自然宽。 */
+      const sig = brand.querySelector('.brand__sig') as HTMLElement | null
+      const tail = brand.querySelector('.brand__tail-inner') as HTMLElement | null
+      const tailName = brand.querySelector('.brand__name') as HTMLElement | null
+      const tailDivider = brand.querySelector('.brand__divider') as HTMLElement | null
+      const brandGap = parseFloat(getComputedStyle(brand).columnGap) || 0
+      const collapsed =
+        wrap.classList.contains('is-collapsed') ||
+        window.matchMedia('(max-width: 720px)').matches
+      const sigW = sig ? sig.getBoundingClientRect().width : brand.getBoundingClientRect().width
+      /*  不用 tail.scrollWidth：站名块被 0fr 裁切时它可能读到裁后的值。
+       *  细线 + 内部 gap + 文字宽度相加才是稳定的自然宽度。 */
+      const tailGap = tail ? parseFloat(getComputedStyle(tail).columnGap) || 0 : 0
+      const tailW = tailName
+        ? tailName.getBoundingClientRect().width +
+          (tailDivider ? tailDivider.getBoundingClientRect().width : 0) +
+          tailGap
+        : 0
+      const brandW = sigW + (collapsed ? 0 : brandGap + tailW)
+
       naturalW =
-        brand.getBoundingClientRect().width +
-        (nav && navInFlow ? nav.getBoundingClientRect().width + gap : 0) +
-        padX +
-        borX
+        brandW + (nav && navInFlow ? nav.getBoundingClientRect().width + gap : 0) + padX + borX
     }
     wrap.style.setProperty('--pill-w', `${naturalW}px`)
     wrap.style.setProperty('--field-w', `${fieldW}px`)

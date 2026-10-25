@@ -163,10 +163,9 @@
   /* 高度固定住：导航去掉后内容变矮，若不管它，
    * 胶囊会和背后的磨砂圆不等高。 */
   min-height: 54px;   /* + 上下 1px 边框 = 56px，与磨砂圆等高 */
-  transition:
-    min-height var(--dur-base) var(--ease-apple),
-    padding var(--dur-base) var(--ease-apple),
-    gap var(--dur-base) var(--ease-apple);
+  /*  padding / gap 不做过渡：收缩时 measure() 要立刻读到目标值，
+   *  否则会拿旧内边距去算胶囊宽度，导致留空或溢出。 */
+  transition: min-height var(--dur-base) var(--ease-apple);
 }
 
 .site-header-wrap.is-collapsed .site-header__inner {
@@ -272,6 +271,10 @@
 }
 
 .brand__name {
+  /*  折叠时这一块会被压到 0 宽；保留自然宽度，
+   *  measure() 才能用它算展开后的目标宽度（否则反复收放会越算越窄）。 */
+  flex-shrink: 0;
+
   /*  站名用手写体（Edu QLD Hand），手写体本身偏宽，
    *  字号比原来大一点点、字距收一点才不至于散开 */
   font-family: var(--font-wordmark);
