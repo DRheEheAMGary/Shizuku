@@ -3,43 +3,27 @@
  * ========================================================================== */
 
 /* ----------------------------------------------------------------------------
- *  路由切换：旧页退场 + 新页入场
+ *  路由切换：实时 DOM 退场 + 入场
  * ----------------------------------------------------------------------------
- *  用 View Transitions 让旧/新页面各成一张快照：
- *  顶栏和背景不参与（只有 .page-view 有 view-transition-name），
- *  所以切换时导航栏不动，只有页面内容淡出、上移，再淡入落位。
+ *  不用 View Transition 快照：卡片带 backdrop-filter，拍成快照再淡入淡出时
+ *  磨砂会跟真实背景脱节，出现模糊跳变。
+ *  这里直接对真实的页面容器做透明度 / 位移，磨砂始终按当前背景实时计算。
  * -------------------------------------------------------------------------- */
 
-html.is-page-transition .page-view {
-  view-transition-name: page;
+.page-view {
+  transition:
+    opacity 200ms var(--ease-apple),
+    transform 200ms var(--ease-apple);
 }
 
-/*  页面切换时不要给深浅色开关的图标单独建快照：
- *  它平时带着主题切换的 view-transition-name，会被主题的图标动画带着闪一下。 */
-html.is-page-transition .theme-switch__knob {
-  view-transition-name: none;
+.page-view.is-out {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
 }
 
-/*  页面切换时把主题揭示的根快照动画关掉，避免圆形裁切串场 */
-html.is-page-transition::view-transition-old(root),
-html.is-page-transition::view-transition-new(root) {
-  animation: none;
-  clip-path: none;
-}
-
-::view-transition-old(page) {
-  animation: page-out 200ms var(--ease-apple) both;
-}
-
-::view-transition-new(page) {
+.page-view.is-in {
   animation: page-in 320ms var(--ease-apple) both;
-}
-
-@keyframes page-out {
-  to {
-    opacity: 0;
-    transform: translateY(8px);
-  }
 }
 
 @keyframes page-in {
@@ -47,11 +31,18 @@ html.is-page-transition::view-transition-new(root) {
     opacity: 0;
     transform: translateY(8px);
   }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(page),
-  ::view-transition-new(page) {
+  .page-view {
+    transition: none;
+  }
+
+  .page-view.is-in {
     animation: none;
   }
 }

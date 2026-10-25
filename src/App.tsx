@@ -3,7 +3,6 @@
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
 import { SiteHeader } from '@/components/SiteHeader'
 import { PageLoader } from '@/components/PageLoader'
 import { About } from '@/pages/About'
@@ -18,57 +17,73 @@ function readPath() {
   return path || '/'
 }
 
-interface ViewTransition {
-  finished?: Promise<void>
-}
+type Phase = 'idle' | 'out' | 'in'
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (cb: () => void | Promise<void>) => ViewTransition
-}
+const EXIT_MS = 200
+const ENTER_MS = 320
 
 export function App() {
   const [path, setPath] = useState(readPath)
+  const [shownPath, setShownPath] = useState(path)
+  const [phase, setPhase] = useState<Phase>('idle')
   const pathRef = useRef(path)
   pathRef.current = path
+  const busyRef = useRef(false)
+  const pendingRef = useRef<string | null>(null)
+
+  const commit = (to: string) => {
+    setPath(to)
+    pathRef.current = to
+    setShownPath(to)
+    window.scrollTo(0, 0)
+  }
+
+  const run = (to: string) => {
+    busyRef.current = true
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      commit(to)
+      setPhase('idle')
+      busyRef.current = false
+      return
+    }
+
+    setPhase('out')
+
+    window.setTimeout(() => {
+      /*  退场期间如果又点了别的导航，直接落到最后一个目标，
+       *  不要把中间页闪一下再走。 */
+      const target = pendingRef.current ?? to
+      pendingRef.current = null
+      commit(target)
+      setPhase('in')
+
+      window.setTimeout(() => {
+        setPhase('idle')
+        busyRef.current = false
+
+        const next = pendingRef.current
+        pendingRef.current = null
+        if (next && next !== pathRef.current) run(next)
+      }, ENTER_MS)
+    }, EXIT_MS)
+  }
 
   const navigate = (to: string, push = true) => {
-    if (to === pathRef.current) {
+    if (to === pathRef.current && !busyRef.current) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
-    if (push) window.history.pushState(null, '', to)
-
-    const apply = () => {
-      flushSync(() => {
-        setPath(to)
-        pathRef.current = to
-        window.scrollTo(0, 0)
-      })
-    }
-
-    const doc = document as ViewTransitionDocument
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (typeof doc.startViewTransition !== 'function' || reduced) {
-      apply()
+    if (busyRef.current) {
+      //  过渡中再点：记下最后一次目标，等这一轮播完再接上
+      if (push) window.history.pushState(null, '', to)
+      pendingRef.current = to
       return
     }
 
-    /*  旧页和新页各拍一张快照：
-     *  顶栏、背景不参与（.page-view 单独命名），只让页面内容进退场。 */
-    const root = document.documentElement
-    const done = () => root.classList.remove('is-page-transition')
-    root.classList.add('is-page-transition')
-
-    try {
-      const vt = doc.startViewTransition(apply)
-      if (vt.finished) vt.finished.finally(done).catch(() => {})
-      else window.setTimeout(done, 600)
-    } catch {
-      // 上一次过渡还没结束等异常：直接切，不把导航卡住
-      done()
-      apply()
-    }
+    if (push) window.history.pushState(null, '', to)
+    run(to)
   }
 
   useEffect(() => {
@@ -78,11 +93,11 @@ export function App() {
   }, [])
 
   const page =
-    path === '/about' ? (
+    shownPath === '/about' ? (
       <About />
-    ) : path === '/github' ? (
+    ) : shownPath === '/github' ? (
       <Github />
-    ) : path === '/contact' ? (
+    ) : shownPath === '/contact' ? (
       <Contact />
     ) : (
       <Home />
@@ -93,7 +108,9 @@ export function App() {
       {/*  等背景图和磨砂都算完再揭开 */}
       <PageLoader />
       <SiteHeader path={path} onNavigate={navigate} />
-      <div className="page-view">{page}</div>
+      <div className={`page-view${phase === 'out' ? ' is-out' : ''}${phase === 'in' ? ' is-in' : ''}`}>
+        {page}
+      </div>
     </>
   )
 }
