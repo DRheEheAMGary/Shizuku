@@ -7,5 +7,5 @@
 import { PageShell } from '@/components/PageShell'
 
 export function Github() {
-  return <PageShell marginText="コード" title="Github" />
+  return <PageShell marginText="コード" />
 }

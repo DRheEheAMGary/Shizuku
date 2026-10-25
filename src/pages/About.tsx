@@ -7,5 +7,5 @@
 import { PageShell } from '@/components/PageShell'
 
 export function About() {
-  return <PageShell marginText="について" title="About" />
+  return <PageShell marginText="について" />
 }

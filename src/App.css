@@ -14,6 +14,12 @@ html.is-page-transition .page-view {
   view-transition-name: page;
 }
 
+/*  页面切换时不要给深浅色开关的图标单独建快照：
+ *  它平时带着主题切换的 view-transition-name，会被主题的图标动画带着闪一下。 */
+html.is-page-transition .theme-switch__knob {
+  view-transition-name: none;
+}
+
 /*  页面切换时把主题揭示的根快照动画关掉，避免圆形裁切串场 */
 html.is-page-transition::view-transition-old(root),
 html.is-page-transition::view-transition-new(root) {
