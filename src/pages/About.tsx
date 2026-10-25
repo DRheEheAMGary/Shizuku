@@ -46,7 +46,7 @@ export function About() {
             </div>
           </GlassCard>
 
-          <GlassCard span={12} title="站外链接" icon="folder" className="span-12">
+          <GlassCard span={12} title="链接" icon="folder" className="span-12">
             <div className="link-grid">
               {profile.links.map((link) => (
                 <a

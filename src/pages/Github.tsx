@@ -18,7 +18,7 @@ export function Github() {
     <PageShell marginText="コード" wide>
       <div className="subpage">
         <div className="page-grid">
-          <GlassCard span={12} title="GitHub" icon="github" className="span-12">
+          <GlassCard span={4} title="GitHub" icon="github" className="span-4 github-card">
             <div className="github-profile">
               <span className="github-mark" aria-hidden="true">
                 <Icon name="github" size={28} />
@@ -26,6 +26,7 @@ export function Github() {
               <div className="github-id">
                 <strong>@{github.username}</strong>
                 <span>GitHub 首页 · 开源项目与贡献</span>
+                <span className="github-meta">{github.repos.length} 个公开仓库</span>
               </div>
               <a
                 className="page-cta"
@@ -39,7 +40,7 @@ export function Github() {
             </div>
           </GlassCard>
 
-          <GlassCard span={12} title="贡献热力图" icon="github" className="span-12">
+          <GlassCard span={8} title="贡献热力图" icon="github" className="span-8">
             <GithubHeatmap login={github.username} />
           </GlassCard>
 

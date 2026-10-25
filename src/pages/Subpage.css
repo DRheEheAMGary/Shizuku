@@ -38,6 +38,13 @@
   padding: var(--sp-5);
 }
 
+/* 同一行卡片被拉高时，内容垂直居中，避免空白全堆在底部 */
+.subpage .glass-card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 /* ---------- 标签 ---------- */
 .tag-row {
   display: flex;
@@ -131,28 +138,33 @@
   background: var(--hairline);
 }
 
-/* ---------- 站外链接 ---------- */
+/* ---------- 链接 ---------- */
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
 .link-card {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 12px;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: var(--hairline);
+  background: var(--glass-bg);
   transition:
     background-color var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
     transform var(--dur-fast) var(--ease-apple);
 }
 
 .link-card:hover {
-  background: var(--hairline-strong);
+  background: var(--glass-bg-strong);
+  border-color: var(--hairline-strong);
   transform: translateY(-1px);
 }
 
@@ -172,12 +184,15 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  flex: 1;
+  width: 100%;
 }
 
 .link-main strong {
+  padding-right: 14px;
+  overflow-wrap: anywhere;
   font-size: var(--fs-sm);
   font-weight: 500;
+  line-height: 1.3;
   color: var(--text);
 }
 
@@ -190,6 +205,9 @@
 }
 
 .link-arrow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   flex-shrink: 0;
   color: var(--text-muted);
   transition:
@@ -205,9 +223,10 @@
 /* ---------- Github ---------- */
 .github-profile {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  height: 100%;
 }
 
 .github-mark {
@@ -240,11 +259,17 @@
   color: var(--text-muted);
 }
 
+.github-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .page-cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: auto;
+  margin-top: auto;
   padding: 8px 14px;
   border-radius: var(--r-full);
   font-size: var(--fs-xs);
@@ -266,7 +291,7 @@
 
 .repo-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -276,9 +301,9 @@
   gap: 4px;
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid transparent;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: var(--hairline);
+  background: var(--glass-bg);
   transition:
     background-color var(--dur-fast) var(--ease-apple),
     border-color var(--dur-fast) var(--ease-apple),
@@ -286,7 +311,7 @@
 }
 
 .repo-card:hover {
-  background: var(--hairline-strong);
+  background: var(--glass-bg-strong);
   border-color: var(--hairline-strong);
   transform: translateY(-1px);
 }
@@ -322,6 +347,19 @@
 @media (min-width: 861px) {
   .subpage .heat__grid {
     justify-content: center;
+  }
+}
+
+/* 8 栏里的热力图改用更小的格子，整年不用横向滚动 */
+@media (min-width: 981px) {
+  .subpage .heat__day {
+    width: 8px;
+    height: 8px;
+  }
+
+  .subpage .heat__grid,
+  .subpage .heat__week {
+    gap: 2px;
   }
 }
 
@@ -419,7 +457,7 @@
 }
 
 /* ---------- 窄屏 ---------- */
-@media (max-width: 860px) {
+@media (max-width: 980px) {
   .page-grid {
     grid-template-columns: 1fr;
   }
@@ -430,16 +468,21 @@
   .span-12 {
     grid-column: 1 / -1;
   }
+
+  .repo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .link-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
   .subpage .glass-card {
     padding: var(--sp-4);
-  }
-
-  .link-grid,
-  .repo-grid {
-    grid-template-columns: 1fr;
   }
 
   .account-list {
@@ -448,5 +491,21 @@
 
   .page-cta {
     margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .link-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .repo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .link-grid {
+    grid-template-columns: 1fr;
   }
 }
