@@ -10,6 +10,7 @@
  * ========================================================================== */
 
 import { useEffect, useState } from 'react'
+import { preloadSiteImages } from '@/lib/preloadImages'
 import './PageLoader.css'
 
 /** 填充动画时长（与 CSS 里的 loader-fill 保持一致） */
@@ -21,7 +22,7 @@ const MIN_WAIT_MS = 320
 
 type Phase = 'wait' | 'fill' | 'out' | 'done'
 
-/** 等所有资源就绪：字体 + 图片 */
+/** 等所有资源就绪：字体 + 图片（含 CSS 背景） */
 function whenAssetsReady(): Promise<unknown> {
   const fonts = document.fonts?.ready ?? Promise.resolve()
   const images = Array.from(document.images).map((img) =>
@@ -32,7 +33,7 @@ function whenAssetsReady(): Promise<unknown> {
           img.addEventListener('error', resolve, { once: true })
         }),
   )
-  return Promise.all([fonts, ...images])
+  return Promise.all([fonts, ...images, preloadSiteImages()])
 }
 
 export function PageLoader() {
