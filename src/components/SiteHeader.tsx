@@ -24,7 +24,18 @@ import './SiteHeader.css'
 /** 搜索框里的占位文字：逐字上浮，所以得自己渲染，不能用原生 placeholder */
 const PLACEHOLDER = '搜索博客与文档…'
 
-export function SiteHeader() {
+const NAV_ITEMS = [
+  { href: '/', label: 'Main' },
+  { href: '/about', label: 'About' },
+  { href: '/github', label: 'Github' },
+] as const
+
+interface SiteHeaderProps {
+  path: string
+  onNavigate: (to: string) => void
+}
+
+export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const collapsed = useScrollCollapse()
   const [searching, setSearching] = useState(false)
   const [query, setQuery] = useState('')
@@ -141,13 +152,20 @@ export function SiteHeader() {
      *  改用内容推算：.brand 是 flex-shrink:0，它的宽度就是自然宽度，
      *  再加内层的内边距与边框。这样收起态完全不用碰胶囊。 */
     const brand = pill.querySelector('.brand') as HTMLElement | null
+    const nav = pill.querySelector('.site-nav') as HTMLElement | null
     const inner = pill.firstElementChild as HTMLElement | null
     let naturalW = pillRect.width
     if (brand && inner) {
       const ics = getComputedStyle(inner)
       const padX = (parseFloat(ics.paddingLeft) || 0) + (parseFloat(ics.paddingRight) || 0)
       const borX = (parseFloat(ics.borderLeftWidth) || 0) + (parseFloat(ics.borderRightWidth) || 0)
-      naturalW = brand.getBoundingClientRect().width + padX + borX
+      const gap = parseFloat(ics.columnGap) || 0
+      const navInFlow = nav ? getComputedStyle(nav).position !== 'absolute' : false
+      naturalW =
+        brand.getBoundingClientRect().width +
+        (nav && navInFlow ? nav.getBoundingClientRect().width + gap : 0) +
+        padX +
+        borX
     }
     wrap.style.setProperty('--pill-w', `${naturalW}px`)
     wrap.style.setProperty('--field-w', `${fieldW}px`)
@@ -267,7 +285,16 @@ export function SiteHeader() {
 
       <header className="site-header glass" ref={pillRef}>
         <div className="site-header__inner">
-          <a href="#top" className="brand" aria-label="回到首页">
+          <a
+            href="/"
+            className="brand"
+            aria-label="回到首页"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+              e.preventDefault()
+              onNavigate('/')
+            }}
+          >
             {/* 署名：连笔手写体，主题色，始终保留（收紧时折的是右边那道线加站名） */}
             <span className="brand__sig">
               <span>{profile.signature}</span>
@@ -281,6 +308,27 @@ export function SiteHeader() {
               </span>
             </span>
           </a>
+
+          <nav className="site-nav" aria-label="主导航">
+            {NAV_ITEMS.map((item) => {
+              const active = path === item.href
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`site-nav__link${active ? ' is-active' : ''}`}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                    e.preventDefault()
+                    onNavigate(item.href)
+                  }}
+                >
+                  {item.label}
+                </a>
+              )
+            })}
+          </nav>
 
           {/* 搜索时顶栏自己变成输入框：签名淡出，这里浮现 */}
           <div className="site-header__search">

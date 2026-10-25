@@ -289,6 +289,49 @@
   background: var(--hairline-strong);
 }
 
+/* ---------- 顶栏导航 ---------- */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  transition:
+    opacity 180ms var(--ease-apple),
+    visibility 180ms var(--ease-apple);
+}
+
+.site-nav__link {
+  padding: 6px 9px;
+  border-radius: var(--r-full);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple);
+}
+
+.site-nav__link:hover {
+  color: var(--text);
+  background: var(--hairline);
+}
+
+.site-nav__link.is-active {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* 搜索时导航让位给输入框 */
+.site-header-wrap[data-search='true'] .site-nav {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 720px) {
   .site-header-wrap {
@@ -319,6 +362,30 @@
 
   .brand {
     gap: 0;
+  }
+
+  /* 窄屏放不下「署名 + 三项导航」一行：导航改成胶囊下方独立的小玻璃条 */
+  .site-nav {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    translate: -50% 0;
+    gap: 0;
+    padding: 4px;
+    border-radius: var(--r-full);
+    background: var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(14px) saturate(170%);
+    backdrop-filter: blur(14px) saturate(170%);
+    border: 1px solid var(--hairline-strong);
+    box-shadow:
+      0 6px 20px rgba(31, 45, 61, 0.14),
+      var(--glass-inner);
+  }
+
+  .site-nav__link {
+    padding: 6px 9px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
   }
 }
 

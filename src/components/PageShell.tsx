@@ -10,7 +10,7 @@ import { site } from '@/content/site'
 import './PageShell.css'
 
 interface PageShellProps {
-  children: ReactNode
+  children?: ReactNode
   /** 页边竖排小字，如「ホーム」 */
   marginText?: string
   /** 页面主标题 */
