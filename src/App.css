@@ -38,7 +38,7 @@ html.is-page-transition::view-transition-new(root) {
 @keyframes page-out {
   to {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(8px);
   }
 }
 
