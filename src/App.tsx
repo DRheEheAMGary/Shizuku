@@ -210,12 +210,16 @@ export function App() {
       const union = unionRect(oldRects)
       collectUnionRef.current = union
       if (union) {
+        /* 不要把所有卡缩到同一矩形：透明玻璃叠一起会明显发白。
+         * 让每张旧卡拼到 union 的不同碎片上，彼此不重叠。 */
+        const pieces = cardPieces(union, oldCards.length)
         oldCards.forEach((el, i) => {
           const r = oldRects[i]
-          if (!r.w || !r.h) return
+          const piece = pieces[i]
+          if (!r.w || !r.h || !piece) return
           el.style.transition = `transform ${COLLECT_OUT_MS}ms var(--ease-card)`
           el.style.transformOrigin = 'top left'
-          el.style.transform = `translate3d(${union.x - r.x}px, ${union.y - r.y}px, 0) scale(${union.w / r.w}, ${union.h / r.h})`
+          el.style.transform = `translate3d(${piece.x - r.x}px, ${piece.y - r.y}px, 0) scale(${piece.w / r.w}, ${piece.h / r.h})`
         })
       }
     }

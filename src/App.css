@@ -74,39 +74,14 @@
   border-radius: var(--r-lg);
   pointer-events: none;
   background: transparent;
-  -webkit-backdrop-filter: blur(14px) saturate(125%);
-  backdrop-filter: blur(14px) saturate(125%);
-  box-shadow: 0 8px 32px rgba(31, 45, 61, 0.08);
+  -webkit-backdrop-filter: blur(10px) saturate(105%);
+  backdrop-filter: blur(10px) saturate(105%);
   animation: bridge-fade 280ms var(--ease-fade) 80ms forwards;
-}
-
-.transition-bridge::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.22) 46%,
-    transparent 72%
-  );
-  animation: bridge-sheen 700ms var(--ease-fade) forwards;
 }
 
 @keyframes bridge-fade {
   to {
     opacity: 0;
-  }
-}
-
-@keyframes bridge-sheen {
-  from {
-    transform: translateX(-110%);
-  }
-  to {
-    transform: translateX(110%);
   }
 }
 
