@@ -48,7 +48,7 @@
   }
 }
 
-/* 分裂 / 合并时让空壳先走一段，先把形状变化看清楚 */
+/* 分裂时让空壳先走一段，先把形状变化看清楚 */
 .page-view.is-card-morph.is-split [data-card] > * {
   animation-delay: 300ms;
 }
@@ -81,6 +81,24 @@
 .page-view.is-card-out .home-title-block {
   opacity: 0;
   transition: opacity 120ms linear;
+}
+
+/* Main 放大：标题跟着放一点，主卡自己放大成舞台 */
+.page-view.is-main .home-title-block {
+  opacity: 0;
+  transform: scale(1.06);
+  transform-origin: left bottom;
+  transition:
+    opacity 520ms linear,
+    transform 600ms var(--ease-card);
+}
+
+.page-view.is-main [data-card] > * {
+  transition-duration: 300ms;
+}
+
+.page-view.is-card-morph.is-main [data-card] > * {
+  animation-delay: 180ms;
 }
 
 .page-view.is-card-morph .home-title-block {

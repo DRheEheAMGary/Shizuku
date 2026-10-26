@@ -18,7 +18,7 @@ function readPath() {
 }
 
 type Phase = 'idle' | 'out' | 'morph' | 'in'
-type TransitionKind = 'normal' | 'split'
+type TransitionKind = 'normal' | 'split' | 'main'
 
 interface CardRect {
   x: number
@@ -38,12 +38,52 @@ const CARD_COUNTS: Record<string, number> = {
 const OUT_MS = 120
 const MORPH_MS = 900
 const SPLIT_MS = 1150
+const MAIN_ZOOM_MS = 600
+const MAIN_SPLIT_MS = 1000
 const IN_MS = 180
 
-/** 桌面端 About → Contact 走分裂；手机上卡片是单列，保持普通过渡 */
+/** Main → 子页：放大后分裂；About → Contact：普通分裂。手机上保持普通过渡 */
 function getTransitionKind(from: string, to: string): TransitionKind {
   if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
+  if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
+    return 'main'
+  }
   return from === '/about' && to === '/contact' ? 'split' : 'normal'
+}
+
+/** Main 卡放大后的舞台：接近子页内容栏的宽度，垂直居中 */
+function getMainStageRect(): CardRect {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const w = Math.min(1024, vw - 96)
+  const h = Math.min(560, Math.max(320, vh - 320))
+  return { x: (vw - w) / 2, y: (vh - h) / 2, w, h }
+}
+
+/** 把舞台按目标卡片数量切成 4/8（+整行）的碎片 */
+function stagePieces(stage: CardRect, count: number, gap = 16): CardRect[] {
+  if (count >= 3) {
+    const splitY = stage.h * 0.56
+    const leftW = stage.w * (4 / 12) - gap / 2
+    const rightW = stage.w * (8 / 12) - gap / 2
+    return [
+      { x: stage.x, y: stage.y, w: leftW, h: splitY - gap / 2 },
+      { x: stage.x + stage.w * (4 / 12) + gap / 2, y: stage.y, w: rightW, h: splitY - gap / 2 },
+      {
+        x: stage.x,
+        y: stage.y + splitY + gap / 2,
+        w: stage.w,
+        h: stage.h - splitY - gap / 2,
+      },
+    ]
+  }
+
+  const leftW = stage.w * (4 / 12) - gap / 2
+  const rightW = stage.w * (8 / 12) - gap / 2
+  return [
+    { x: stage.x, y: stage.y, w: leftW, h: stage.h },
+    { x: stage.x + stage.w * (4 / 12) + gap / 2, y: stage.y, w: rightW, h: stage.h },
+  ]
 }
 
 /** 目标页放不下的旧卡先下沉；分裂时保留被拆的那张，其余先退场 */
@@ -56,6 +96,8 @@ function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
     })
     return
   }
+
+  if (kind === 'main') return
 
   const targetCount = CARD_COUNTS[to] ?? cards.length
   cards.forEach((el, i) => {
@@ -75,6 +117,7 @@ export function App() {
   const oldRectsRef = useRef<CardRect[]>([])
   const oldPathRef = useRef(shownPath)
   const kindRef = useRef<TransitionKind>('normal')
+  const stageRef = useRef<CardRect | null>(null)
 
   const commit = (to: string) => {
     setHasNavigated(true)
@@ -111,6 +154,20 @@ export function App() {
     kindRef.current = kind
     markExitCards(oldCards, kind, to)
 
+    if (kind === 'main') {
+      /* 先把 Main 的唯一卡片放大到舞台；内容稍后淡出 */
+      const mainCard = oldCards[0]
+      const stage = getMainStageRect()
+      stageRef.current = stage
+      if (mainCard) {
+        const r = mainCard.getBoundingClientRect()
+        mainCard.style.transition = `transform ${MAIN_ZOOM_MS}ms var(--ease-card)`
+        mainCard.style.transformOrigin = 'top left'
+        void mainCard.offsetWidth
+        mainCard.style.transform = `translate3d(${stage.x - r.x}px, ${stage.y - r.y}px, 0) scale(${stage.w / r.width}, ${stage.h / r.height})`
+      }
+    }
+
     setPhase('out')
 
     window.setTimeout(() => {
@@ -125,7 +182,8 @@ export function App() {
       commit(target)
       setPhase('morph')
 
-      const morphMs = finalKind === 'split' ? SPLIT_MS : MORPH_MS
+      const morphMs =
+        finalKind === 'main' ? MAIN_SPLIT_MS : finalKind === 'split' ? SPLIT_MS : MORPH_MS
 
       window.setTimeout(() => {
         setPhase('in')
@@ -139,7 +197,7 @@ export function App() {
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
       }, morphMs)
-    }, OUT_MS)
+    }, kind === 'main' ? MAIN_ZOOM_MS : OUT_MS)
   }
 
   /* 新页挂载后、绘制前把卡片放回旧矩形，再在下一帧动画归位。
@@ -153,6 +211,8 @@ export function App() {
     const old = oldRectsRef.current
     const kind = kindRef.current
     const split = kind === 'split' && old.length >= 3
+    const main = kind === 'main' && !!stageRef.current
+    const mainPieces = main ? stagePieces(stageRef.current!, cards.length) : []
     const gap = 16
 
     cards.forEach((el, i) => {
@@ -164,7 +224,9 @@ export function App() {
 
       let source: CardRect | undefined
 
-      if (split) {
+      if (main) {
+        source = mainPieces[i]
+      } else if (split) {
         /* 一张全宽链接卡，在原来的位置先裂成 4/8 两半 */
         if (i < 2) {
           const base = old[2]
@@ -184,19 +246,22 @@ export function App() {
       }
 
       if (source) {
-        const factor = split ? 0.98 : 0.95
+        const factor = main ? 1 : split ? 0.98 : 0.95
         const sx = (source.w / r.width) * factor
         const sy = (source.h / r.height) * factor
         const dx = source.x - r.x
-        const dy = source.y - r.y + (split ? 6 : 18)
+        const dy = source.y - r.y + (main ? 0 : split ? 6 : 18)
         el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`
       } else {
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
-      /* 分裂先让空壳在原位停一下，形状看清楚了再移动 */
-      const hold = split ? 300 : 0
-      el.style.setProperty('--card-delay', `${hold + (split ? 0 : i * 70)}ms`)
+      /* 分裂 / 放大分裂先让碎片停一下，形状看清楚了再移动 */
+      const hold = main ? 180 : split ? 300 : 0
+      el.style.setProperty(
+        '--card-delay',
+        `${hold + (main ? i * 40 : split ? 0 : i * 70)}ms`,
+      )
     })
 
     let raf2 = 0
@@ -227,6 +292,7 @@ export function App() {
       el.style.removeProperty('--card-delay')
     })
     oldRectsRef.current = []
+    stageRef.current = null
   }, [phase])
 
   const navigate = (to: string, push = true) => {
@@ -264,7 +330,13 @@ export function App() {
     )
 
   const kindClass =
-    phase !== 'idle' && kindRef.current === 'split' ? ' is-split' : ''
+    phase === 'idle'
+      ? ''
+      : kindRef.current === 'split'
+        ? ' is-split'
+        : kindRef.current === 'main'
+          ? ' is-main'
+          : ''
 
   const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${kindClass}${
     phase === 'out'
