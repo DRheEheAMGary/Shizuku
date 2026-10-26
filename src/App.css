@@ -15,7 +15,9 @@
   --ease-card: cubic-bezier(0.32, 1.06, 0.58, 1);
   --ease-fade: cubic-bezier(0.4, 0, 0.2, 1);
   /*  汇聚到合并矩形时不再刹停：交棒瞬间还留着速度，直接接上分裂的起步 */
-  --ease-collect: cubic-bezier(0.4, 0.35, 0.85, 0.6);
+  --ease-collect: cubic-bezier(0.4, 0.35, 0.8, 0.55);
+  /*  分裂：起步速度接得住合并的收尾，整段平顺外扩，不先窜出去再拖尾 */
+  --ease-split: cubic-bezier(0.3, 0.58, 0.5, 0.92);
 }
 
 [data-card] {
@@ -24,22 +26,16 @@
 }
 
 [data-card] > * {
-  transition: opacity 240ms var(--ease-fade);
+  transition: opacity var(--out-fade, 300ms) var(--ease-fade);
 }
 
 .page-view.is-card-out [data-card] > * {
   opacity: 0;
-  transition-duration: 200ms;
-}
-
-/* 合并很快交棒时，文字要在换页前退干净，不能停在半透明被切掉 */
-.page-view.is-card-out.is-collect-split [data-card] > *,
-.page-view.is-card-out.is-collect-shrink [data-card] > * {
-  transition-duration: 100ms;
+  transition-duration: var(--out-fade, 260ms);
 }
 
 .page-view.is-card-morph [data-card] > * {
-  animation: card-content-in var(--content-fade, 480ms) var(--ease-fade)
+  animation: card-content-in var(--content-fade, 600ms) var(--ease-fade)
     var(--content-delay, 0ms) both;
 }
 
@@ -61,20 +57,21 @@
 .page-view.is-card-morph.is-main,
 .page-view.is-card-morph.is-collect-split,
 .page-view.is-card-morph.is-collect-shrink {
-  --content-fade: 300ms;
+  --content-fade: 520ms;
 }
 
-/* 形变类过渡用更短的行程时长，长尾拖沓会让合并/分裂变成两拍 */
+/* 分裂/收拢的行程：变长之后，"分开"和"位移"能同时发生 */
 .page-view.is-card-morph.is-main [data-card],
 .page-view.is-card-morph.is-collect-split [data-card],
 .page-view.is-card-morph.is-collect-shrink [data-card] {
-  transition-duration: 700ms;
+  transition-duration: 950ms;
+  transition-timing-function: var(--ease-split);
 }
 
 /* 回到 Main：标题也等到主卡收拢后再出现 */
 .page-view.is-card-morph.is-collect-shrink .home-title-block {
-  animation-delay: 640ms;
-  animation-duration: 400ms;
+  animation-delay: 800ms;
+  animation-duration: 520ms;
 }
 
 /* 合并阶段的桥接玻璃 */
@@ -90,7 +87,7 @@
   background: transparent;
   -webkit-backdrop-filter: blur(10px) saturate(105%);
   backdrop-filter: blur(10px) saturate(105%);
-  animation: bridge-veil 420ms var(--ease-fade) forwards;
+  animation: bridge-veil 400ms var(--ease-fade) forwards;
 }
 
 /* 交棒瞬间盖住碎片接缝：先轻轻浮上来，再随卡片散开化掉 */
