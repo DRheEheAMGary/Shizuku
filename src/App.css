@@ -83,22 +83,18 @@
   transition: opacity 120ms linear;
 }
 
-/* Main 放大：标题跟着放一点，主卡自己放大成舞台 */
+/* Main 分裂：标题轻轻放大淡出；卡片本身从原位置裂开并移动 */
 .page-view.is-main .home-title-block {
   opacity: 0;
-  transform: scale(1.06);
+  transform: scale(1.04);
   transform-origin: left bottom;
   transition:
-    opacity 520ms linear,
-    transform 600ms var(--ease-card);
-}
-
-.page-view.is-main [data-card] > * {
-  transition-duration: 300ms;
+    opacity 120ms linear,
+    transform 180ms var(--ease-card);
 }
 
 .page-view.is-card-morph.is-main [data-card] > * {
-  animation-delay: 180ms;
+  animation-delay: 380ms;
 }
 
 .page-view.is-card-morph .home-title-block {

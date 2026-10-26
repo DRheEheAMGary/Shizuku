@@ -38,8 +38,7 @@ const CARD_COUNTS: Record<string, number> = {
 const OUT_MS = 120
 const MORPH_MS = 900
 const SPLIT_MS = 1150
-const MAIN_ZOOM_MS = 600
-const MAIN_SPLIT_MS = 1000
+const MAIN_SPLIT_MS = 1150
 const IN_MS = 180
 
 /** Main → 子页：放大后分裂；About → Contact：普通分裂。手机上保持普通过渡 */
@@ -51,17 +50,8 @@ function getTransitionKind(from: string, to: string): TransitionKind {
   return from === '/about' && to === '/contact' ? 'split' : 'normal'
 }
 
-/** Main 卡放大后的舞台：接近子页内容栏的宽度，垂直居中 */
-function getMainStageRect(): CardRect {
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  const w = Math.min(1024, vw - 96)
-  const h = Math.min(560, Math.max(320, vh - 320))
-  return { x: (vw - w) / 2, y: (vh - h) / 2, w, h }
-}
-
-/** 把舞台按目标卡片数量切成 4/8（+整行）的碎片 */
-function stagePieces(stage: CardRect, count: number, gap = 16): CardRect[] {
+/** 把 Main 卡矩形按目标卡片数量切成 4/8（+整行）的碎片 */
+function cardPieces(stage: CardRect, count: number, gap = 16): CardRect[] {
   if (count >= 3) {
     const splitY = stage.h * 0.56
     const leftW = stage.w * (4 / 12) - gap / 2
@@ -112,17 +102,19 @@ export function App() {
   const [hasNavigated, setHasNavigated] = useState(false)
   const pathRef = useRef(path)
   pathRef.current = path
+  const shownPathRef = useRef(shownPath)
+  shownPathRef.current = shownPath
+  const navigateRef = useRef<(to: string, push?: boolean) => void>(() => {})
   const busyRef = useRef(false)
   const pendingRef = useRef<string | null>(null)
   const oldRectsRef = useRef<CardRect[]>([])
-  const oldPathRef = useRef(shownPath)
   const kindRef = useRef<TransitionKind>('normal')
-  const stageRef = useRef<CardRect | null>(null)
 
   const commit = (to: string) => {
     setHasNavigated(true)
     setPath(to)
     pathRef.current = to
+    shownPathRef.current = to
     setShownPath(to)
     window.scrollTo(0, 0)
   }
@@ -137,8 +129,7 @@ export function App() {
       return
     }
 
-    const from = shownPath
-    oldPathRef.current = from
+    const from = shownPathRef.current
 
     /* 换页前先记下当前卡片矩形。
      * 新页渲染后，卡片会从这个矩形形变到新布局的位置。 */
@@ -154,19 +145,6 @@ export function App() {
     kindRef.current = kind
     markExitCards(oldCards, kind, to)
 
-    if (kind === 'main') {
-      /* 先把 Main 的唯一卡片放大到舞台；内容稍后淡出 */
-      const mainCard = oldCards[0]
-      const stage = getMainStageRect()
-      stageRef.current = stage
-      if (mainCard) {
-        const r = mainCard.getBoundingClientRect()
-        mainCard.style.transition = `transform ${MAIN_ZOOM_MS}ms var(--ease-card)`
-        mainCard.style.transformOrigin = 'top left'
-        void mainCard.offsetWidth
-        mainCard.style.transform = `translate3d(${stage.x - r.x}px, ${stage.y - r.y}px, 0) scale(${stage.w / r.width}, ${stage.h / r.height})`
-      }
-    }
 
     setPhase('out')
 
@@ -197,7 +175,7 @@ export function App() {
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
       }, morphMs)
-    }, kind === 'main' ? MAIN_ZOOM_MS : OUT_MS)
+    }, OUT_MS)
   }
 
   /* 新页挂载后、绘制前把卡片放回旧矩形，再在下一帧动画归位。
@@ -211,8 +189,8 @@ export function App() {
     const old = oldRectsRef.current
     const kind = kindRef.current
     const split = kind === 'split' && old.length >= 3
-    const main = kind === 'main' && !!stageRef.current
-    const mainPieces = main ? stagePieces(stageRef.current!, cards.length) : []
+    const main = kind === 'main' && old.length >= 1
+    const mainPieces = main ? cardPieces(old[0], cards.length) : []
     const gap = 16
 
     cards.forEach((el, i) => {
@@ -256,11 +234,10 @@ export function App() {
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
-      /* 分裂 / 放大分裂先让碎片停一下，形状看清楚了再移动 */
-      const hold = main ? 180 : split ? 300 : 0
+      /* Main 碎片从原卡位置直接出发；About→Contact 仍保留分裂停留 */
       el.style.setProperty(
         '--card-delay',
-        `${hold + (main ? i * 40 : split ? 0 : i * 70)}ms`,
+        main ? `${i * 40}ms` : split ? '300ms' : `${i * 70}ms`,
       )
     })
 
@@ -292,7 +269,6 @@ export function App() {
       el.style.removeProperty('--card-delay')
     })
     oldRectsRef.current = []
-    stageRef.current = null
   }, [phase])
 
   const navigate = (to: string, push = true) => {
@@ -312,8 +288,10 @@ export function App() {
     run(to)
   }
 
+  navigateRef.current = navigate
+
   useEffect(() => {
-    const onPopState = () => navigate(readPath(), false)
+    const onPopState = () => navigateRef.current(readPath(), false)
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
