@@ -13,25 +13,25 @@
  * -------------------------------------------------------------------------- */
 
 :root {
-  --ease-card: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-card: cubic-bezier(0.42, 0, 0.58, 1);
 }
 
 [data-card] {
-  transition: transform 700ms var(--ease-card);
+  transition: transform 800ms var(--ease-card);
   transition-delay: var(--card-delay, 0ms);
 }
 
 [data-card] > * {
-  transition: opacity 120ms linear;
+  transition: opacity 200ms var(--ease-card);
 }
 
 .page-view.is-card-out [data-card] > * {
   opacity: 0;
-  transition-duration: 120ms;
+  transition-duration: 200ms;
 }
 
 .page-view.is-card-morph [data-card] > * {
-  animation: card-content-in 300ms var(--ease-apple) both;
+  animation: card-content-in 400ms var(--ease-card) both;
 }
 
 .page-view.is-card-in [data-card] > * {
@@ -57,7 +57,7 @@
 /* 目标页放不下的旧卡：向下让位，然后在新页出现前卸载 */
 [data-card].is-card-exit {
   transform: translateY(18px) scale(0.97);
-  transition-duration: 120ms;
+  transition-duration: 200ms;
 }
 
 .page-view.is-card-out,
@@ -80,7 +80,7 @@
 /* 首页标题不是玻璃卡，可以安全地淡出/淡入 */
 .page-view.is-card-out .home-title-block {
   opacity: 0;
-  transition: opacity 120ms linear;
+  transition: opacity 200ms var(--ease-card);
 }
 
 /* Main 分裂：标题轻轻放大淡出；卡片本身从原位置裂开并移动 */
@@ -89,8 +89,8 @@
   transform: scale(1.04);
   transform-origin: left bottom;
   transition:
-    opacity 120ms linear,
-    transform 180ms var(--ease-card);
+    opacity 200ms var(--ease-card),
+    transform 320ms var(--ease-card);
 }
 
 .page-view.is-card-morph.is-main [data-card] > * {
@@ -98,7 +98,7 @@
 }
 
 .page-view.is-card-morph .home-title-block {
-  animation: title-in 300ms var(--ease-apple) both;
+  animation: title-in 400ms var(--ease-card) both;
 }
 
 @keyframes title-in {

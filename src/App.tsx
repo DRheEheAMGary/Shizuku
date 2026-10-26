@@ -35,11 +35,11 @@ const CARD_COUNTS: Record<string, number> = {
   '/contact': 2,
 }
 
-const OUT_MS = 120
-const MORPH_MS = 900
-const SPLIT_MS = 1150
+const OUT_MS = 200
+const MORPH_MS = 1000
+const SPLIT_MS = 1300
 const MAIN_SPLIT_MS = 1150
-const IN_MS = 180
+const IN_MS = 220
 
 /** Main → 子页：放大后分裂；About → Contact：普通分裂。手机上保持普通过渡 */
 function getTransitionKind(from: string, to: string): TransitionKind {
