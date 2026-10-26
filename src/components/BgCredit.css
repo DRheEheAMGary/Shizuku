@@ -1,0 +1,42 @@
+/* ============================================================================
+ *  Shizuku · 背景画师署名
+ * ----------------------------------------------------------------------------
+ *  永远留在页脚文档流里（页脚被撑到页面底部，所以它天然就在左下角）。
+ *  不做 position: fixed —— 内容比视口高时，固定元素会压在卡片上。
+ * ========================================================================== */
+
+.bg-credit {
+  /*  和页脚那句备案同一档字号，读起来是一双小字 */
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+
+  /*  页脚里顶到最左边，引语与备案仍靠右 */
+  margin-right: auto;
+  margin-left: -0.5rem;   /*  抵消内边距，文字仍贴住页脚左缘 */
+
+  /*  插画底色有亮有暗，给它一层和卡片同材质的极薄雾面：
+   *  既保留「贴着背景的小字」观感，又保证任何底色下都读得清。 */
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--glass-bg-menu) 78%, transparent);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+
+  transition: color 180ms var(--ease-fade), box-shadow 180ms var(--ease-fade);
+}
+
+.bg-credit:hover,
+.bg-credit:focus-visible {
+  color: var(--primary);
+}
+
+/*  不支持毛玻璃时退回更实一点的底，别让字糊在插画里 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bg-credit {
+    background: color-mix(in srgb, var(--glass-bg-strong) 88%, transparent);
+  }
+}

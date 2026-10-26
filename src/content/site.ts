@@ -29,6 +29,22 @@ export const site = {
   footerQuote: '',
 } as const
 
+/** 三套背景插画各自的画师署名（跟着 data-accent 走） */
+export const bgArtists = {
+  blue: {
+    name: '花久花酒',
+    url: 'https://space.bilibili.com/2394319',
+  },
+  yellow: {
+    name: 'DAME_ovo_',
+    url: 'https://space.bilibili.com/33461313',
+  },
+  purple: {
+    name: 'DAME_ovo_',
+    url: 'https://space.bilibili.com/33461313',
+  },
+} as const
+
 export const profile = {
   name: 'DRheEheAM_Gary',
   /** 顶栏的连笔署名 */

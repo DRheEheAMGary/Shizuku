@@ -7,6 +7,7 @@
 
 import type { ReactNode } from 'react'
 import { site } from '@/content/site'
+import { BgCredit } from './BgCredit'
 import './PageShell.css'
 
 interface PageShellProps {
@@ -42,6 +43,8 @@ export function PageShell({ children, marginText, title, subtitle, wide }: PageS
 
       <footer className="site-footer">
         <div className="site-footer__inner">
+          {/* 背景画师署名：桌面端 fixed 到左下角，窄屏留在页脚里 */}
+          <BgCredit />
           {site.footerQuote && (
             <span className="site-footer__quote" lang="ja">
               {site.footerQuote}
