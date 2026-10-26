@@ -336,38 +336,11 @@
 }
 
 /* ---------- 响应式 ---------- */
-@media (max-width: 720px) {
-  .site-header-wrap {
-    top: var(--sp-3);
-    margin-top: var(--sp-3);
-    /* 磨砂圆会向外探出 --halo-bleed，间隙要留够才不会贴住胶囊 */
-    gap: 10px;
-
-    /* 窄屏留给导航的空间有限，头像相应收小 */
-    --avatar-size: 34px;
-  }
-
-  .site-header-wrap.is-collapsed {
-    --avatar-size: 32px;
-  }
-
-  .site-header__inner {
-    padding: 0.375rem 0.375rem 0.375rem var(--sp-4);
-    gap: var(--sp-1);
-  }
-
-  /*  窄屏收紧：保留署名，折起「细线 + 站名」，和向下滚动时的表现一致 */
-  .brand__tail {
-    grid-template-rows: 0fr;
-    grid-template-columns: 0fr;
-    opacity: 0;
-  }
-
-  .brand {
-    gap: 0;
-  }
-
-  /* 窄屏放不下「署名 + 三项导航」一行：导航改成胶囊下方独立的小玻璃条 */
+/*  660px 以上到 860px：桌面版式还在，但「署名 + 站名 + 三项导航」
+ *  一行放不下（实测 721–839px 时导航会探出胶囊 33–104px）。
+ *  这一档把导航挪到胶囊下方，署名和站名都留着；再窄（≤720）连站名一起折。 */
+@media (max-width: 860px) {
+  /* 放不下「署名 + 站名 + 三项导航」一行：导航改成胶囊下方独立的小玻璃条 */
   .site-nav {
     position: absolute;
     top: calc(100% + 8px);
@@ -389,6 +362,40 @@
     padding: 6px 9px;
     font-size: 0.6875rem;
     letter-spacing: 0.02em;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header-wrap {
+    top: var(--sp-3);
+    margin-top: var(--sp-3);
+    /* 磨砂圆会向外探出 --halo-bleed，间隙要留够才不会贴住胶囊 */
+    gap: 10px;
+
+    /* 窄屏留给导航的空间有限，头像相应收小 */
+    --avatar-size: 34px;
+  }
+
+  .site-header-wrap.is-collapsed {
+    --avatar-size: 32px;
+  }
+
+  .site-header__inner {
+    /*  右侧原来只留 6px：署名的手写体墨迹会顶到胶囊边沿，看着像溢出。
+     *  放到 10px，靠署名最后一笔也有余量。 */
+    padding: 0.375rem 0.625rem 0.375rem var(--sp-4);
+    gap: var(--sp-1);
+  }
+
+  /*  手机宽度连「署名 + 站名」都放不下：折起站名，只留署名 */
+  .brand__tail {
+    grid-template-rows: 0fr;
+    grid-template-columns: 0fr;
+    opacity: 0;
+  }
+
+  .brand {
+    gap: 0;
   }
 }
 
