@@ -18,7 +18,7 @@ function readPath() {
 }
 
 type Phase = 'idle' | 'out' | 'morph' | 'in'
-type TransitionKind = 'normal' | 'split' | 'main'
+type TransitionKind = 'normal' | 'split' | 'main' | 'merge'
 
 interface CardRect {
   x: number
@@ -59,6 +59,7 @@ const CARD_COUNTS: Record<string, number> = {
 const OUT_MS = 200
 const MORPH_MS = 1000
 const SPLIT_MS = 1300
+const MERGE_MS = 1200
 const MAIN_SPLIT_MS = 1150
 const IN_MS = 220
 
@@ -68,7 +69,9 @@ function getTransitionKind(from: string, to: string): TransitionKind {
   if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
     return 'main'
   }
-  return from === '/about' && to === '/contact' ? 'split' : 'normal'
+  if (from === '/about' && to === '/contact') return 'split'
+  if (from === '/contact' && to === '/about') return 'merge'
+  return 'normal'
 }
 
 /** 把 Main 卡矩形按目标卡片数量切成 4/8（+整行）的碎片 */
@@ -108,7 +111,7 @@ function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
     return
   }
 
-  if (kind === 'main') return
+  if (kind === 'main' || kind === 'merge') return
 
   const targetCount = CARD_COUNTS[to] ?? cards.length
   cards.forEach((el, i) => {
@@ -189,7 +192,13 @@ export function App() {
       setPhase('morph')
 
       const morphMs =
-        finalKind === 'main' ? MAIN_SPLIT_MS : finalKind === 'split' ? SPLIT_MS : MORPH_MS
+        finalKind === 'main'
+          ? MAIN_SPLIT_MS
+          : finalKind === 'split'
+            ? SPLIT_MS
+            : finalKind === 'merge'
+              ? MERGE_MS
+              : MORPH_MS
 
       window.setTimeout(() => {
         setPhase('in')
@@ -219,6 +228,7 @@ export function App() {
     const split = kind === 'split' && old.length >= 3
     const main = kind === 'main' && old.length >= 1
     const mainPieces = main ? cardPieces(old[0], cards.length) : []
+    const merge = kind === 'merge' && old.length >= 2
     const gap = 16
 
     cards.forEach((el, i) => {
@@ -232,6 +242,18 @@ export function App() {
 
       if (main) {
         source = mainPieces[i]
+      } else if (merge) {
+        /* 两个旧卡先并成一条全宽玻璃，作为链接卡的起点 */
+        if (i === 2) {
+          const a = old[0]
+          const b = old[1]
+          source = {
+            x: Math.min(a.x, b.x),
+            y: Math.min(a.y, b.y),
+            w: Math.max(a.x + a.w, b.x + b.w) - Math.min(a.x, b.x),
+            h: Math.max(a.y + a.h, b.y + b.h) - Math.min(a.y, b.y),
+          }
+        }
       } else if (split) {
         /* 一张全宽链接卡，在原来的位置先裂成 4/8 两半 */
         if (i < 2) {
@@ -295,6 +317,7 @@ export function App() {
       el.style.transition = ''
       el.style.transformOrigin = ''
       el.style.removeProperty('--card-delay')
+      el.style.zIndex = ''
     })
     oldRectsRef.current = []
   }, [phase])
@@ -342,7 +365,9 @@ export function App() {
         ? ' is-split'
         : kindRef.current === 'main'
           ? ' is-main'
-          : ''
+          : kindRef.current === 'merge'
+            ? ' is-merge'
+            : ''
 
   const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${kindClass}${
     phase === 'out'
