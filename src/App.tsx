@@ -42,17 +42,17 @@ const CARD_COUNTS: Record<string, number> = {
   '/contact': 2,
 }
 
-const OUT_MS = 260
-const MORPH_MS = 1320
-const CONTENT_MS = 900
-const MAIN_SPLIT_MS = 1420
-const COLLECT_OUT_MS = 380
-const COLLECT_SPLIT_MS = 1380
-const COLLECT_SHRINK_MS = 1400
-const COLLECT_HANDOFF_MS = 240
+const OUT_MS = 230
+const MORPH_MS = 1160
+const CONTENT_MS = 780
+const MAIN_SPLIT_MS = 1260
+const COLLECT_OUT_MS = 340
+const COLLECT_SPLIT_MS = 1220
+const COLLECT_SHRINK_MS = 1240
+const COLLECT_HANDOFF_MS = 210
 const BRIDGE_HOLD_MS = 0
 const SHRINK_HOLD_MS = 0
-const IN_MS = 260
+const IN_MS = 230
 
 /** 旧卡要走的距离越短，合并这一拍就越短；已经在同一位置时直接交棒 */
 function collectOutMs(rects: CardRect[], union: CardRect | null) {
@@ -70,16 +70,16 @@ function collectOutMs(rects: CardRect[], union: CardRect | null) {
 }
 
 /** 内容文字淡入的时长（与 App.css 的 --content-fade 保持一致） */
-const CONTENT_FADE_MS = 520
+const CONTENT_FADE_MS = 460
 
 /** 卡片基本落位之后才浮出文字：延迟各自的形变收尾时刻 */
 function contentDelayFor(kind: TransitionKind) {
   /* About ↔ Github 只换内容、卡片不动，保持即时淡入 */
   if (kind === 'content') return 0
-  if (kind === 'collect-split') return 820
-  if (kind === 'collect-shrink') return 840
-  if (kind === 'main') return 860
-  return 620
+  if (kind === 'collect-split') return 720
+  if (kind === 'collect-shrink') return 740
+  if (kind === 'main') return 760
+  return 560
 }
 
 /** Main 的标题复制一份，换页后继续在原位淡出 */
@@ -277,7 +277,7 @@ export function App() {
           window.setTimeout(() => {
             bridge.remove()
             if (bridgeRef.current === bridge) bridgeRef.current = null
-          }, 440)
+          }, 380)
         }
       }
 

@@ -35,7 +35,7 @@
 }
 
 .page-view.is-card-morph [data-card] > * {
-  animation: card-content-in var(--content-fade, 600ms) var(--ease-fade)
+  animation: card-content-in var(--content-fade, 540ms) var(--ease-fade)
     var(--content-delay, 0ms) both;
 }
 
@@ -57,21 +57,21 @@
 .page-view.is-card-morph.is-main,
 .page-view.is-card-morph.is-collect-split,
 .page-view.is-card-morph.is-collect-shrink {
-  --content-fade: 520ms;
+  --content-fade: 460ms;
 }
 
 /* 分裂/收拢的行程：变长之后，"分开"和"位移"能同时发生 */
 .page-view.is-card-morph.is-main [data-card],
 .page-view.is-card-morph.is-collect-split [data-card],
 .page-view.is-card-morph.is-collect-shrink [data-card] {
-  transition-duration: 950ms;
+  transition-duration: 840ms;
   transition-timing-function: var(--ease-split);
 }
 
 /* 回到 Main：标题也等到主卡收拢后再出现 */
 .page-view.is-card-morph.is-collect-shrink .home-title-block {
-  animation-delay: 800ms;
-  animation-duration: 520ms;
+  animation-delay: 720ms;
+  animation-duration: 460ms;
 }
 
 /* 合并阶段的桥接玻璃 */
@@ -87,7 +87,7 @@
   background: transparent;
   -webkit-backdrop-filter: blur(10px) saturate(105%);
   backdrop-filter: blur(10px) saturate(105%);
-  animation: bridge-veil 400ms var(--ease-fade) forwards;
+  animation: bridge-veil 360ms var(--ease-fade) forwards;
 }
 
 /* 交棒瞬间盖住碎片接缝：先轻轻浮上来，再随卡片散开化掉 */
