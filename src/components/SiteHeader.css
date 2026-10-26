@@ -614,3 +614,80 @@
   opacity: 0;
   pointer-events: none;
 }
+/*  极致窄（≈440% 以上的浏览器缩放）：单行组成里最先撑爆胶囊的是署名。
+ *  这一档先把内边距、字距、导航条一起收紧，别急着藏东西。
+ *  375/390/414 这些常见手机宽度不受影响，保持原样。 */
+@media (max-width: 340px) {
+  .site-header-wrap {
+    gap: 8px;
+  }
+
+  .site-header__inner {
+    padding: 0.375rem 0.5rem 0.375rem 0.75rem;
+  }
+
+  .brand__sig {
+    font-size: 0.95rem;
+  }
+
+  .site-nav {
+    padding: 3px;
+  }
+
+  .site-nav__link {
+    padding: 5px 7px;
+    font-size: 0.625rem;
+    letter-spacing: 0.01em;
+  }
+}
+
+/*  再窄（≈500% 缩放）：头像让位，署名允许省略成「DRheEhe…」，
+ *  这样胶囊、搜索钮、导航条都还在，且谁都不会探出视口。 */
+@media (max-width: 300px) {
+  .site-header__avatar {
+    display: none;
+  }
+
+  /*  让弹性链一路能缩：胶囊被 max-width 压窄时，署名靠省略号收，
+   *  而不是整块探出玻璃右缘 */
+  .brand {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .brand__sig {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .brand__sig > span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .site-nav__link {
+    padding: 5px 6px;
+  }
+}
+
+/*  视口再窄（≈600% 以上）：导航条也跟着缩，免得它顶出屏幕 */
+@media (max-width: 260px) {
+  .site-nav {
+    padding: 2px;
+  }
+
+  .site-nav__link {
+    padding: 4px 5px;
+    font-size: 0.5625rem;
+  }
+}
+
+/*  视口比 230px 还窄（≈650% 缩放）：导航条不足以居中在胶囊下方，
+ *  改成与胶囊左缘对齐，避免左侧被切 */
+@media (max-width: 230px) {
+  .site-nav {
+    left: 0;
+    translate: 0 0;
+  }
+}
