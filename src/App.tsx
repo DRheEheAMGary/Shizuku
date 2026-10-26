@@ -43,16 +43,17 @@ const CARD_COUNTS: Record<string, number> = {
 }
 
 const OUT_MS = 230
+const MAIN_OUT_MS = 150
 const MORPH_MS = 1160
 const CONTENT_MS = 780
-const MAIN_SPLIT_MS = 1260
-const COLLECT_OUT_MS = 340
-const COLLECT_SPLIT_MS = 1220
-const COLLECT_SHRINK_MS = 1240
-const COLLECT_HANDOFF_MS = 210
+const MAIN_SPLIT_MS = 1000
+const COLLECT_OUT_MS = 280
+const COLLECT_SPLIT_MS = 960
+const COLLECT_SHRINK_MS = 980
+const COLLECT_HANDOFF_MS = 100
 const BRIDGE_HOLD_MS = 0
 const SHRINK_HOLD_MS = 0
-const IN_MS = 230
+const IN_MS = 190
 
 /** 旧卡要走的距离越短，合并这一拍就越短；已经在同一位置时直接交棒 */
 function collectOutMs(rects: CardRect[], union: CardRect | null) {
@@ -70,15 +71,15 @@ function collectOutMs(rects: CardRect[], union: CardRect | null) {
 }
 
 /** 内容文字淡入的时长（与 App.css 的 --content-fade 保持一致） */
-const CONTENT_FADE_MS = 460
+const CONTENT_FADE_MS = 400
 
 /** 卡片基本落位之后才浮出文字：延迟各自的形变收尾时刻 */
 function contentDelayFor(kind: TransitionKind) {
   /* About ↔ Github 只换内容、卡片不动，保持即时淡入 */
   if (kind === 'content') return 0
-  if (kind === 'collect-split') return 720
-  if (kind === 'collect-shrink') return 740
-  if (kind === 'main') return 760
+  if (kind === 'collect-split') return 520
+  if (kind === 'collect-shrink') return 540
+  if (kind === 'main') return 560
   return 560
 }
 
@@ -241,7 +242,7 @@ export function App() {
       collectUnionRef.current = union
       collectOut = collectOutMs(oldRects, union)
       /* 文字退场要在交棒前走完，时长跟合并时长绑定 */
-      const outFade = `${Math.max(160, collectOut - 30)}ms`
+      const outFade = `${Math.max(90, collectOut - 30)}ms`
       oldCards.forEach((el) => el.style.setProperty('--out-fade', outFade))
       if (union) {
         /* 不要把所有卡缩到同一矩形：透明玻璃叠一起会明显发白。
@@ -312,7 +313,11 @@ export function App() {
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
       }, morphPhaseMs)
-    }, kind === 'collect-split' || kind === 'collect-shrink' ? collectOut : OUT_MS)
+    }, kind === 'collect-split' || kind === 'collect-shrink'
+      ? collectOut
+      : kind === 'main'
+        ? MAIN_OUT_MS
+        : OUT_MS)
   }
 
   useLayoutEffect(() => {
@@ -354,7 +359,7 @@ export function App() {
 
       if (main) {
         source = mainPieces[i]
-        delay = '100ms'
+        delay = '0ms'
       } else if (collectSplit) {
         source = collectPieces[i]
         delay = `${BRIDGE_HOLD_MS}ms`
