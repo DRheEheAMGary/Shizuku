@@ -15,6 +15,10 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /*  About/Github 比 Contact 高，换页时滚动条会忽有忽无，
+   *  整页因此横移半个滚动条宽度 —— 正好落在卡片缩放的当口。
+   *  固定预留这条沟，滚动条不再参与布局，动画期间就不会跳。 */
+  scrollbar-gutter: stable;
 }
 
 @media (prefers-reduced-motion: reduce) {
