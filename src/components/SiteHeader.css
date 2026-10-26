@@ -294,6 +294,8 @@
 
 /* ---------- 顶栏导航 ---------- */
 .site-nav {
+  /*  滑块按 offsetLeft/offsetWidth 定位，所以这里必须是定位父级 */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1px;
@@ -303,7 +305,34 @@
     visibility 180ms var(--ease-apple);
 }
 
+/*  激活态滑块：一枚半透明主题色，在导航项之间平移。
+ *  不用每个链接自己带背景 —— 那样切换时是「闪一下」，不是「滑过去」。 */
+.site-nav__slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  height: 100%;
+  width: var(--nav-w, 0px);
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent);
+  transform: translateX(var(--nav-x, 0px));
+  transition:
+    transform 300ms var(--ease-slide),
+    width 300ms var(--ease-slide),
+    opacity 180ms var(--ease-fade);
+  pointer-events: none;
+  will-change: transform, width;
+}
+
+.site-nav__slider.is-instant {
+  transition: none;
+}
+
 .site-nav__link {
+  position: relative;
+  z-index: 1;
   padding: 6px 9px;
   border-radius: var(--r-full);
   font-family: var(--font-sans);
@@ -325,7 +354,12 @@
 
 .site-nav__link.is-active {
   color: var(--primary);
-  background: var(--primary-soft);
+  /*  底色交给滑块，链接自身保持透明 */
+  background: transparent;
+}
+
+.site-nav__link.is-active:hover {
+  background: transparent;
 }
 
 /* 搜索时导航让位给输入框 */

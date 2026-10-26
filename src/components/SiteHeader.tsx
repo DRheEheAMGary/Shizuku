@@ -55,8 +55,38 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const flyRef = useRef({ x: 0, y: 0 })
   // 量好的基准位置：落点槽位、图标当前位置
   const baseRef = useRef({ slotOffset: 0, slotW: 16, avatarLeft: 0, pillTop: 0, pillH: 0, iconX: 0, iconY: 0 })
+  const navRef = useRef<HTMLElement>(null)
+  /*  点击时就先把滑块挪到目标上，不等 70ms 后的路由提交 —— 否则会有半拍迟滞 */
+  const [hopeful, setHopeful] = useState<string | null>(null)
+  const activeHref = hopeful ?? path
+  const sliderRef = useRef<HTMLSpanElement>(null)
 
   const measureRef = useRef<() => void>(() => {})
+
+  /*  导航激活态：一枚半透明的主题色滑块，在四个链接之间平移。
+   *  位置量的是链接相对 .site-nav 的 offset —— 所以 .site-nav 必须是定位父级。
+   *  animate=false 用于首次绘制和窗口尺寸变化：直接归位，不滑。 */
+  const placeSlider = useCallback((animate: boolean) => {
+    const nav = navRef.current
+    const slider = sliderRef.current
+    if (!nav || !slider) return
+
+    const active = nav.querySelector<HTMLElement>('.site-nav__link.is-active')
+    if (!active) {
+      slider.style.opacity = '0'
+      return
+    }
+
+    if (!animate) slider.classList.add('is-instant')
+    slider.style.setProperty('--nav-x', `${active.offsetLeft}px`)
+    slider.style.setProperty('--nav-w', `${active.offsetWidth}px`)
+    slider.style.opacity = '1'
+    if (!animate) {
+      // 先让这一帧按新位置渲染，再打开过渡
+      void slider.offsetWidth
+      requestAnimationFrame(() => slider.classList.remove('is-instant'))
+    }
+  }, [])
 
   const close = useCallback(() => {
     setSearching(false)
@@ -248,6 +278,31 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     measureRef.current()
   }, [collapsed])
 
+  /*  乐观值到期：路由已经跟上，清掉即可 */
+  useEffect(() => {
+    if (hopeful && hopeful === path) setHopeful(null)
+  }, [path, hopeful])
+
+  /*  目标变化：滑块滑过去 */
+  useLayoutEffect(() => {
+    placeSlider(true)
+  }, [activeHref, placeSlider])
+
+  /*  首次绘制 / 字体就绪 / 尺寸变化：直接归位，不滑 */
+  useEffect(() => {
+    placeSlider(false)
+    document.fonts?.ready.then(() => placeSlider(false)).catch(() => {})
+    const onResize = () => placeSlider(false)
+    window.addEventListener('resize', onResize)
+    const nav = navRef.current
+    const ro = nav ? new ResizeObserver(() => placeSlider(false)) : null
+    if (nav && ro) ro.observe(nav)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      ro?.disconnect()
+    }
+  }, [placeSlider])
+
   /*  首帧、字体就绪、窗口尺寸变化后都要重新量。
    *  手写字体是异步加载的，首帧量到的胶囊宽度是回退字体的，
    *  差个几像素，撑开的边缘就会对不齐。 */
@@ -331,9 +386,10 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
             </span>
           </a>
 
-          <nav className="site-nav" aria-label="主导航">
+          <nav className="site-nav" aria-label="主导航" ref={navRef}>
+            <span className="site-nav__slider" aria-hidden="true" ref={sliderRef} />
             {NAV_ITEMS.map((item) => {
-              const active = path === item.href
+              const active = activeHref === item.href
               return (
                 <a
                   key={item.href}
@@ -343,6 +399,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
                   onClick={(e) => {
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
                     e.preventDefault()
+                    setHopeful(item.href)
                     onNavigate(item.href)
                   }}
                 >

@@ -17,7 +17,9 @@
   /*  汇聚到合并矩形时不再刹停：交棒瞬间还留着速度，直接接上分裂的起步 */
   --ease-collect: cubic-bezier(0.3, 0.45, 0.6, 0.6);
   /*  分裂：起步速度接得住合并的收尾，整段平顺外扩，不先窜出去再拖尾 */
-  --ease-split: cubic-bezier(0.26, 0.72, 0.36, 1);
+  --ease-split: cubic-bezier(0.2, 0.85, 0.36, 1);
+  /*  导航滑块：中段一口气滑到位，末尾一点点回弹收住 */
+  --ease-slide: cubic-bezier(0.3, 1.1, 0.42, 1);
 }
 
 [data-card] {
@@ -62,21 +64,21 @@
 .page-view.is-card-morph.is-main,
 .page-view.is-card-morph.is-collect-split,
 .page-view.is-card-morph.is-collect-shrink {
-  --content-fade: 340ms;
+  --content-fade: 300ms;
 }
 
 /* 分裂/收拢的行程：变长之后，"分开"和"位移"能同时发生 */
 .page-view.is-card-morph.is-main [data-card],
 .page-view.is-card-morph.is-collect-split [data-card],
 .page-view.is-card-morph.is-collect-shrink [data-card] {
-  transition-duration: 460ms;
+  transition-duration: 400ms;
   transition-timing-function: var(--ease-split);
 }
 
 /* 回到 Main：标题也等到主卡收拢后再出现 */
 .page-view.is-card-morph.is-collect-shrink .home-title-block {
-  animation-delay: 440ms;
-  animation-duration: 340ms;
+  animation-delay: 360ms;
+  animation-duration: 300ms;
 }
 
 /* 合并阶段的桥接玻璃 */
@@ -92,7 +94,7 @@
   background: transparent;
   -webkit-backdrop-filter: blur(10px) saturate(105%);
   backdrop-filter: blur(10px) saturate(105%);
-  animation: bridge-veil 320ms var(--ease-fade) forwards;
+  animation: bridge-veil 280ms var(--ease-fade) forwards;
 }
 
 /* 交棒瞬间盖住碎片接缝：先轻轻浮上来，再随卡片散开化掉 */
