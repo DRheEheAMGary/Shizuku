@@ -35,10 +35,10 @@ const CARD_COUNTS: Record<string, number> = {
   '/contact': 2,
 }
 
-const OUT_MS = 60
-const MORPH_MS = 480
-const SPLIT_MS = 700
-const IN_MS = 100
+const OUT_MS = 120
+const MORPH_MS = 900
+const SPLIT_MS = 1150
+const IN_MS = 180
 
 /** 桌面端 About → Contact 走分裂；手机上卡片是单列，保持普通过渡 */
 function getTransitionKind(from: string, to: string): TransitionKind {
@@ -195,8 +195,8 @@ export function App() {
       }
 
       /* 分裂先让空壳在原位停一下，形状看清楚了再移动 */
-      const hold = split ? 120 : 0
-      el.style.setProperty('--card-delay', `${hold + (split ? 0 : i * 30)}ms`)
+      const hold = split ? 300 : 0
+      el.style.setProperty('--card-delay', `${hold + (split ? 0 : i * 70)}ms`)
     })
 
     let raf2 = 0
