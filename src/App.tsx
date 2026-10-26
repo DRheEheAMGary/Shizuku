@@ -43,17 +43,17 @@ const CARD_COUNTS: Record<string, number> = {
 }
 
 const OUT_MS = 230
-const MAIN_OUT_MS = 150
+const MAIN_OUT_MS = 110
 const MORPH_MS = 1160
 const CONTENT_MS = 780
-const MAIN_SPLIT_MS = 1000
-const COLLECT_OUT_MS = 280
-const COLLECT_SPLIT_MS = 960
-const COLLECT_SHRINK_MS = 980
-const COLLECT_HANDOFF_MS = 100
+const MAIN_SPLIT_MS = 840
+const COLLECT_OUT_MS = 220
+const COLLECT_SPLIT_MS = 800
+const COLLECT_SHRINK_MS = 820
+const COLLECT_HANDOFF_MS = 70
 const BRIDGE_HOLD_MS = 0
 const SHRINK_HOLD_MS = 0
-const IN_MS = 190
+const IN_MS = 160
 
 /** 旧卡要走的距离越短，合并这一拍就越短；已经在同一位置时直接交棒 */
 function collectOutMs(rects: CardRect[], union: CardRect | null) {
@@ -71,15 +71,15 @@ function collectOutMs(rects: CardRect[], union: CardRect | null) {
 }
 
 /** 内容文字淡入的时长（与 App.css 的 --content-fade 保持一致） */
-const CONTENT_FADE_MS = 400
+const CONTENT_FADE_MS = 340
 
 /** 卡片基本落位之后才浮出文字：延迟各自的形变收尾时刻 */
 function contentDelayFor(kind: TransitionKind) {
   /* About ↔ Github 只换内容、卡片不动，保持即时淡入 */
   if (kind === 'content') return 0
-  if (kind === 'collect-split') return 520
-  if (kind === 'collect-shrink') return 540
-  if (kind === 'main') return 560
+  if (kind === 'collect-split') return 420
+  if (kind === 'collect-shrink') return 440
+  if (kind === 'main') return 460
   return 560
 }
 
@@ -242,7 +242,7 @@ export function App() {
       collectUnionRef.current = union
       collectOut = collectOutMs(oldRects, union)
       /* 文字退场要在交棒前走完，时长跟合并时长绑定 */
-      const outFade = `${Math.max(90, collectOut - 30)}ms`
+      const outFade = `${Math.max(40, collectOut - 30)}ms`
       oldCards.forEach((el) => el.style.setProperty('--out-fade', outFade))
       if (union) {
         /* 不要把所有卡缩到同一矩形：透明玻璃叠一起会明显发白。
@@ -278,7 +278,7 @@ export function App() {
           window.setTimeout(() => {
             bridge.remove()
             if (bridgeRef.current === bridge) bridgeRef.current = null
-          }, 380)
+          }, 320)
         }
       }
 
