@@ -27,6 +27,27 @@ interface CardRect {
   h: number
 }
 
+/** 把 Main 标题复制一份固定在原位，换页后继续淡出，避免被换页截断 */
+function createTitleGhost() {
+  const title = document.querySelector<HTMLElement>('.home-title-block')
+  if (!title) return
+
+  document.querySelectorAll('.home-title-ghost').forEach((el) => el.remove())
+
+  const rect = title.getBoundingClientRect()
+  title.style.opacity = '0'
+
+  const ghost = title.cloneNode(true) as HTMLElement
+  ghost.classList.add('home-title-ghost')
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.style.left = `${rect.left}px`
+  ghost.style.top = `${rect.top}px`
+  ghost.style.width = `${rect.width}px`
+  document.body.appendChild(ghost)
+
+  window.setTimeout(() => ghost.remove(), 760)
+}
+
 /** 各路由的卡片数量，用来决定旧卡里哪些要单独退场 */
 const CARD_COUNTS: Record<string, number> = {
   '/': 1,
@@ -100,6 +121,7 @@ export function App() {
   const [shownPath, setShownPath] = useState(path)
   const [phase, setPhase] = useState<Phase>('idle')
   const [hasNavigated, setHasNavigated] = useState(false)
+  const [scrimVisible, setScrimVisible] = useState(path === '/')
   const pathRef = useRef(path)
   pathRef.current = path
   const shownPathRef = useRef(shownPath)
@@ -112,6 +134,7 @@ export function App() {
 
   const commit = (to: string) => {
     setHasNavigated(true)
+    setScrimVisible(to === '/')
     setPath(to)
     pathRef.current = to
     shownPathRef.current = to
@@ -121,6 +144,7 @@ export function App() {
 
   const run = (to: string) => {
     busyRef.current = true
+    document.querySelectorAll('.home-title-ghost').forEach((el) => el.remove())
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       commit(to)
@@ -130,6 +154,7 @@ export function App() {
     }
 
     const from = shownPathRef.current
+    if (from === '/') setScrimVisible(false)
 
     /* 换页前先记下当前卡片矩形。
      * 新页渲染后，卡片会从这个矩形形变到新布局的位置。 */
@@ -145,6 +170,9 @@ export function App() {
     kindRef.current = kind
     markExitCards(oldCards, kind, to)
 
+    if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
+      createTitleGhost()
+    }
 
     setPhase('out')
 
@@ -330,6 +358,10 @@ export function App() {
     <>
       {/*  等背景图和磨砂都算完再揭开 */}
       <PageLoader />
+      <div
+        className={`home-scrim${scrimVisible ? ' is-visible' : ''}`}
+        aria-hidden="true"
+      />
       <SiteHeader path={path} onNavigate={navigate} />
       <div className={viewClass}>{page}</div>
     </>

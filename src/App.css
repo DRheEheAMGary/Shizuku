@@ -88,17 +88,41 @@
   opacity: 0;
   transform: scale(1.04);
   transform-origin: left bottom;
-  transition:
-    opacity 200ms var(--ease-card),
-    transform 320ms var(--ease-card);
+  transition: transform 400ms var(--ease-card);
 }
 
 .page-view.is-card-morph.is-main [data-card] > * {
   animation-delay: 380ms;
 }
 
+/* Main 标题跨页淡出：换页后由 ghost 继续收尾，目标卡片可以照常压上来 */
+.home-title-ghost {
+  position: fixed !important;
+  z-index: -1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+  transform-origin: left bottom;
+  animation: title-ghost-out 700ms var(--ease-card) forwards;
+}
+
+.home-title-ghost .intro {
+  animation: none !important;
+}
+
+@keyframes title-ghost-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.03);
+  }
+}
+
 .page-view.is-card-morph .home-title-block {
-  animation: title-in 400ms var(--ease-card) both;
+  animation: title-in 700ms var(--ease-card) both;
 }
 
 @keyframes title-in {
@@ -115,7 +139,8 @@
 @media (prefers-reduced-motion: reduce) {
   [data-card],
   [data-card] > *,
-  .home-title-block {
+  .home-title-block,
+  .home-scrim {
     transition: none !important;
     animation: none !important;
   }
