@@ -13,7 +13,7 @@ import './Subpage.css'
 export function About() {
   return (
     <PageShell marginText="について" wide>
-      <div className="subpage">
+      <div className="subpage subpage--paired">
         <div className="page-grid">
           <GlassCard span={4} title="游戏" icon="gamepad" className="span-4">
             <div className="tag-row">

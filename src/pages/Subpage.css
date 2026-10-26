@@ -8,8 +8,9 @@
 .subpage {
   width: 100%;
   max-width: 64rem;
-  /*  内容短时在视口内垂直居中；内容超过一屏时 auto 外边距自动归零。 */
-  margin: auto auto;
+  /*  子页统一从同一高度开始，避免 About / Github 切换时整体上下跳。 */
+  margin: 0 auto;
+  padding-top: clamp(8px, 2.4vh, 28px);
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
@@ -34,8 +35,25 @@
 .span-7 { grid-column: span 7; }
 .span-12 { grid-column: span 12; }
 
+.subpage--contact {
+  margin-block: auto;
+  padding-top: 0;
+}
+
 .subpage .glass-card {
   padding: var(--sp-5);
+}
+
+/* About / Github 是同一套卡片栅格。把卡片高度统一，切换时只换内容不跳几何。 */
+@media (min-width: 981px) {
+  .subpage--paired .page-grid > .glass-card:nth-child(1),
+  .subpage--paired .page-grid > .glass-card:nth-child(2) {
+    height: 240px;
+  }
+
+  .subpage--paired .page-grid > .glass-card:nth-child(3) {
+    height: 200px;
+  }
 }
 
 /* 同一行卡片被拉高时，内容垂直居中，避免空白全堆在底部 */

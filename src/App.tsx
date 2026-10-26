@@ -18,7 +18,7 @@ function readPath() {
 }
 
 type Phase = 'idle' | 'out' | 'morph' | 'in'
-type TransitionKind = 'normal' | 'split' | 'main' | 'merge'
+type TransitionKind = 'normal' | 'content' | 'split' | 'main' | 'merge'
 
 interface CardRect {
   x: number
@@ -58,6 +58,7 @@ const CARD_COUNTS: Record<string, number> = {
 
 const OUT_MS = 200
 const MORPH_MS = 1000
+const CONTENT_MS = 800
 const SPLIT_MS = 1300
 const MERGE_MS = 1200
 const MAIN_SPLIT_MS = 1150
@@ -68,6 +69,12 @@ function getTransitionKind(from: string, to: string): TransitionKind {
   if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
   if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
     return 'main'
+  }
+  if (
+    (from === '/about' && to === '/github') ||
+    (from === '/github' && to === '/about')
+  ) {
+    return 'content'
   }
   if (from === '/about' && to === '/contact') return 'split'
   if (from === '/contact' && to === '/about') return 'merge'
@@ -111,7 +118,7 @@ function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
     return
   }
 
-  if (kind === 'main' || kind === 'merge') return
+  if (kind === 'main' || kind === 'merge' || kind === 'content') return
 
   const targetCount = CARD_COUNTS[to] ?? cards.length
   cards.forEach((el, i) => {
@@ -198,7 +205,9 @@ export function App() {
             ? SPLIT_MS
             : finalKind === 'merge'
               ? MERGE_MS
-              : MORPH_MS
+              : finalKind === 'content'
+                ? CONTENT_MS
+                : MORPH_MS
 
       window.setTimeout(() => {
         setPhase('in')
@@ -229,9 +238,17 @@ export function App() {
     const main = kind === 'main' && old.length >= 1
     const mainPieces = main ? cardPieces(old[0], cards.length) : []
     const merge = kind === 'merge' && old.length >= 2
+    const content = kind === 'content'
     const gap = 16
 
     cards.forEach((el, i) => {
+      if (content) {
+        el.style.transform = ''
+        el.style.zIndex = ''
+        el.style.removeProperty('--card-delay')
+        return
+      }
+
       const r = el.getBoundingClientRect()
       if (!r.width || !r.height) return
 
@@ -367,7 +384,9 @@ export function App() {
           ? ' is-main'
           : kindRef.current === 'merge'
             ? ' is-merge'
-            : ''
+            : kindRef.current === 'content'
+              ? ' is-content'
+              : ''
 
   const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${kindClass}${
     phase === 'out'

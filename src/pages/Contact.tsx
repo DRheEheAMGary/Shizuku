@@ -70,7 +70,7 @@ export function Contact() {
 
   return (
     <PageShell marginText="れんらく" wide>
-      <div className="subpage">
+      <div className="subpage subpage--contact">
         <div className="page-grid">
           <GlassCard span={4} title="社交" icon="qq" className="span-4">
             <div className="contact-list">

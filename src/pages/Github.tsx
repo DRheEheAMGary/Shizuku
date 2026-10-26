@@ -16,7 +16,7 @@ export function Github() {
 
   return (
     <PageShell marginText="コード" wide>
-      <div className="subpage">
+      <div className="subpage subpage--paired">
         <div className="page-grid">
           <GlassCard span={4} title="GitHub" icon="github" className="span-4 github-card">
             <div className="github-profile">
