@@ -82,28 +82,19 @@ function getTransitionKind(from: string, to: string): TransitionKind {
 }
 
 /** 把 Main 卡矩形按目标卡片数量切成 4/8（+整行）的碎片 */
-function cardPieces(stage: CardRect, count: number, gap = 16): CardRect[] {
+function cardPieces(stage: CardRect, count: number): CardRect[] {
   if (count >= 3) {
     const splitY = stage.h * 0.56
-    const leftW = stage.w * (4 / 12) - gap / 2
-    const rightW = stage.w * (8 / 12) - gap / 2
     return [
-      { x: stage.x, y: stage.y, w: leftW, h: splitY - gap / 2 },
-      { x: stage.x + stage.w * (4 / 12) + gap / 2, y: stage.y, w: rightW, h: splitY - gap / 2 },
-      {
-        x: stage.x,
-        y: stage.y + splitY + gap / 2,
-        w: stage.w,
-        h: stage.h - splitY - gap / 2,
-      },
+      { x: stage.x, y: stage.y, w: stage.w * (4 / 12), h: splitY },
+      { x: stage.x + stage.w * (4 / 12), y: stage.y, w: stage.w * (8 / 12), h: splitY },
+      { x: stage.x, y: stage.y + splitY, w: stage.w, h: stage.h - splitY },
     ]
   }
 
-  const leftW = stage.w * (4 / 12) - gap / 2
-  const rightW = stage.w * (8 / 12) - gap / 2
   return [
-    { x: stage.x, y: stage.y, w: leftW, h: stage.h },
-    { x: stage.x + stage.w * (4 / 12) + gap / 2, y: stage.y, w: rightW, h: stage.h },
+    { x: stage.x, y: stage.y, w: stage.w * (4 / 12), h: stage.h },
+    { x: stage.x + stage.w * (4 / 12), y: stage.y, w: stage.w * (8 / 12), h: stage.h },
   ]
 }
 
@@ -239,7 +230,6 @@ export function App() {
     const mainPieces = main ? cardPieces(old[0], cards.length) : []
     const merge = kind === 'merge' && old.length >= 2
     const content = kind === 'content'
-    const gap = 16
 
     cards.forEach((el, i) => {
       if (content) {
@@ -278,11 +268,11 @@ export function App() {
           const splitAt = base.x + base.w * (4 / 12)
           source =
             i === 0
-              ? { x: base.x, y: base.y, w: base.w * (4 / 12) - gap / 2, h: base.h }
+              ? { x: base.x, y: base.y, w: base.w * (4 / 12), h: base.h }
               : {
-                  x: splitAt + gap / 2,
+                  x: splitAt,
                   y: base.y,
-                  w: base.w * (8 / 12) - gap / 2,
+                  w: base.w * (8 / 12),
                   h: base.h,
                 }
         }
@@ -291,20 +281,27 @@ export function App() {
       }
 
       if (source) {
-        const factor = main ? 1 : split ? 0.98 : 0.95
-        const sx = (source.w / r.width) * factor
-        const sy = (source.h / r.height) * factor
+        const sx = source.w / r.width
+        const sy = source.h / r.height
         const dx = source.x - r.x
-        const dy = source.y - r.y + (main ? 0 : split ? 6 : 18)
+        const dy = source.y - r.y
         el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`
       } else {
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
-      /* Main 碎片从原卡位置直接出发；About→Contact 仍保留分裂停留 */
+      /* 所有分裂都先从完整拼接的旧卡开始，再分开移动 */
       el.style.setProperty(
         '--card-delay',
-        main ? `${i * 40}ms` : split ? '300ms' : `${i * 70}ms`,
+        main
+          ? '100ms'
+          : split
+            ? '300ms'
+            : merge
+              ? i === 2
+                ? '150ms'
+                : '0ms'
+              : '0ms',
       )
     })
 
