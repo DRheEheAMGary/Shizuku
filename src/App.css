@@ -3,26 +3,26 @@
  * ========================================================================== */
 
 /* ----------------------------------------------------------------------------
- *  路由切换：卡片级形变
+ *  路由切换：内容淡入 / 卡片形变 / 合并再分裂
  * ----------------------------------------------------------------------------
- *  旧卡内容先淡出，换页后新卡从旧卡的矩形形变到新布局，最后内容淡入。
- *
  *  磨砂红线：
  *  - 只能动卡片自己的 transform，不能给卡片或祖先加 opacity / filter / 快照
  *  - 卡片内容单独做 opacity，玻璃本体始终保持不透明
  * -------------------------------------------------------------------------- */
 
 :root {
-  --ease-card: cubic-bezier(0.42, 0, 0.58, 1);
+  /*  轻微回弹，避免长距离位移结束时“硬停” */
+  --ease-card: cubic-bezier(0.32, 1.06, 0.58, 1);
+  --ease-fade: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-card] {
-  transition: transform 800ms var(--ease-card);
+  transition: transform 900ms var(--ease-card);
   transition-delay: var(--card-delay, 0ms);
 }
 
 [data-card] > * {
-  transition: opacity 200ms var(--ease-card);
+  transition: opacity 240ms var(--ease-fade);
 }
 
 .page-view.is-card-out [data-card] > * {
@@ -31,7 +31,7 @@
 }
 
 .page-view.is-card-morph [data-card] > * {
-  animation: card-content-in 400ms var(--ease-card) both;
+  animation: card-content-in 480ms var(--ease-fade) both;
 }
 
 .page-view.is-card-in [data-card] > * {
@@ -48,11 +48,67 @@
   }
 }
 
-/* 分裂时让空壳先走一段，先把形状变化看清楚 */
-.page-view.is-card-morph.is-split [data-card] > * {
-  animation-delay: 300ms;
+/* 合并后分裂：等桥接卡撤掉、碎片开始移动后再出内容 */
+.page-view.is-card-morph.is-collect-split [data-card] > * {
+  animation-delay: 120ms;
 }
 
+/* 合并后缩小：Main 卡开始收缩后出内容 */
+.page-view.is-card-morph.is-collect-shrink [data-card] > * {
+  animation-delay: 0ms;
+}
+
+/* Main 放大分裂：碎片先拼接停留，再由内容补上 */
+.page-view.is-card-morph.is-main [data-card] > * {
+  animation-delay: 380ms;
+}
+
+/* 合并阶段的桥接玻璃 */
+.transition-bridge {
+  position: fixed;
+  z-index: 4;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  pointer-events: none;
+  background: transparent;
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  backdrop-filter: blur(14px) saturate(125%);
+  box-shadow: 0 8px 32px rgba(31, 45, 61, 0.08);
+  animation: bridge-fade 280ms var(--ease-fade) 80ms forwards;
+}
+
+.transition-bridge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.22) 46%,
+    transparent 72%
+  );
+  animation: bridge-sheen 700ms var(--ease-fade) forwards;
+}
+
+@keyframes bridge-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bridge-sheen {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(110%);
+  }
+}
 
 /* 目标页放不下的旧卡：向下让位，然后在新页出现前卸载 */
 [data-card].is-card-exit {
@@ -80,10 +136,10 @@
 /* 首页标题不是玻璃卡，可以安全地淡出/淡入 */
 .page-view.is-card-out .home-title-block {
   opacity: 0;
-  transition: opacity 200ms var(--ease-card);
+  transition: opacity 200ms var(--ease-fade);
 }
 
-/* Main 分裂：标题轻轻放大淡出；卡片本身从原位置裂开并移动 */
+/* Main 分裂：标题随主卡一起离开 */
 .page-view.is-main .home-title-block {
   opacity: 0;
   transform: scale(1.04);
@@ -91,69 +147,7 @@
   transition: transform 400ms var(--ease-card);
 }
 
-.page-view.is-card-morph.is-main [data-card] > * {
-  animation-delay: 380ms;
-}
-
-/* 合并：先让合并条走一段，上方两张新卡稍后出内容 */
-.page-view.is-card-morph.is-merge [data-card] > * {
-  animation-delay: 700ms;
-}
-
-.page-view.is-card-morph.is-merge [data-card]:nth-child(3) > * {
-  animation-delay: 600ms;
-}
-
-/* 合并条还在上方时，先藏起目标页上面两张卡 */
-.page-view.is-card-morph.is-merge [data-card]:nth-child(1),
-.page-view.is-card-morph.is-merge [data-card]:nth-child(2) {
-  visibility: hidden;
-  animation: merge-top-in 500ms var(--ease-card) 550ms both;
-}
-
-@keyframes merge-top-in {
-  from {
-    visibility: hidden;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    visibility: visible;
-    transform: none;
-  }
-}
-
-/* 合并条上的接缝：一开始保留两张旧卡的边界，随后淡掉 */
-.page-view.is-card-morph.is-merge [data-card]:nth-child(3) {
-  position: relative;
-}
-
-.page-view.is-card-morph.is-merge [data-card]:nth-child(3)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent calc(33.333% - 1px),
-    var(--hairline-strong) calc(33.333% - 1px),
-    var(--hairline-strong) calc(33.333% + 1px),
-    transparent calc(33.333% + 1px)
-  );
-  animation: merge-seam 900ms var(--ease-card) 150ms both;
-}
-
-@keyframes merge-seam {
-  0%,
-  45% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-/* Main 标题跨页淡出：换页后由 ghost 继续收尾，目标卡片可以照常压上来 */
+/* Main 标题跨页淡出：换页后由 ghost 继续收尾 */
 .home-title-ghost {
   position: fixed !important;
   z-index: -1 !important;
@@ -161,7 +155,7 @@
   padding: 0 !important;
   pointer-events: none;
   transform-origin: left bottom;
-  animation: title-ghost-out 700ms var(--ease-card) forwards;
+  animation: title-ghost-out 700ms var(--ease-fade) forwards;
 }
 
 .home-title-ghost .intro {
@@ -180,7 +174,7 @@
 }
 
 .page-view.is-card-morph .home-title-block {
-  animation: title-in 700ms var(--ease-card) both;
+  animation: title-in 700ms var(--ease-fade) both;
 }
 
 @keyframes title-in {

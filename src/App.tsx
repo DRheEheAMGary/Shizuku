@@ -18,7 +18,12 @@ function readPath() {
 }
 
 type Phase = 'idle' | 'out' | 'morph' | 'in'
-type TransitionKind = 'normal' | 'content' | 'split' | 'main' | 'merge'
+type TransitionKind =
+  | 'normal'
+  | 'content'
+  | 'main'
+  | 'collect-split'
+  | 'collect-shrink'
 
 interface CardRect {
   x: number
@@ -27,7 +32,28 @@ interface CardRect {
   h: number
 }
 
-/** 把 Main 标题复制一份固定在原位，换页后继续淡出，避免被换页截断 */
+const CONTENT_PATHS = new Set(['/about', '/github', '/contact'])
+
+/** 各路由的卡片数量，普通过渡时用来决定哪些旧卡要退场 */
+const CARD_COUNTS: Record<string, number> = {
+  '/': 1,
+  '/about': 3,
+  '/github': 3,
+  '/contact': 2,
+}
+
+const OUT_MS = 200
+const MORPH_MS = 1050
+const CONTENT_MS = 800
+const MAIN_SPLIT_MS = 1150
+const COLLECT_OUT_MS = 300
+const COLLECT_SPLIT_MS = 1200
+const COLLECT_SHRINK_MS = 1150
+const BRIDGE_HOLD_MS = 140
+const SHRINK_HOLD_MS = 160
+const IN_MS = 220
+
+/** Main 的标题复制一份，换页后继续在原位淡出 */
 function createTitleGhost() {
   const title = document.querySelector<HTMLElement>('.home-title-block')
   if (!title) return
@@ -48,40 +74,29 @@ function createTitleGhost() {
   window.setTimeout(() => ghost.remove(), 760)
 }
 
-/** 各路由的卡片数量，用来决定旧卡里哪些要单独退场 */
-const CARD_COUNTS: Record<string, number> = {
-  '/': 1,
-  '/about': 3,
-  '/github': 3,
-  '/contact': 2,
+/** 合并阶段的桥接玻璃：先把源卡汇聚到这块矩形，再由它裂成目标卡 */
+function createBridge(rect: CardRect) {
+  const el = document.createElement('div')
+  el.className = 'transition-bridge'
+  el.setAttribute('aria-hidden', 'true')
+  el.style.left = `${rect.x}px`
+  el.style.top = `${rect.y}px`
+  el.style.width = `${rect.w}px`
+  el.style.height = `${rect.h}px`
+  document.body.appendChild(el)
+  return el
 }
 
-const OUT_MS = 200
-const MORPH_MS = 1000
-const CONTENT_MS = 800
-const SPLIT_MS = 1300
-const MERGE_MS = 1200
-const MAIN_SPLIT_MS = 1150
-const IN_MS = 220
-
-/** Main → 子页：放大后分裂；About → Contact：普通分裂。手机上保持普通过渡 */
-function getTransitionKind(from: string, to: string): TransitionKind {
-  if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
-  if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
-    return 'main'
-  }
-  if (
-    (from === '/about' && to === '/github') ||
-    (from === '/github' && to === '/about')
-  ) {
-    return 'content'
-  }
-  if (from === '/about' && to === '/contact') return 'split'
-  if (from === '/contact' && to === '/about') return 'merge'
-  return 'normal'
+function unionRect(rects: CardRect[]): CardRect | null {
+  if (rects.length === 0) return null
+  const x = Math.min(...rects.map((r) => r.x))
+  const y = Math.min(...rects.map((r) => r.y))
+  const right = Math.max(...rects.map((r) => r.x + r.w))
+  const bottom = Math.max(...rects.map((r) => r.y + r.h))
+  return { x, y, w: right - x, h: bottom - y }
 }
 
-/** 把 Main 卡矩形按目标卡片数量切成 4/8（+整行）的碎片 */
+/** 把一块矩形按目标卡片数量切成首尾相接的碎片 */
 function cardPieces(stage: CardRect, count: number): CardRect[] {
   if (count >= 3) {
     const splitY = stage.h * 0.56
@@ -98,18 +113,28 @@ function cardPieces(stage: CardRect, count: number): CardRect[] {
   ]
 }
 
-/** 目标页放不下的旧卡先下沉；分裂时保留被拆的那张，其余先退场 */
-function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
-  cards.forEach((el) => el.classList.remove('is-card-exit'))
+function getTransitionKind(from: string, to: string): TransitionKind {
+  if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
 
-  if (kind === 'split' && cards.length >= 3) {
-    cards.forEach((el, i) => {
-      if (i !== 2) el.classList.add('is-card-exit')
-    })
-    return
+  if (from === '/' && CONTENT_PATHS.has(to)) return 'main'
+
+  if (CONTENT_PATHS.has(from) && to === '/') return 'collect-shrink'
+
+  if (
+    (from === '/about' && to === '/github') ||
+    (from === '/github' && to === '/about')
+  ) {
+    return 'content'
   }
 
-  if (kind === 'main' || kind === 'merge' || kind === 'content') return
+  if (CONTENT_PATHS.has(from) && CONTENT_PATHS.has(to)) return 'collect-split'
+
+  return 'normal'
+}
+
+function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
+  cards.forEach((el) => el.classList.remove('is-card-exit'))
+  if (kind !== 'normal') return
 
   const targetCount = CARD_COUNTS[to] ?? cards.length
   cards.forEach((el, i) => {
@@ -131,6 +156,8 @@ export function App() {
   const busyRef = useRef(false)
   const pendingRef = useRef<string | null>(null)
   const oldRectsRef = useRef<CardRect[]>([])
+  const collectUnionRef = useRef<CardRect | null>(null)
+  const bridgeRef = useRef<HTMLElement | null>(null)
   const kindRef = useRef<TransitionKind>('normal')
 
   const commit = (to: string) => {
@@ -143,9 +170,15 @@ export function App() {
     window.scrollTo(0, 0)
   }
 
+  const removeBridge = () => {
+    bridgeRef.current?.remove()
+    bridgeRef.current = null
+  }
+
   const run = (to: string) => {
     busyRef.current = true
     document.querySelectorAll('.home-title-ghost').forEach((el) => el.remove())
+    removeBridge()
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       commit(to)
@@ -157,22 +190,34 @@ export function App() {
     const from = shownPathRef.current
     if (from === '/') setScrimVisible(false)
 
-    /* 换页前先记下当前卡片矩形。
-     * 新页渲染后，卡片会从这个矩形形变到新布局的位置。 */
     const oldCards = Array.from(
       document.querySelectorAll<HTMLElement>('.page-view [data-card]'),
     )
-    oldRectsRef.current = oldCards.map((el) => {
+    const oldRects = oldCards.map((el) => {
       const r = el.getBoundingClientRect()
       return { x: r.x, y: r.y, w: r.width, h: r.height }
     })
+    oldRectsRef.current = oldRects
 
     const kind = getTransitionKind(from, to)
     kindRef.current = kind
     markExitCards(oldCards, kind, to)
 
-    if (from === '/' && (to === '/about' || to === '/github' || to === '/contact')) {
-      createTitleGhost()
+    if (from === '/' && CONTENT_PATHS.has(to)) createTitleGhost()
+
+    /* 合并类过渡：旧卡先向共同矩形汇聚，视觉上并成一张卡 */
+    if (kind === 'collect-split' || kind === 'collect-shrink') {
+      const union = unionRect(oldRects)
+      collectUnionRef.current = union
+      if (union) {
+        oldCards.forEach((el, i) => {
+          const r = oldRects[i]
+          if (!r.w || !r.h) return
+          el.style.transition = `transform ${COLLECT_OUT_MS}ms var(--ease-card)`
+          el.style.transformOrigin = 'top left'
+          el.style.transform = `translate3d(${union.x - r.x}px, ${union.y - r.y}px, 0) scale(${union.w / r.w}, ${union.h / r.h})`
+        })
+      }
     }
 
     setPhase('out')
@@ -180,11 +225,23 @@ export function App() {
     window.setTimeout(() => {
       const target = pendingRef.current ?? to
       pendingRef.current = null
-
-      /* 退场期间又换了目标：按最终目标重新决定哪些旧卡退场 */
       const finalKind = getTransitionKind(from, target)
       kindRef.current = finalKind
       markExitCards(oldCards, finalKind, target)
+
+      /* 合并后分裂：先把桥接玻璃放在合并矩形上，盖住目标碎片之间的缝 */
+      if (finalKind === 'collect-split') {
+        const union = collectUnionRef.current ?? unionRect(oldRectsRef.current)
+        collectUnionRef.current = union
+        if (union) {
+          const bridge = createBridge(union)
+          bridgeRef.current = bridge
+          window.setTimeout(() => {
+            bridge.remove()
+            if (bridgeRef.current === bridge) bridgeRef.current = null
+          }, 420)
+        }
+      }
 
       commit(target)
       setPhase('morph')
@@ -192,17 +249,16 @@ export function App() {
       const morphMs =
         finalKind === 'main'
           ? MAIN_SPLIT_MS
-          : finalKind === 'split'
-            ? SPLIT_MS
-            : finalKind === 'merge'
-              ? MERGE_MS
-              : finalKind === 'content'
-                ? CONTENT_MS
+          : finalKind === 'content'
+            ? CONTENT_MS
+            : finalKind === 'collect-split'
+              ? COLLECT_SPLIT_MS
+              : finalKind === 'collect-shrink'
+                ? COLLECT_SHRINK_MS
                 : MORPH_MS
 
       window.setTimeout(() => {
         setPhase('in')
-
         window.setTimeout(() => {
           setPhase('idle')
           busyRef.current = false
@@ -212,11 +268,9 @@ export function App() {
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
       }, morphMs)
-    }, OUT_MS)
+    }, kind === 'collect-split' || kind === 'collect-shrink' ? COLLECT_OUT_MS : OUT_MS)
   }
 
-  /* 新页挂载后、绘制前把卡片放回旧矩形，再在下一帧动画归位。
-   * 只动 transform，绝不动卡片的 opacity / filter。 */
   useLayoutEffect(() => {
     if (phase !== 'morph') return
 
@@ -224,12 +278,14 @@ export function App() {
       document.querySelectorAll<HTMLElement>('.page-view [data-card]'),
     )
     const old = oldRectsRef.current
+    const union = collectUnionRef.current
     const kind = kindRef.current
-    const split = kind === 'split' && old.length >= 3
-    const main = kind === 'main' && old.length >= 1
-    const mainPieces = main ? cardPieces(old[0], cards.length) : []
-    const merge = kind === 'merge' && old.length >= 2
     const content = kind === 'content'
+    const main = kind === 'main' && old.length >= 1
+    const collectSplit = kind === 'collect-split' && !!union
+    const collectShrink = kind === 'collect-shrink' && !!union
+    const mainPieces = main ? cardPieces(old[0], cards.length) : []
+    const collectPieces = collectSplit ? cardPieces(union!, cards.length) : []
 
     cards.forEach((el, i) => {
       if (content) {
@@ -246,36 +302,17 @@ export function App() {
       el.style.transformOrigin = 'top left'
 
       let source: CardRect | undefined
+      let delay = '0ms'
 
       if (main) {
         source = mainPieces[i]
-      } else if (merge) {
-        /* 两个旧卡先并成一条全宽玻璃，作为链接卡的起点 */
-        if (i === 2) {
-          const a = old[0]
-          const b = old[1]
-          source = {
-            x: Math.min(a.x, b.x),
-            y: Math.min(a.y, b.y),
-            w: Math.max(a.x + a.w, b.x + b.w) - Math.min(a.x, b.x),
-            h: Math.max(a.y + a.h, b.y + b.h) - Math.min(a.y, b.y),
-          }
-        }
-      } else if (split) {
-        /* 一张全宽链接卡，在原来的位置先裂成 4/8 两半 */
-        if (i < 2) {
-          const base = old[2]
-          const splitAt = base.x + base.w * (4 / 12)
-          source =
-            i === 0
-              ? { x: base.x, y: base.y, w: base.w * (4 / 12), h: base.h }
-              : {
-                  x: splitAt,
-                  y: base.y,
-                  w: base.w * (8 / 12),
-                  h: base.h,
-                }
-        }
+        delay = '100ms'
+      } else if (collectSplit) {
+        source = collectPieces[i]
+        delay = `${BRIDGE_HOLD_MS}ms`
+      } else if (collectShrink) {
+        source = union!
+        delay = `${SHRINK_HOLD_MS}ms`
       } else {
         source = old[i]
       }
@@ -290,19 +327,7 @@ export function App() {
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
-      /* 所有分裂都先从完整拼接的旧卡开始，再分开移动 */
-      el.style.setProperty(
-        '--card-delay',
-        main
-          ? '100ms'
-          : split
-            ? '300ms'
-            : merge
-              ? i === 2
-                ? '150ms'
-                : '0ms'
-              : '0ms',
-      )
+      el.style.setProperty('--card-delay', delay)
     })
 
     let raf2 = 0
@@ -323,7 +348,6 @@ export function App() {
     }
   }, [phase, shownPath])
 
-  /* 动画结束后清掉临时内联样式 */
   useEffect(() => {
     if (phase !== 'idle') return
     document.querySelectorAll<HTMLElement>('.page-view [data-card]').forEach((el) => {
@@ -333,7 +357,9 @@ export function App() {
       el.style.removeProperty('--card-delay')
       el.style.zIndex = ''
     })
+    removeBridge()
     oldRectsRef.current = []
+    collectUnionRef.current = null
   }, [phase])
 
   const navigate = (to: string, push = true) => {
@@ -343,7 +369,6 @@ export function App() {
     }
 
     if (busyRef.current) {
-      //  过渡中再点：记下最后一次目标，等这一轮播完再接上
       if (push) window.history.pushState(null, '', to)
       pendingRef.current = to
       return
@@ -375,14 +400,14 @@ export function App() {
   const kindClass =
     phase === 'idle'
       ? ''
-      : kindRef.current === 'split'
-        ? ' is-split'
+      : kindRef.current === 'content'
+        ? ' is-content'
         : kindRef.current === 'main'
           ? ' is-main'
-          : kindRef.current === 'merge'
-            ? ' is-merge'
-            : kindRef.current === 'content'
-              ? ' is-content'
+          : kindRef.current === 'collect-split'
+            ? ' is-collect-split'
+            : kindRef.current === 'collect-shrink'
+              ? ' is-collect-shrink'
               : ''
 
   const viewClass = `page-view${hasNavigated ? ' has-routed' : ''}${kindClass}${
@@ -397,7 +422,6 @@ export function App() {
 
   return (
     <>
-      {/*  等背景图和磨砂都算完再揭开 */}
       <PageLoader />
       <div
         className={`home-scrim${scrimVisible ? ' is-visible' : ''}`}
