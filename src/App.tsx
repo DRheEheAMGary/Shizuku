@@ -45,13 +45,29 @@ const CARD_COUNTS: Record<string, number> = {
 const OUT_MS = 200
 const MORPH_MS = 1050
 const CONTENT_MS = 800
-const MAIN_SPLIT_MS = 1150
-const COLLECT_OUT_MS = 300
-const COLLECT_SPLIT_MS = 1200
-const COLLECT_SHRINK_MS = 1150
-const BRIDGE_HOLD_MS = 140
-const SHRINK_HOLD_MS = 160
+const MAIN_SPLIT_MS = 1060
+const COLLECT_OUT_MS = 280
+const COLLECT_SPLIT_MS = 980
+const COLLECT_SHRINK_MS = 1080
+const COLLECT_HANDOFF_MS = 120
+const BRIDGE_HOLD_MS = 0
+const SHRINK_HOLD_MS = 0
 const IN_MS = 220
+
+/** 旧卡要走的距离越短，合并这一拍就越短；已经在同一位置时直接交棒 */
+function collectOutMs(rects: CardRect[], union: CardRect | null) {
+  if (!union) return COLLECT_OUT_MS
+
+  const pieces = cardPieces(union, rects.length)
+  let maxD = 0
+  rects.forEach((r, i) => {
+    const p = pieces[i]
+    if (!p || !r.w || !r.h) return
+    maxD = Math.max(maxD, Math.hypot(p.x - r.x, p.y - r.y), Math.hypot(p.w - r.w, p.h - r.h))
+  })
+
+  return Math.round(Math.max(COLLECT_HANDOFF_MS, Math.min(COLLECT_OUT_MS, 110 + maxD * 1.4)))
+}
 
 /** 内容文字淡入的时长（与 App.css 的 --content-fade 保持一致） */
 const CONTENT_FADE_MS = 300
@@ -60,9 +76,9 @@ const CONTENT_FADE_MS = 300
 function contentDelayFor(kind: TransitionKind) {
   /* About ↔ Github 只换内容、卡片不动，保持即时淡入 */
   if (kind === 'content') return 0
-  if (kind === 'collect-split') return 980
-  if (kind === 'collect-shrink') return 1000
-  if (kind === 'main') return 940
+  if (kind === 'collect-split') return 640
+  if (kind === 'collect-shrink') return 660
+  if (kind === 'main') return 720
   return 520
 }
 
@@ -219,9 +235,11 @@ export function App() {
     if (from === '/' && CONTENT_PATHS.has(to)) createTitleGhost()
 
     /* 合并类过渡：旧卡先向共同矩形汇聚，视觉上并成一张卡 */
+    let collectOut = COLLECT_OUT_MS
     if (kind === 'collect-split' || kind === 'collect-shrink') {
       const union = unionRect(oldRects)
       collectUnionRef.current = union
+      collectOut = collectOutMs(oldRects, union)
       if (union) {
         /* 不要把所有卡缩到同一矩形：透明玻璃叠一起会明显发白。
          * 让每张旧卡拼到 union 的不同碎片上，彼此不重叠。 */
@@ -230,7 +248,7 @@ export function App() {
           const r = oldRects[i]
           const piece = pieces[i]
           if (!r.w || !r.h || !piece) return
-          el.style.transition = `transform ${COLLECT_OUT_MS}ms var(--ease-card)`
+          el.style.transition = `transform ${collectOut}ms var(--ease-collect)`
           el.style.transformOrigin = 'top left'
           el.style.transform = `translate3d(${piece.x - r.x}px, ${piece.y - r.y}px, 0) scale(${piece.w / r.w}, ${piece.h / r.h})`
         })
@@ -256,7 +274,7 @@ export function App() {
           window.setTimeout(() => {
             bridge.remove()
             if (bridgeRef.current === bridge) bridgeRef.current = null
-          }, 420)
+          }, 460)
         }
       }
 
@@ -291,7 +309,7 @@ export function App() {
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
       }, morphPhaseMs)
-    }, kind === 'collect-split' || kind === 'collect-shrink' ? COLLECT_OUT_MS : OUT_MS)
+    }, kind === 'collect-split' || kind === 'collect-shrink' ? collectOut : OUT_MS)
   }
 
   useLayoutEffect(() => {

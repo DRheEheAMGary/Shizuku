@@ -14,6 +14,8 @@
   /*  轻微回弹，避免长距离位移结束时“硬停” */
   --ease-card: cubic-bezier(0.32, 1.06, 0.58, 1);
   --ease-fade: cubic-bezier(0.4, 0, 0.2, 1);
+  /*  汇聚到合并矩形时不再刹停：交棒瞬间还留着速度，直接接上分裂的起步 */
+  --ease-collect: cubic-bezier(0.4, 0.35, 0.85, 0.6);
 }
 
 [data-card] {
@@ -28,6 +30,12 @@
 .page-view.is-card-out [data-card] > * {
   opacity: 0;
   transition-duration: 200ms;
+}
+
+/* 合并很快交棒时，文字要在换页前退干净，不能停在半透明被切掉 */
+.page-view.is-card-out.is-collect-split [data-card] > *,
+.page-view.is-card-out.is-collect-shrink [data-card] > * {
+  transition-duration: 100ms;
 }
 
 .page-view.is-card-morph [data-card] > * {
@@ -56,9 +64,16 @@
   --content-fade: 300ms;
 }
 
+/* 形变类过渡用更短的行程时长，长尾拖沓会让合并/分裂变成两拍 */
+.page-view.is-card-morph.is-main [data-card],
+.page-view.is-card-morph.is-collect-split [data-card],
+.page-view.is-card-morph.is-collect-shrink [data-card] {
+  transition-duration: 700ms;
+}
+
 /* 回到 Main：标题也等到主卡收拢后再出现 */
 .page-view.is-card-morph.is-collect-shrink .home-title-block {
-  animation-delay: 900ms;
+  animation-delay: 640ms;
   animation-duration: 400ms;
 }
 
@@ -75,11 +90,18 @@
   background: transparent;
   -webkit-backdrop-filter: blur(10px) saturate(105%);
   backdrop-filter: blur(10px) saturate(105%);
-  animation: bridge-fade 280ms var(--ease-fade) 80ms forwards;
+  animation: bridge-veil 420ms var(--ease-fade) forwards;
 }
 
-@keyframes bridge-fade {
-  to {
+/* 交棒瞬间盖住碎片接缝：先轻轻浮上来，再随卡片散开化掉 */
+@keyframes bridge-veil {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
   }
 }
