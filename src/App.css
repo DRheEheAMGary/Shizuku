@@ -31,7 +31,8 @@
 }
 
 .page-view.is-card-morph [data-card] > * {
-  animation: card-content-in 480ms var(--ease-fade) both;
+  animation: card-content-in var(--content-fade, 480ms) var(--ease-fade)
+    var(--content-delay, 0ms) both;
 }
 
 .page-view.is-card-in [data-card] > * {
@@ -48,19 +49,17 @@
   }
 }
 
-/* 合并后分裂：等桥接卡撤掉、碎片开始移动后再出内容 */
-.page-view.is-card-morph.is-collect-split [data-card] > * {
-  animation-delay: 120ms;
+/* 卡片先走完形变，文字最后浮上来 */
+.page-view.is-card-morph.is-main,
+.page-view.is-card-morph.is-collect-split,
+.page-view.is-card-morph.is-collect-shrink {
+  --content-fade: 300ms;
 }
 
-/* 合并后缩小：Main 卡开始收缩后出内容 */
-.page-view.is-card-morph.is-collect-shrink [data-card] > * {
-  animation-delay: 0ms;
-}
-
-/* Main 放大分裂：碎片先拼接停留，再由内容补上 */
-.page-view.is-card-morph.is-main [data-card] > * {
-  animation-delay: 380ms;
+/* 回到 Main：标题也等到主卡收拢后再出现 */
+.page-view.is-card-morph.is-collect-shrink .home-title-block {
+  animation-delay: 900ms;
+  animation-duration: 400ms;
 }
 
 /* 合并阶段的桥接玻璃 */

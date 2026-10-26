@@ -53,6 +53,19 @@ const BRIDGE_HOLD_MS = 140
 const SHRINK_HOLD_MS = 160
 const IN_MS = 220
 
+/** 内容文字淡入的时长（与 App.css 的 --content-fade 保持一致） */
+const CONTENT_FADE_MS = 300
+
+/** 卡片基本落位之后才浮出文字：延迟各自的形变收尾时刻 */
+function contentDelayFor(kind: TransitionKind) {
+  /* About ↔ Github 只换内容、卡片不动，保持即时淡入 */
+  if (kind === 'content') return 0
+  if (kind === 'collect-split') return 980
+  if (kind === 'collect-shrink') return 1000
+  if (kind === 'main') return 940
+  return 520
+}
+
 /** Main 的标题复制一份，换页后继续在原位淡出 */
 function createTitleGhost() {
   const title = document.querySelector<HTMLElement>('.home-title-block')
@@ -261,6 +274,12 @@ export function App() {
                 ? COLLECT_SHRINK_MS
                 : MORPH_MS
 
+      /* 文字最后出现，所以形变阶段要等到文字淡完再结束 */
+      const morphPhaseMs = Math.max(
+        morphMs,
+        contentDelayFor(finalKind) + CONTENT_FADE_MS + 40,
+      )
+
       window.setTimeout(() => {
         setPhase('in')
         window.setTimeout(() => {
@@ -271,7 +290,7 @@ export function App() {
           pendingRef.current = null
           if (next && next !== pathRef.current) run(next)
         }, IN_MS)
-      }, morphMs)
+      }, morphPhaseMs)
     }, kind === 'collect-split' || kind === 'collect-shrink' ? COLLECT_OUT_MS : OUT_MS)
   }
 
@@ -291,7 +310,11 @@ export function App() {
     const mainPieces = main ? cardPieces(old[0], cards.length) : []
     const collectPieces = collectSplit ? cardPieces(union!, cards.length) : []
 
+    const contentDelay = `${contentDelayFor(kind)}ms`
+
     cards.forEach((el, i) => {
+      el.style.setProperty('--content-delay', contentDelay)
+
       if (content) {
         el.style.transform = ''
         el.style.zIndex = ''
@@ -359,6 +382,7 @@ export function App() {
       el.style.transition = ''
       el.style.transformOrigin = ''
       el.style.removeProperty('--card-delay')
+      el.style.removeProperty('--content-delay')
       el.style.zIndex = ''
     })
     removeBridge()
