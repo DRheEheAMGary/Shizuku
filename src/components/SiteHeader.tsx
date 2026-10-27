@@ -17,6 +17,7 @@ import { AccentPicker } from './AccentPicker'
 import { SearchButton } from './SearchButton'
 import { SearchPanel } from './SearchPanel'
 import { ThemeSwitch } from './ThemeSwitch'
+import { useNavDrag } from '@/hooks/useNavDrag'
 import { useRefraction } from '@/hooks/useRefraction'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
@@ -91,6 +92,17 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       requestAnimationFrame(() => slider.classList.remove('is-instant'))
     }
   }, [])
+
+  /*  滑块可以拖着走：松手落到最近一项并切过去（参照 glisse 的 TabBar） */
+  const selectByDrag = useCallback(
+    (href: string) => {
+      if (!href) return
+      setHopeful(href)
+      onNavigate(href)
+    },
+    [onNavigate],
+  )
+  const swallowClick = useNavDrag({ navRef, sliderRef, onSelect: selectByDrag })
 
   const close = useCallback(() => {
     setSearching(false)
@@ -392,6 +404,11 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
                   aria-current={active ? 'page' : undefined}
                   onClick={(e) => {
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                    //  刚拖完滑块的那一下点击不算数，否则会又跳一次
+                    if (swallowClick()) {
+                      e.preventDefault()
+                      return
+                    }
                     e.preventDefault()
                     setHopeful(item.href)
                     onNavigate(item.href)

@@ -348,6 +348,25 @@
   transition: none;
 }
 
+/*  拖动中：关掉过渡（逐帧直给才跟手），并把它"拎起来"一点 ——
+ *  缩放 + 阴影加深，是 glisse 那种"手里有一块玻璃"的暗示。 */
+.site-nav.is-dragging .site-nav__slider {
+  transition: none;
+  scale: 1.06;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 26%, transparent),
+    0 6px 16px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.site-nav.is-dragging {
+  cursor: grabbing;
+  /*  拖动期间交给 JS 处理横向手势，纵向仍可滚页面 */
+  touch-action: pan-y;
+  /*  按住拖的时候别选中文字 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .site-nav__link {
   position: relative;
   z-index: 1;
