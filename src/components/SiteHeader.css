@@ -139,7 +139,26 @@
   width: var(--pill-w, fit-content);
   max-width: 100%;
   --glass-radius: var(--r-full);   /* 正圆胶囊：圆角取到高度的一半 */
-  background: var(--glass-bg-strong);
+  /*  顶栏比全站其它玻璃更透、模糊更小 —— 折射才有东西可掰。
+   *  0.84 白 + 24px 模糊的话，边缘位移完全被糊没了。
+   *  color-mix 让明暗两套主题都还能用同一行。 */
+  --glass-blur: 12px;
+  background: color-mix(in srgb, var(--glass-bg-strong) 58%, transparent);
+
+  /*  ---------- 液态玻璃 ----------
+   *  useRefraction() 会把两条变量写到元素上：
+   *    --lg-filter  形如 url("#shizuku-lens-0")，接在模糊后面，只作用于背后的画面
+   *    --lg-rim     一张 PNG，铺在玻璃表面当边缘高光
+   *  不支持 backdrop SVG 滤镜的浏览器（Safari / Firefox）读到的就是 none，
+   *  观感退回原来的纯模糊，不会坏。 */
+  --lg-bezel: 12px;
+  --lg-thickness: 20px;
+  --lg-refraction: 1.4;
+
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  background-image: var(--lg-rim, none);
+  background-size: 100% 100%;
 
   transition:
     box-shadow var(--dur-base) var(--ease-apple),
@@ -147,6 +166,15 @@
     width 420ms var(--ease-apple),
     margin-left 420ms var(--ease-apple),
     margin-right 420ms var(--ease-apple);
+}
+
+/*  折射必须排在模糊**前面**。
+ *  Chromium 给 backdrop 做降采样时按模糊半径决定采样面尺寸，
+ *  blur 在 url() 之前会把位移几乎全部抹掉（实测：blur(12px)+url 只剩一片灰，
+ *  blur(4px)+url 或 url+blur(12px) 才正常）。所以这里先掰弯、再模糊。 */
+.site-header[data-liquid] {
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) blur(var(--glass-blur)) saturate(var(--glass-sat));
 }
 
 .site-header-wrap.is-collapsed .site-header {
