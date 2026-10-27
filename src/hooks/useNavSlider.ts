@@ -19,8 +19,8 @@ import { createSpring } from '@/lib/spring'
 const SLOP = 6
 
 /** 松手归位：略欠阻尼，尾巴上有一点点回弹 */
-const REST_X: [number, number] = [430, 28]
-const REST_W: [number, number] = [400, 30]
+const REST_X: [number, number] = [560, 33]
+const REST_W: [number, number] = [520, 36]
 /** 拖动跟手：刚度拉高，几乎贴着指针 */
 const DRAG_X: [number, number] = [1400, 70]
 const DRAG_W: [number, number] = [900, 60]

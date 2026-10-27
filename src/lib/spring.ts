@@ -26,8 +26,17 @@ interface State {
   velocity: number
   stiffness: number
   damping: number
+  /** set() 的时刻，用来做"到点必须落位"的时间兜底 */
+  startedAt: number
   paint: (value: number) => void
 }
+
+/**
+ * 兜底时长：弹簧是指数收敛，尾巴再薄也总差一点点；
+ * 超过这个时间就直接落到目标，避免"结尾拖长 + 最后一下跳"。
+ * 正常刚度下 200–260ms 就收敛了，这里是异常情况的保险。
+ */
+const MAX_SETTLE_MS = 620
 
 const moving = new Set<State>()
 let frame = 0
@@ -67,14 +76,15 @@ function advance(s: State, dt: number): void {
 
 function tick(time: number): void {
   frame = 0
-  //  切后台再回来时 dt 会很大，夹一下免得一步跨过头
-  const dt = Math.min(0.1, Math.max(0, (time - last) / 1000))
+  //  按真实经过的时间推进（帧率抖动时也不会"少走一段"）；
+  //  只挡一下切后台回来的超大跨度。
+  const dt = Math.min(0.5, Math.max(0, (time - last) / 1000))
   last = time
 
   for (const s of moving) {
     advance(s, dt)
     s.paint(s.value)
-    if (Math.abs(s.value - s.target) < 0.1 && Math.abs(s.velocity) < 0.1) {
+    if (time - s.startedAt > MAX_SETTLE_MS || (Math.abs(s.value - s.target) < 0.1 && Math.abs(s.velocity) < 0.1)) {
       s.value = s.target
       s.velocity = 0
       s.paint(s.value)
@@ -103,12 +113,14 @@ export function createSpring(
     velocity: 0,
     stiffness,
     damping,
+    startedAt: 0,
     paint,
   }
 
   return {
     set(target, instant = false) {
       state.target = target
+      state.startedAt = performance.now()
       if (instant) {
         state.value = target
         state.velocity = 0

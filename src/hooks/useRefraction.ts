@@ -58,14 +58,18 @@ interface Lens {
 const MAPS = new Map<string, Map>()
 const LENSES = new WeakMap<HTMLElement, Lens>()
 /** 每个元素最近一次用过的贴图，以及它是按多大尺寸烘的 */
-const LASTMAP = new WeakMap<HTMLElement, { map: Map; width: number; height: number; density: number }>()
+const LASTMAP = new WeakMap<
+  HTMLElement,
+  { map: Map; width: number; height: number; density: number; at: number }
+>()
 
 /**
- * 动画里多大的尺寸差才值得重画一张。
- * 实测：尺寸动到 16px 之外，倒角/厚度的变化才勉强能看出来（0.2px 量级起）；
- * 比这更小的差别直接拿上一张拉伸，省掉逐帧生成 PNG + 上传纹理 —— 这才是卡的主因。
+ * 重画贴图的节流按**时间**算，不按位移。
+ * 按位移的话：一段先快后慢的过渡里，最后几十毫秒可能一直差不到阈值，
+ * 于是停在"上一张拉伸图"上，等停稳那次重画才突然变准 —— 结尾会跳一下。
+ * 按时间就均匀了：每 70ms 必刷一次，最后一帧离终态最多 70ms。
  */
-const REBAKE_STEP = 16
+const REBAKE_MS = 70
 let defs: SVGDefsElement | null = null
 let serial = 0
 
@@ -290,17 +294,18 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
 
   //  动画中：尺寸只挪了几像素就继续用上一张（拉伸），不重新生成 PNG。
   //  收尾（mode='exact'）时无条件按最终尺寸烘一张全分辨率的。
-  const near =
-    previous &&
-    Math.abs(width - previous.width) < REBAKE_STEP &&
-    Math.abs(height - previous.height) < REBAKE_STEP
+  const now = performance.now()
+  const near = previous && now - previous.at < REBAKE_MS
 
   let map: Map
   let density: number
   let stretched = false
-  if (mode === 'auto' && previous && near) {
-    map = previous.map
-    density = previous.density
+  //  只有真的烘了新图才推进"上次烘焙时刻"，否则节流会一直被自己刷新、永远不重画
+  let at = previous?.at ?? 0
+
+  if (mode === 'auto' && near) {
+    map = previous!.map
+    density = previous!.density
     stretched = true
   } else {
     //  动画中先按 dpr 1 烘，省一半以上的像素与纹理；停稳后再换全分辨率
@@ -312,9 +317,10 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
       stretched = true
     } else {
       map = mapFor(width, height, radius, shape, density)
+      at = now
     }
   }
-  LASTMAP.set(element, { map, width, height, density })
+  LASTMAP.set(element, { map, width, height, density, at })
 
   const lens = lensFor(element)
   //  盒子没变就别写属性：写一次会让 Chromium 丢弃滤镜结果重算
