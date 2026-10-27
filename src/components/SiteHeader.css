@@ -369,7 +369,8 @@
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.03em;
-  color: var(--text-muted);
+  /*  未激活态用正文色而不是 muted：顶栏现在是清透玻璃，灰字压在插画上读不清 */
+  color: var(--text);
   white-space: nowrap;
   transition:
     color var(--dur-fast) var(--ease-apple),
@@ -377,7 +378,7 @@
 }
 
 .site-nav__link:hover {
-  color: var(--text);
+  color: var(--primary);
   background: var(--hairline);
 }
 
