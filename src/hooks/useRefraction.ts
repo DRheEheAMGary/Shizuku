@@ -10,12 +10,19 @@
  *  https://kube.io/blog/liquid-glass-css-svg/ 。这里只保留 Chromium 那条路径，
  *  去掉了色散（selection）、放大（zoom）和 Safari 的 DOM 克隆兜底。
  *
+ *  实时性：
+ *    位移贴图按「盒子尺寸」生成，边长大就得重画（27px 的圆钮 1ms，527×56 的
+ *    胶囊 20ms 左右），不可能每帧来一次。所以这里分两档：
+ *      · 尺寸稳定时 —— 生成与当前盒子完全匹配的贴图，边缘最准；
+ *      · 尺寸在动时（展开搜索框、滚动收起、登录坞拉开）—— 把上一张贴图
+ *        用 preserveAspectRatio="none" 拉伸到当前盒子，只改属性、不重画。
+ *    这样动画过程中**始终**是折射，不会退化成模糊。
+ *
  *  用法：
  *    const ref = useRef<HTMLElement>(null)
  *    useRefraction(ref)
- *    CSS 里把变量接上：
- *      backdrop-filter: blur(...) saturate(...) var(--lg-filter, none);
- *      background-image: var(--lg-rim, none);
+ *    CSS（见 styles/glass.css）：
+ *      [data-liquid] { backdrop-filter: var(--lg-filter) saturate(...) }
  *
  *  可调参数（写在元素上，同样以 CSS 变量形式读取）：
  *    --lg-bezel       边框带宽（折射只发生在这个环带里），默认按短边 12% 夹到 4–10px
@@ -33,14 +40,30 @@ interface Shape {
   level: number
 }
 
-interface Lens {
-  filter: string
-  rim: string
+/** 一张按某个尺寸烘好的位移贴图 */
+interface Map {
+  displacement: string
+  highlight: string
+  /** 位移量的理论上限（像素），用来换算 feDisplacementMap 的 scale */
+  maximum: number
 }
 
-/** 同尺寸的玻璃复用同一份滤镜与贴图：十个一样宽的按钮只生成一次 */
-const lenses = new Map<string, Lens>()
+/** 每个元素独占一个滤镜节点：盒子尺寸会跟着动画实时改，共享节点会互相打架 */
+interface Lens {
+  filter: SVGFilterElement
+  image: SVGImageElement
+  displace: SVGFEDisplacementMapElement
+}
+
+const MAPS = new Map<string, Map>()
+const LENSES = new WeakMap<HTMLElement, Lens>()
+/** 每个元素最近一次用过的贴图：过渡中先拿它拉伸顶住，避免逐帧重画 */
+const LASTMAP = new WeakMap<HTMLElement, Map>()
 let defs: SVGDefsElement | null = null
+let serial = 0
+
+/** 尺寸稳定后多久才重画贴图（太短会在过渡里反复重画） */
+const REGENERATE_MS = 140
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
@@ -80,7 +103,7 @@ function profile(bezel: number, thickness: number): { samples: Float32Array; max
 /*  ---------- 2. 生成位移图与高光图 ----------
  *  位移图：R 通道 = x 偏移、G 通道 = y 偏移，128 表示不偏移（中性）。
  *  高光图：白色 + alpha，越靠近边框越亮，铺在玻璃表面当镜面反光。 */
-function maps(width: number, height: number, radius: number, shape: Shape) {
+function buildMap(width: number, height: number, radius: number, shape: Shape): Map {
   const density = Math.min(devicePixelRatio || 1, 2)
   const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.12, 4, 10)
   const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.2, 8, 24)
@@ -145,77 +168,130 @@ function maps(width: number, height: number, radius: number, shape: Shape) {
   const displacement = canvas.toDataURL()
   context.putImageData(shine, 0, 0)
   const highlight = canvas.toDataURL()
-  return { displacement, highlight, scale: maximum * 2 * shape.level }
+  return { displacement, highlight, maximum }
 }
 
-/*  ---------- 3. 拼出 SVG 滤镜并缓存 ---------- */
-function lens(width: number, height: number, radius: number, shape: Shape): Lens {
-  const key = [width, height, radius, shape.bezel, shape.thickness, shape.level].join('-')
-  const cached = lenses.get(key)
+/** 同尺寸的玻璃复用同一份贴图（3 个 37px 圆钮只烘焙一次） */
+function mapFor(width: number, height: number, radius: number, shape: Shape): Map {
+  const key = [Math.round(width), Math.round(height), Math.round(radius), shape.bezel, shape.thickness].join('x')
+  const cached = MAPS.get(key)
   if (cached) return cached
+  const built = buildMap(width, height, radius, shape)
+  MAPS.set(key, built)
+  return built
+}
 
-  const { displacement, highlight, scale } = maps(width, height, radius, shape)
-  const id = `shizuku-lens-${lenses.size}`
-  const box = { x: 0, y: 0, width, height }
+/*  ---------- 3. 滤镜节点：建一次，之后只改属性 ---------- */
+function lensFor(element: HTMLElement): Lens {
+  const existing = LENSES.get(element)
+  if (existing) return existing
 
+  const id = `shizuku-lens-${serial++}`
   const filter = svg('filter', {
     id,
-    ...box,
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
     filterUnits: 'userSpaceOnUse',
     primitiveUnits: 'userSpaceOnUse',
     'color-interpolation-filters': 'sRGB',
-  })
+  }) as SVGFilterElement
+
+  const image = svg('feImage', {
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
+    preserveAspectRatio: 'none',
+    result: 'field',
+  }) as SVGImageElement
+
+  const displace = svg('feDisplacementMap', {
+    in: 'SourceGraphic',
+    in2: 'field',
+    scale: 0,
+    xChannelSelector: 'R',
+    yChannelSelector: 'G',
+    result: 'bent',
+  }) as SVGFEDisplacementMapElement
 
   filter.append(
-    svg('feImage', { href: displacement, ...box, preserveAspectRatio: 'none', result: 'field' }),
-    svg('feDisplacementMap', {
-      in: 'SourceGraphic',
-      in2: 'field',
-      scale,
-      xChannelSelector: 'R',
-      yChannelSelector: 'G',
-      result: 'bent',
-    }),
+    image,
+    displace,
     //  位移是取最近像素，边缘弯得最狠的地方会留台阶；0.4 的模糊正好抹掉
     svg('feGaussianBlur', { in: 'bent', stdDeviation: 0.4 }),
   )
-
   container().append(filter)
-  const result = { filter: `url("#${id}")`, rim: `url("${highlight}")` }
-  lenses.set(key, result)
-  return result
+
+  const lens: Lens = { filter, image, displace }
+  LENSES.set(element, lens)
+  return lens
 }
 
-/*  ---------- 4. 量尺寸、算圆角、写回 CSS 变量 ---------- */
-function fit(element: HTMLElement): void {
-  const width = element.offsetWidth
-  const height = element.offsetHeight
-  if (!width || !height) return
-
+/** 读出当前几何：圆角、以及三个可调参数 */
+function readShape(element: HTMLElement, width: number, height: number) {
   const style = getComputedStyle(element)
   const corner = style.borderTopLeftRadius
   //  胶囊的 999px 会被浏览器夹到高度的一半，这里要跟着夹，否则 SDF 算错
   const radius = Math.min(
     width / 2,
     height / 2,
-    corner.endsWith('%') ? (Math.min(width, height) * parseFloat(corner)) / 100 : parseFloat(corner),
+    corner.endsWith('%') ? (Math.min(width, height) * parseFloat(corner)) / 100 : parseFloat(corner || '0'),
   )
-
   const length = (name: string) => {
     const value = parseFloat(style.getPropertyValue(name))
     return Number.isFinite(value) ? value : undefined
   }
-
   const shape: Shape = {
     bezel: length('--lg-bezel'),
     thickness: length('--lg-thickness'),
     level: length('--lg-refraction') ?? 1,
   }
+  return { radius, shape }
+}
 
-  const { filter, rim } = lens(width, height, radius, shape)
+/**
+ * 把贴图套到当前盒子上。用拉伸而不是重画 —— 属性写入是微秒级，可以每帧干。
+ * @param mode 'exact' 时允许为当前尺寸烘焙新贴图；'auto' 时若尺寸没见过就拉伸旧的。
+ * @returns 是否用了拉伸过的贴图（是的话调用方要在尺寸停稳后补一张精确的）
+ */
+function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
+  const width = Math.round(element.offsetWidth)
+  const height = Math.round(element.offsetHeight)
+  if (!width || !height) return false
+
+  const { radius, shape } = readShape(element, width, height)
+  const key = [width, height, Math.round(radius), shape.bezel, shape.thickness].join('x')
+
+  let map = MAPS.get(key)
+  let stretched = false
+  if (!map) {
+    const previous = LASTMAP.get(element)
+    //  过渡中：先用上一张拉伸顶着，等停稳了再烘焙精确的
+    if (mode === 'auto' && previous) {
+      map = previous
+      stretched = true
+    } else {
+      map = mapFor(width, height, radius, shape)
+    }
+  }
+  LASTMAP.set(element, map)
+
+  const lens = lensFor(element)
+  const box = { x: 0, y: 0, width, height }
+  for (const [name, value] of Object.entries(box)) {
+    lens.filter.setAttribute(name, String(value))
+    lens.image.setAttribute(name, String(value))
+  }
+  lens.image.setAttribute('href', map.displacement)
+  lens.displace.setAttribute('scale', String(map.maximum * 2 * shape.level))
+
   element.dataset.liquid = ''
-  element.style.setProperty('--lg-filter', filter)
-  element.style.setProperty('--lg-rim', rim)
+  element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
+  element.style.setProperty('--lg-rim', `url("${map.highlight}")`)
+
+  return stretched
 }
 
 /** 只有 Chromium 会把 SVG 滤镜应用到活的 backdrop 上 */
@@ -223,8 +299,9 @@ const refractsBackdrop = () => /Chrom(?:e|ium)\//.test(navigator.userAgent)
 
 /**
  * 给元素挂上液态玻璃折射。不做兜底：不支持时什么都不写，元素保持原本的模糊。
- * 尺寸变化会重算贴图；过渡进行中先摘掉滤镜（贴图尺寸和当前盒子对不上，
- * 硬用会错位），停下后再挂回去。
+ *
+ * 动画全程不摘滤镜：尺寸一变就按当前盒子把贴图拉伸着用，停稳 140ms 后再
+ * 烘焙一张严丝合缝的。所以过渡过程中看到的也是折射，不会突然糊一下。
  */
 export function useRefraction(ref: RefObject<HTMLElement | null>): void {
   useEffect(() => {
@@ -232,48 +309,47 @@ export function useRefraction(ref: RefObject<HTMLElement | null>): void {
     if (!element || !refractsBackdrop()) return
 
     let settle = 0
-    let restoring = 0
 
-    const apply = () => {
+    const apply = (mode: 'auto' | 'exact' = 'auto') => {
       window.clearTimeout(settle)
-      window.clearTimeout(restoring)
-      restoring = 0
-      fit(element)
+      const stretched = paint(element, mode)
+      //  用了拉伸版贴图 → 等尺寸停下来再烘一张严丝合缝的
+      if (stretched) settle = window.setTimeout(() => paint(element, 'exact'), REGENERATE_MS)
     }
 
-    //  尺寸还在变（展开成搜索框、滚动收起）时先关掉，停稳 120ms 后再算
-    const schedule = () => {
-      window.clearTimeout(settle)
-      settle = window.setTimeout(apply, 120)
-    }
-
-    const drop = () => {
-      delete element.dataset.liquid
-      element.style.removeProperty('--lg-filter')
-      element.style.removeProperty('--lg-rim')
-    }
-
+    //  过渡期间每帧最多来一次：只改属性，不碰 canvas
+    let frame = 0
     const observer = new ResizeObserver(() => {
-      drop()
-      schedule()
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        apply('auto')
+      })
     })
     observer.observe(element)
 
+    //  过渡结束后补一张精确的（有些尺寸变化不触发 ResizeObserver 也能兜住）
+    let endTimer = 0
     const onTransitionEnd = (event: TransitionEvent) => {
       if (event.target !== element) return
-      window.clearTimeout(restoring)
-      restoring = window.setTimeout(apply, 30)
+      window.clearTimeout(endTimer)
+      endTimer = window.setTimeout(() => apply('exact'), 30)
     }
-
     element.addEventListener('transitionend', onTransitionEnd)
+
     apply()
 
     return () => {
       observer.disconnect()
       element.removeEventListener('transitionend', onTransitionEnd)
+      if (frame) cancelAnimationFrame(frame)
       window.clearTimeout(settle)
-      window.clearTimeout(restoring)
-      drop()
+      window.clearTimeout(endTimer)
+      LENSES.get(element)?.filter.remove()
+      LENSES.delete(element)
+      delete element.dataset.liquid
+      element.style.removeProperty('--lg-filter')
+      element.style.removeProperty('--lg-rim')
     }
   }, [ref])
 }
