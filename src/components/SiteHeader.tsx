@@ -17,7 +17,7 @@ import { AccentPicker } from './AccentPicker'
 import { SearchButton } from './SearchButton'
 import { SearchPanel } from './SearchPanel'
 import { ThemeSwitch } from './ThemeSwitch'
-import { useNavDrag } from '@/hooks/useNavDrag'
+import { useNavSlider } from '@/hooks/useNavSlider'
 import { useRefraction } from '@/hooks/useRefraction'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
@@ -68,31 +68,6 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
 
   const measureRef = useRef<() => void>(() => {})
 
-  /*  导航激活态：一枚半透明的主题色滑块，在四个链接之间平移。
-   *  位置量的是链接相对 .site-nav 的 offset —— 所以 .site-nav 必须是定位父级。
-   *  animate=false 用于首次绘制和窗口尺寸变化：直接归位，不滑。 */
-  const placeSlider = useCallback((animate: boolean) => {
-    const nav = navRef.current
-    const slider = sliderRef.current
-    if (!nav || !slider) return
-
-    const active = nav.querySelector<HTMLElement>('.site-nav__link.is-active')
-    if (!active) {
-      slider.style.opacity = '0'
-      return
-    }
-
-    if (!animate) slider.classList.add('is-instant')
-    slider.style.setProperty('--nav-x', `${active.offsetLeft}px`)
-    slider.style.setProperty('--nav-w', `${active.offsetWidth}px`)
-    slider.style.opacity = '1'
-    if (!animate) {
-      // 先让这一帧按新位置渲染，再打开过渡
-      void slider.offsetWidth
-      requestAnimationFrame(() => slider.classList.remove('is-instant'))
-    }
-  }, [])
-
   /*  滑块可以拖着走：松手落到最近一项并切过去（参照 glisse 的 TabBar） */
   const selectByDrag = useCallback(
     (href: string) => {
@@ -102,7 +77,12 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     },
     [onNavigate],
   )
-  const swallowClick = useNavDrag({ navRef, sliderRef, onSelect: selectByDrag })
+  const { shouldSwallowClick } = useNavSlider({
+    navRef,
+    sliderRef,
+    activeHref,
+    onSelect: selectByDrag,
+  })
 
   const close = useCallback(() => {
     setSearching(false)
@@ -289,25 +269,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     if (hopeful && hopeful === path) setHopeful(null)
   }, [path, hopeful])
 
-  /*  目标变化：滑块滑过去 */
-  useLayoutEffect(() => {
-    placeSlider(true)
-  }, [activeHref, placeSlider])
 
-  /*  首次绘制 / 字体就绪 / 尺寸变化：直接归位，不滑 */
-  useEffect(() => {
-    placeSlider(false)
-    document.fonts?.ready.then(() => placeSlider(false)).catch(() => {})
-    const onResize = () => placeSlider(false)
-    window.addEventListener('resize', onResize)
-    const nav = navRef.current
-    const ro = nav ? new ResizeObserver(() => placeSlider(false)) : null
-    if (nav && ro) ro.observe(nav)
-    return () => {
-      window.removeEventListener('resize', onResize)
-      ro?.disconnect()
-    }
-  }, [placeSlider])
 
   /*  首帧、字体就绪、窗口尺寸变化后都要重新量。
    *  手写字体是异步加载的，首帧量到的胶囊宽度是回退字体的，
@@ -407,7 +369,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
                   onClick={(e) => {
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
                     //  刚拖完滑块的那一下点击不算数，否则会又跳一次
-                    if (swallowClick()) {
+                    if (shouldSwallowClick()) {
                       e.preventDefault()
                       return
                     }

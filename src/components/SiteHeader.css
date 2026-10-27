@@ -351,6 +351,12 @@
   transition: none;
 }
 
+/*  弹簧驱动时，位置与宽度由 JS 每帧写内联样式 —— CSS 过渡必须让开，
+ *  否则每帧写一次就等于每帧重开一段过渡。只保留淡入淡出。 */
+.site-nav__slider.is-spring {
+  transition: opacity 180ms var(--ease-fade);
+}
+
 /*  拖动中：关掉过渡（逐帧直给才跟手），并把它"拎起来"一点 ——
  *  缩放 + 阴影加深，是 glisse 那种"手里有一块玻璃"的暗示。 */
 .site-nav.is-dragging .site-nav__slider {
