@@ -169,3 +169,22 @@
   background: var(--hairline);
   border: none;
 }
+
+/*  ============================================================================
+ *  液态玻璃（透镜折射）
+ * ----------------------------------------------------------------------------
+ *  由 useRefraction() 给元素打上 data-liquid，并把 --lg-filter / --lg-rim
+ *  写成内联变量。这里只负责把变量接进 backdrop-filter —— **不放模糊**：
+ *  Chromium 会按模糊半径给 backdrop 降采样，模糊排在 url() 前面会把位移抹平。
+ *
+ *  为什么用 [data-liquid][data-liquid]：组件自己的 .xxx { backdrop-filter: blur(...) }
+ *  特异性是 (0,1,0)，单一属性选择器同样是 (0,1,0)，靠书写顺序决定胜负太脆。
+ *  重复一次属性把权重抬到 (0,2,0)，无论导入顺序如何都能覆盖掉各自的模糊兜底。
+ * ========================================================================== */
+[data-liquid][data-liquid] {
+  background: var(--liquid-bg);
+  background-image: var(--lg-rim, none);
+  background-size: 100% 100%;
+  -webkit-backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
+}

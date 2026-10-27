@@ -129,8 +129,3 @@
   transform: scale(1.15);
 }
 
-/*  液态玻璃：主题色选择钮的玻璃面（不支持时上面的 blur 兜底） */
-.accent-picker__panel[data-liquid] {
-  -webkit-backdrop-filter: var(--lg-filter) saturate(170%);
-  backdrop-filter: var(--lg-filter) saturate(170%);
-}

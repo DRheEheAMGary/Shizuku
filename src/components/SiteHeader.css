@@ -143,7 +143,7 @@
    *  0.84 白 + 24px 模糊的话，边缘位移完全被糊没了。
    *  color-mix 让明暗两套主题都还能用同一行。 */
   --glass-blur: 12px;
-  background: color-mix(in srgb, var(--glass-bg-strong) 58%, transparent);
+  background: var(--liquid-bg);
 
   /*  ---------- 液态玻璃 ----------
    *  useRefraction() 会把两条变量写到元素上：
@@ -166,17 +166,6 @@
     width 420ms var(--ease-apple),
     margin-left 420ms var(--ease-apple),
     margin-right 420ms var(--ease-apple);
-}
-
-/*  折射链里**不放模糊**：
- *  1. Chromium 给 backdrop 做降采样时按模糊半径决定采样面尺寸，blur 排在 url()
- *     之前会把位移几乎抹平（blur 在后还行，但在前就废）；
- *  2. 干脆不要模糊 —— 玻璃的柔化交给折射本身与半透底色，
- *     背后的画面才会像隔着真玻璃那样被"掰弯"而不是被糊掉。
- *  不支持 url() 的浏览器不会拿到 data-liquid，走上面的纯模糊兜底。 */
-.site-header[data-liquid] {
-  -webkit-backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
-  backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
 }
 
 .site-header-wrap.is-collapsed .site-header {
@@ -753,11 +742,3 @@
   }
 }
 
-/*  液态玻璃 · 顶栏里的小圆玻璃（头像磨砂圆、搜索钮）。
- *  和胶囊同一套位移滤镜，只是尺寸更小；链条里不放模糊。
- *  不支持的浏览器拿不到 data-liquid，继续用上面各自的 blur 兜底。 */
-.site-header__avatar-halo[data-liquid],
-.search-btn__glass[data-liquid] {
-  -webkit-backdrop-filter: var(--lg-filter) saturate(170%);
-  backdrop-filter: var(--lg-filter) saturate(170%);
-}
