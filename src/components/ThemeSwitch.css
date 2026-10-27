@@ -148,3 +148,9 @@
 
 /* ---------- 太阳 ⇄ 月牙 ⇄ 自动 ---------- */
 /*  描边/实心图形都跟着文字色走（currentColor）；三档直接切换，不做形变动画。 */
+
+/*  液态玻璃：明暗切换钮的玻璃面（不支持时上面的 blur 兜底） */
+.theme-switch__panel[data-liquid] {
+  -webkit-backdrop-filter: var(--lg-filter) saturate(170%);
+  backdrop-filter: var(--lg-filter) saturate(170%);
+}

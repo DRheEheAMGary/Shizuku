@@ -49,6 +49,9 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const pillRef = useRef<HTMLElement>(null)
   //  顶栏胶囊的液态玻璃折射（只在 Chromium 生效，其余浏览器保持纯模糊）
   useRefraction(pillRef)
+  //  头像那枚磨砂圆也一起做折射（同一套滤镜，尺寸不同各生成一份）
+  const haloRef = useRef<HTMLSpanElement>(null)
+  useRefraction(haloRef)
   const avatarRef = useRef<HTMLSpanElement>(null)
   const slotRef = useRef<HTMLSpanElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -347,7 +350,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
 
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
       <span className="site-header__avatar" ref={avatarRef}>
-        <span className="site-header__avatar-halo" aria-hidden="true" />
+        <span className="site-header__avatar-halo" aria-hidden="true" ref={haloRef} />
         <img src={site.avatar} alt="" width={54} height={54} />
       </span>
 

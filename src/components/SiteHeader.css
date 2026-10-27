@@ -752,3 +752,12 @@
     translate: 0 0;
   }
 }
+
+/*  液态玻璃 · 顶栏里的小圆玻璃（头像磨砂圆、搜索钮）。
+ *  和胶囊同一套位移滤镜，只是尺寸更小；链条里不放模糊。
+ *  不支持的浏览器拿不到 data-liquid，继续用上面各自的 blur 兜底。 */
+.site-header__avatar-halo[data-liquid],
+.search-btn__glass[data-liquid] {
+  -webkit-backdrop-filter: var(--lg-filter) saturate(170%);
+  backdrop-filter: var(--lg-filter) saturate(170%);
+}
