@@ -17,6 +17,7 @@ import { AccentPicker } from './AccentPicker'
 import { SearchButton } from './SearchButton'
 import { SearchPanel } from './SearchPanel'
 import { ThemeSwitch } from './ThemeSwitch'
+import { useRefraction } from '@/hooks/useRefraction'
 import { useScrollCollapse } from '@/hooks/useScrollCollapse'
 import './SiteHeader.css'
 
@@ -46,6 +47,8 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const iconRef = useRef<SVGSVGElement>(null)
   const pillRef = useRef<HTMLElement>(null)
+  //  顶栏胶囊的液态玻璃折射（只在 Chromium 生效，其余浏览器保持纯模糊）
+  useRefraction(pillRef)
   const avatarRef = useRef<HTMLSpanElement>(null)
   const slotRef = useRef<HTMLSpanElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)

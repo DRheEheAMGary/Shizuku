@@ -77,6 +77,15 @@ pnpm typecheck  # 只做类型检查
 
 ## 部署
 
+### 0. 分支与站点
+
+| 分支 | 部署到 | 用途 |
+| --- | --- | --- |
+| `main` | `www.dreamgary.cn`（`/www/wwwroot/main`） | 正式主页 |
+| `dev` | `shizuku.dreamgary.cn`（`/www/wwwroot/shizuku`） | 试验场：新东西先在这里上，验证通过再合回 `main` |
+
+两个目录各有一份构建产物，别用整目录覆盖（主站根目录里的 `search-index.json` 是指向预览站索引的软链接）。
+
 ### 1. 发布静态文件
 
 ```bash
