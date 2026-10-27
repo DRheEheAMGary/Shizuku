@@ -171,15 +171,33 @@ function buildMap(width: number, height: number, radius: number, shape: Shape): 
   return { displacement, highlight, maximum }
 }
 
+/** 缓存上限：动画里每帧都是一个新尺寸，留太多会把内存吃掉 */
+const MAP_LIMIT = 48
+
 /** 同尺寸的玻璃复用同一份贴图（3 个 37px 圆钮只烘焙一次） */
 function mapFor(width: number, height: number, radius: number, shape: Shape): Map {
-  const key = [Math.round(width), Math.round(height), Math.round(radius), shape.bezel, shape.thickness].join('x')
+  const key = keyOf(width, height, radius, shape)
   const cached = MAPS.get(key)
   if (cached) return cached
   const built = buildMap(width, height, radius, shape)
   MAPS.set(key, built)
+  if (MAPS.size > MAP_LIMIT) {
+    //  淘汰最早的一张（Map 保持插入顺序）
+    const oldest = MAPS.keys().next()
+    if (!oldest.done) MAPS.delete(oldest.value)
+  }
   return built
 }
+
+const keyOf = (width: number, height: number, radius: number, shape: Shape) =>
+  [Math.round(width), Math.round(height), Math.round(radius), shape.bezel, shape.thickness].join('x')
+
+/**
+ * 超过这个面积就不再逐帧烘焙：一张贴图的成本随像素数线性增长，
+ * 卡片那种大块面在动画里重画会掉帧 —— 退回"拉伸旧贴图 + 停稳后补精确"。
+ * 顶栏这些小元素（37²、56²、527×56）远在阈值内，实测 1–2ms/帧。
+ */
+const BAKE_AREA_LIMIT = 160_000
 
 /*  ---------- 3. 滤镜节点：建一次，之后只改属性 ---------- */
 function lensFor(element: HTMLElement): Lens {
@@ -262,14 +280,15 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   if (!width || !height) return false
 
   const { radius, shape } = readShape(element, width, height)
-  const key = [width, height, Math.round(radius), shape.bezel, shape.thickness].join('x')
+  const key = keyOf(width, height, radius, shape)
 
   let map = MAPS.get(key)
   let stretched = false
   if (!map) {
     const previous = LASTMAP.get(element)
-    //  过渡中：先用上一张拉伸顶着，等停稳了再烘焙精确的
-    if (mode === 'auto' && previous) {
+    //  小元素直接按当前尺寸烘焙（1–2ms，动画每帧都扛得住，边缘始终精确）；
+    //  大元素才退而求其次用拉伸。
+    if (mode === 'auto' && previous && width * height > BAKE_AREA_LIMIT) {
       map = previous
       stretched = true
     } else {
