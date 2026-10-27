@@ -401,6 +401,8 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
                   key={item.href}
                   href={item.href}
                   className={`site-nav__link${active ? ' is-active' : ''}`}
+                  //  允许按住拖动滑块，所以要关掉 <a> 的原生拖拽
+                  draggable={false}
                   aria-current={active ? 'page' : undefined}
                   onClick={(e) => {
                     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return

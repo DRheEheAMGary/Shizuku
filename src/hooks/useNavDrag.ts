@@ -82,7 +82,7 @@ export function useNavDrag({ navRef, sliderRef, onSelect }: Options): () => bool
       nav.classList.remove('is-dragging')
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', onUp)
+      window.removeEventListener('pointercancel', onCancel)
     }
 
     /** 松手：吸附到最近一项，并把内联样式交还给 CSS 变量做过过渡 */
@@ -124,6 +124,12 @@ export function useNavDrag({ navRef, sliderRef, onSelect }: Options): () => bool
       paint(event.clientX, gesture.slots)
     }
 
+    /** 指针被系统打断（比如浏览器抢去做了原生拖拽）—— 只收尾，不导航 */
+    const onCancel = (event: PointerEvent) => {
+      if (!gesture || event.pointerId !== gesture.id) return
+      stop()
+    }
+
     const onUp = (event: PointerEvent) => {
       if (!gesture || event.pointerId !== gesture.id) return
       const { moved, slots } = gesture
@@ -149,12 +155,18 @@ export function useNavDrag({ navRef, sliderRef, onSelect }: Options): () => bool
       gesture = { id: event.pointerId, startX: event.clientX, moved: false, slots: readSlots() }
       window.addEventListener('pointermove', onMove, { passive: true })
       window.addEventListener('pointerup', onUp)
-      window.addEventListener('pointercancel', onUp)
+      window.addEventListener('pointercancel', onCancel)
     }
 
+    //  <a> 默认可拖：一旦浏览器开始原生链接拖拽，指针事件会被取消，
+    //  拖出来的是链接幽灵而不是我们的滑块。直接在导航里禁掉。
+    const onDragStart = (event: DragEvent) => event.preventDefault()
+
     nav.addEventListener('pointerdown', onDown)
+    nav.addEventListener('dragstart', onDragStart)
     return () => {
       nav.removeEventListener('pointerdown', onDown)
+      nav.removeEventListener('dragstart', onDragStart)
       stop()
     }
   }, [navRef, sliderRef, onSelect])

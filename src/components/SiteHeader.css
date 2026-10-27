@@ -314,6 +314,9 @@
 .site-nav {
   /*  滑块按 offsetLeft/offsetWidth 定位，所以这里必须是定位父级 */
   position: relative;
+  /*  导航文字不需要被选中：拖动时更不会先闪一下选区 */
+  user-select: none;
+  -webkit-user-select: none;
   display: flex;
   align-items: center;
   gap: 1px;
@@ -379,6 +382,8 @@
   letter-spacing: 0.03em;
   /*  未激活态用正文色而不是 muted：顶栏现在是清透玻璃，灰字压在插画上读不清 */
   color: var(--text);
+  /*  拖动滑块时不要变成原生链接拖拽 */
+  -webkit-user-drag: none;
   white-space: nowrap;
   transition:
     color var(--dur-fast) var(--ease-apple),
