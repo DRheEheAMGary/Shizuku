@@ -1,18 +1,13 @@
 /* ============================================================================
- *  Shizuku · 首页
+ *  Shizuku · Main（首页）
  * ----------------------------------------------------------------------------
- *  组件化 + 卡片化：正文由一块块玻璃卡片组成。
+ *  首屏分两栏：左侧是大字署名与副标题，右侧一张「关于我」玻璃卡片。
+ *  卡片带 data-card，跨页过渡时由 App 统一驱动形变。
  *
- *  布局：左侧用户名大胶囊，右侧一张「关于我」玻璃卡片。
- *  下面的 .card-grid 骨架留着：横排、滚轮可横向滚动的逻辑都还在，
- *  以后想加横向卡片排时，把卡片放回 grid 里就能直接用。
- *
- *  卡片排成**一横排**，可以横向滚动：
- *    - 鼠标滚轮纵向滚动 → 转成横向位移（到头了就把滚动交还给页面）
- *    - 触控板横向滑动 → 浏览器原生支持
- *
- *  宽度仍按 12 栅格比例算：跨 8 列的卡就是宽，跨 4 列的就是窄，
- *  只是把它们从「上下堆叠」换成了「左右排开」。
+ *  下方 .card-track / .card-grid 是横向卡片排的骨架，目前为空：
+ *  滚轮横向滚动的监听已经挂好，往 grid 里放卡片即可生效 ——
+ *    · 鼠标滚轮纵向滚动 → 转成横向位移，到头了把滚动交还给页面
+ *    · 触控板横向滑动 → 浏览器原生支持
  * ========================================================================== */
 
 import { useEffect, useRef } from 'react'
@@ -24,8 +19,8 @@ export function Home() {
   const trackRef = useRef<HTMLDivElement>(null)
 
   // 滚轮 → 横向滚动。
-  // React 17 起 onWheel 是被动监听，preventDefault 不生效，
-  // 所以这里手动挂一个 passive: false 的监听。
+  // 需要 preventDefault，所以不能用 React 的 onWheel（被动监听，拦不住），
+  // 手动挂一个 passive: false 的监听。
   useEffect(() => {
     const el = trackRef.current
     if (!el) return
@@ -34,7 +29,7 @@ export function Home() {
       if (e.deltaY === 0) return
 
       const max = el.scrollWidth - el.clientWidth
-      // 已经到头/到尾就把滚动还给页面，不然页面会被卡住滚不动
+      // 滚动到两端就把事件放开，否则页面纵向滚动会被这里吃掉
       if (e.deltaY < 0 && el.scrollLeft <= 0) return
       if (e.deltaY > 0 && el.scrollLeft >= max - 1) return
 
@@ -48,9 +43,10 @@ export function Home() {
 
   return (
     <PageShell marginText="しずく" wide>
-      {/*  首屏分栏：左侧用户名大名 + 副标题，右侧一列玻璃卡片 */}
+      {/* 分栏：左标题区，右卡片区 */}
       <div className="home-hero">
         <div className="home-title-block">
+          {/* --i 是入场动画的序号，.intro 按它逐个错开 */}
           <h1
             className="home-title intro"
             data-text={profile.name}
@@ -64,6 +60,7 @@ export function Home() {
         </div>
 
         <div className="home-side">
+          {/* data-card 供 App 在换页时测量起始形变矩形 */}
           <section
             className="glass home-card intro"
             style={{ '--i': 2 } as React.CSSProperties}
@@ -79,7 +76,7 @@ export function Home() {
         </div>
       </div>
 
-      {/*  横向卡片排骨架留着：版式定了再往里放卡片 */}
+      {/* 横向卡片排的容器：当前为空，滚动逻辑已就位 */}
       <div className="card-track">
         <div className="card-grid" ref={trackRef} />
       </div>

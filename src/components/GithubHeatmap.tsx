@@ -1,15 +1,15 @@
 /* ============================================================================
  *  Shizuku · GitHub 贡献热力图
  * ----------------------------------------------------------------------------
- *  GitHub 登录名来自 SSO 的 /userinfo（只有绑定了 GitHub 才有）。
- *  贡献数据走 **SSO 的 /api/contributions 代理**，不直连第三方：
- *  上游 jogruber 在国内网络下经常不可达，直连会一直卡在「加载中」。
+ *  GitHub 登录名来自 SSO 的 /userinfo（只有绑定 GitHub 后才有）。
+ *  贡献数据走 SSO 的 /api/contributions 代理，不直连第三方 ——
+ *  上游服务在部分网络下不可达，直连会一直停在「加载中」。
  *
- *  未绑定时不请求、不报错 —— 直接渲染一整年的空格子，
- *  在上面盖一句提示，版式不会因为状态不同而跳动。
+ *  未绑定时不发请求、不报错：按 weeks 渲染空格子（默认一整年）并盖上提示，
+ *  版式不因状态不同而跳动。
  *
- *  鼠标悬浮在格子上会浮出一块提示框（日期 + 贡献次数），做法参考 Gary-Homepage：
- *  挂到 body 上、fixed 定位、贴边收敛、上方放不下就翻到下方、滚动即收起。
+ *  悬浮提示框用 portal 挂到 body、fixed 定位：坞的面板 overflow:hidden
+ *  且带 backdrop-filter，留在里面会被裁切、定位也会错。
  * ========================================================================== */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -18,13 +18,14 @@ import { createPortal } from 'react-dom'
 import { SSO_ISSUER } from '@/auth/config'
 import './GithubHeatmap.css'
 
+// SSO 代理接口：服务端转发上游并汇总 total，前端不直连第三方
 const API = (login: string) =>
   `${SSO_ISSUER}/api/contributions?login=${encodeURIComponent(login)}`
 
-/** 超时兜底：上游慢的时候别一直转圈 */
+/** 超时兜底：上游响应慢时中断请求，避免一直停在加载中 */
 const TIMEOUT_MS = 15_000
 
-/** 未绑定时用来撑版式的空序列：一整年、全 0 */
+// 未绑定 GitHub 时的占位序列：以今天为终点的一整年、全部 count / level 为 0
 function emptyYear(): Contribution[] {
   const days: Contribution[] = []
   const today = new Date()
@@ -42,22 +43,21 @@ interface Contribution {
   level: 0 | 1 | 2 | 3 | 4
 }
 
-/** 经 SSO 代理后 total 已经是汇总好的数字 */
+/** SSO 代理返回体：total 可能是数字，也可能是按桶分组的对象 */
 interface ApiResponse {
   total: number | Record<string, number>
   contributions: Contribution[]
 }
 
-/** 页面切换会重新挂载组件，缓存一份已拿到的数据，避免热力图回到“加载中”。 */
+/** 已拿到的数据缓存：页面切换会重新挂载组件，命中缓存就不用回到「加载中」 */
 const contributionsCache = new Map<string, { weeks: Slot[][]; total: number }>()
 
 /** 空位：补齐首尾残缺周用的占位，渲染成透明格子 */
 type Slot = Contribution | null
 
-/**  把日期序列按「周」切成列，并补齐成 7 行。
- *
- *  不补的话首尾那一列只有 1~2 个格子，视觉上像「没渲染完的小竖条」。
- *  补成全高之后每一列都是 7 格，右边缘齐平。 */
+// 把日期序列按周切列，并补齐成每列 7 格。
+// 不补的话首尾那一列只有 1~2 个格子，视觉上像没渲染完的小竖条；
+// 补成全高后每一列都是 7 格，右边缘齐平。首列按周日对齐。
 function toWeeks(days: Contribution[]): Slot[][] {
   if (days.length === 0) return []
 
@@ -85,7 +85,7 @@ function toWeeks(days: Contribution[]): Slot[][] {
   return weeks
 }
 
-/** 取最后 N 周 */
+// 按 weeks 截取最后 N 列；不传或传 0 时保留全部 53 周
 function makeSlicer(weeks?: number) {
   return (all: Slot[][]) => (weeks && weeks > 0 ? all.slice(-weeks) : all)
 }
@@ -135,7 +135,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
     setPos({ left, top })
   }, [tip])
 
-  /*  滚动 / 改窗口之后格子的位置就不准了，直接收起来（和 Gary-Homepage 一致） */
+  /*  滚动 / 改窗口之后格子的位置就不准了，直接收起来 */
   useEffect(() => {
     if (!tipVisible) return
     const hide = () => setTipVisible(false)
@@ -158,6 +158,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
 
   const hideTip = () => setTipVisible(false)
 
+  // 有登录名才请求；超时用 AbortController 中断，组件卸载时同样中止
   useEffect(() => {
     if (!login) return
     const controller = new AbortController()
@@ -258,7 +259,7 @@ export function GithubHeatmap({ login, weeks, compact = false }: HeatmapProps) {
       )}
 
       {/*  提示框挂到 body 上：坞的面板是 overflow:hidden，
-          而且它带 backdrop-filter，会把 fixed 定位拉回面板自己身上 ——
+          且带 backdrop-filter，会把 fixed 定位的包含块拉回面板自身 ——
           留在里面既会被裁，位置也会错。 */}
       {createPortal(
         <div

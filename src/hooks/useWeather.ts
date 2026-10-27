@@ -1,24 +1,26 @@
 /* ============================================================================
  *  Shizuku · 天气与地址
  * ----------------------------------------------------------------------------
- *  两件事：
- *    1. 天气 —— Open-Meteo，免费、无需 API Key、允许浏览器直接跨域调用
- *    2. 地址 —— 逆地理编码走 **SSO 的 /api/reverse-geocode 代理**，
- *       不直连第三方：上游在国内经常不可达，直连会一直转圈
+ *  两路数据：
+ *    1. 天气 —— Open-Meteo，免费、无需 API Key、允许浏览器直接跨域
+ *    2. 地址 —— 逆地理编码走 SSO 的 /api/reverse-geocode 代理
+ *       （上游第三方在国内常不可达，直连会一直转圈）
  *
- *  定位权限不主动弹。一进来先问系统「授权过了吗」：
- *    授权过 → 直接取
- *    没授权 → 界面上盖一层遮罩，写着「当前无法获取地址」+「授权」，
- *             由用户点一下才弹系统的权限框
+ *  定位权限不主动弹窗：进入时先用 Permissions API 查一次状态，
+ *  已授权才直接取；未授权则把状态留给界面（登录坞）去显示「授权」按钮。
  * ========================================================================== */
 
 import { useCallback, useEffect, useState } from 'react'
 import { SSO_ISSUER } from '@/auth/config'
 
 export interface Weather {
+  /** 摄氏温度，已取整 */
   temp: number
+  /** WMO 天气代码 */
   code: number
+  /** 是否为白天，决定用太阳还是月亮图标 */
   isDay: boolean
+  /** 中文短语，如「多云」 */
   label: string
 }
 
@@ -63,14 +65,13 @@ const weatherApi = (lat: number, lon: number) =>
 const geoApi = (lat: number, lon: number) =>
   `${SSO_ISSUER}/api/reverse-geocode?lat=${lat}&lon=${lon}`
 
-/** 把省/市/区拼成「省 · 市 · 区」：缺的省略，重复的也省略 */
+/** 把省/市/区拼成「省 · 市 · 区」：缺的省略，重复的也省略（直辖市省市同名） */
 export function formatPlace(place: Place | null): string {
   if (!place) return ''
   const parts: string[] = []
   for (const part of [place.province, place.city, place.district]) {
     const v = (part ?? '').trim()
     if (!v) continue
-    // 直辖市的省和市同名，只留一个
     if (parts.length && parts[parts.length - 1] === v) continue
     parts.push(v)
   }
@@ -83,7 +84,10 @@ export function useWeather() {
   const [place, setPlace] = useState<Place | null>(null)
   const [failed, setFailed] = useState(false)
 
-  /** 取一次坐标，然后并行拉天气和地址 */
+  /**
+   * 用一组坐标并行拉天气与地址，共用一个 AbortController 与 15s 超时。
+   * 地址失败不影响天气：天气本身就是主信息，地址只是补充。
+   */
   const load = useCallback((lat: number, lon: number) => {
     const controller = new AbortController()
     const timer = window.setTimeout(() => controller.abort(), 15_000)
@@ -101,10 +105,10 @@ export function useWeather() {
         })
       })
       .catch((err) => {
+        // 用户主动取消不算失败
         if (err?.name !== 'AbortError') setFailed(true)
       })
 
-    // 地址失败不影响天气，天气好了照样显示
     fetch(geoApi(lat, lon), { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((data) => {
@@ -124,7 +128,7 @@ export function useWeather() {
     }
   }, [])
 
-  /** 弹系统的定位权限框 */
+  /** 弹系统的定位权限框；拿到坐标后交给 load */
   const request = useCallback(() => {
     if (!('geolocation' in navigator)) {
       setLocate('unsupported')
@@ -138,6 +142,7 @@ export function useWeather() {
       },
       () => setLocate('denied'),
       {
+        // 只要城市级精度，关掉高精度可以更快出结果
         enableHighAccuracy: false,
         timeout: 12_000,
         // 位置变化不大，缓存十分钟，避免每次开页面都重新定位
@@ -146,7 +151,7 @@ export function useWeather() {
     )
   }, [load])
 
-  // 进来先问系统：以前授权过就直接取，没授权就等着用户点
+  // 进入时先查权限状态：已授权就直接取，没授权就等用户点按钮
   useEffect(() => {
     if (!('geolocation' in navigator)) {
       setLocate('unsupported')
@@ -173,6 +178,7 @@ export function useWeather() {
     locate,
     failed,
     request,
+    /** 已拼好的地址文本，未取到时为空串 */
     address: formatPlace(place),
   }
 }

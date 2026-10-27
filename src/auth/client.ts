@@ -8,11 +8,12 @@
  *    ② SSO 侧完成登录 → 302 回 /auth/callback?code=&state=
  *    ③ handleCallback()
  *         校验 state → POST /token（带 code_verifier）→ 拿 access_token
- *         → GET /userinfo → 存本地 → 清掉 URL 上的参数
+ *         → GET /userinfo → 存本地快照 → 清掉地址栏上的回调参数
  *    ④ logout()
- *         清本地 → 跳 SSO 的 /logout，把服务端会话也一起结束
+ *         清本地快照 → 跳 SSO 的 /logout，把服务端会话一并结束
  *
  *  只依赖 fetch 与 Web Crypto，没有任何第三方库。
+ *  access_token 只在 ③ 内部存活，不写入任何持久化存储。
  * ========================================================================== */
 
 import {
@@ -25,7 +26,9 @@ import {
 } from './config'
 import { codeChallenge, randomString } from './pkce'
 
+/** /userinfo 返回的公开资料；不包含任何令牌 */
 export interface SsoUser {
+  /** 用户唯一标识，登录态的核心字段 */
   sub: string
   name?: string
   preferred_username?: string
@@ -49,7 +52,7 @@ interface PkceState {
   returnTo: string
 }
 
-/** ① 跳去授权服务器 */
+/** ① 跳去授权服务器；默认登录后回到当前页 */
 export async function startLogin(returnTo = window.location.pathname + window.location.search): Promise<void> {
   const verifier = randomString(48)
   const pkce: PkceState = {
@@ -58,6 +61,7 @@ export async function startLogin(returnTo = window.location.pathname + window.lo
     nonce: randomString(24),
     returnTo,
   }
+  // 中间态放 sessionStorage：同一标签页内有效，关掉标签页即失效
   sessionStorage.setItem(SSO_PKCE_KEY, JSON.stringify(pkce))
 
   const url = new URL(SSO_ENDPOINTS.authorize)
@@ -73,7 +77,11 @@ export async function startLogin(returnTo = window.location.pathname + window.lo
   window.location.assign(url.toString())
 }
 
-/** ③ 处理回调；没有 code 就返回 null */
+/**
+ * ③ 处理授权回调；地址栏里没有 code 就返回 null（普通访问）。
+ *
+ * @throws 授权服务器返回 error、state 不匹配、中间态丢失、换取令牌或资料失败
+ */
 export async function handleCallback(): Promise<SsoUser | null> {
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
@@ -86,12 +94,13 @@ export async function handleCallback(): Promise<SsoUser | null> {
   }
   if (!code || !state) return null
 
+  // 中间态只消费一次：无论成败都先取走，避免重放
   const raw = sessionStorage.getItem(SSO_PKCE_KEY)
   sessionStorage.removeItem(SSO_PKCE_KEY)
   if (!raw) throw new Error('登录会话已过期，请重新登录')
 
   const pkce = JSON.parse(raw) as PkceState
-  // state 必须原样返回 —— 这里不一致说明回调不是本次发起的（CSRF）
+  // state 必须原样返回 —— 不一致说明这次回调不是本站发起的（CSRF）
   if (pkce.state !== state) throw new Error('state 校验失败，已中止')
 
   const body = new URLSearchParams({
@@ -117,6 +126,7 @@ export async function handleCallback(): Promise<SsoUser | null> {
     id_token?: string
   }
 
+  // access_token 仅在这里用一次，随后随作用域结束而丢弃
   const infoRes = await fetch(SSO_ENDPOINTS.userinfo, {
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   })
@@ -128,6 +138,7 @@ export async function handleCallback(): Promise<SsoUser | null> {
   return user
 }
 
+/** 清掉地址栏上的 code / state，并回到登录前所在的页面 */
 function cleanupUrl(replaceWith?: string): void {
   const clean = replaceWith || window.location.pathname
   window.history.replaceState({}, '', clean)
@@ -152,7 +163,7 @@ export function clearUser(): void {
   sessionStorage.removeItem(SSO_PKCE_KEY)
 }
 
-/** ④ 登出：先清本地，再把 SSO 的服务端会话一并结束 */
+/** ④ 登出：先清本地，再把 SSO 的服务端会话一并结束，最后回到首页 */
 export function logout(): void {
   clearUser()
   const back = window.location.origin + '/'

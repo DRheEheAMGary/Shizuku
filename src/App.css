@@ -1,51 +1,61 @@
 /* ============================================================================
- *  Shizuku · 全局布局
+ *  Shizuku · 路由切换动画
+ * ----------------------------------------------------------------------------
+ *  路由切换的 CSS 侧。状态类由 App.tsx 按 phase 挂到 .page-view 上：
+ *  is-card-out 旧页退场 / is-card-morph 形变过渡 / is-card-in 收尾；
+ *  is-main、is-content、is-collect-split、is-collect-shrink 指明走哪一套时长。
+ *
+ *  磨砂红线：卡片只能动自己的 transform。
+ *  卡片或祖先一旦加 opacity / filter，backdrop-filter 就取不到背后的画面，
+ *  玻璃会退化成一块纯色；所以内容文字单独做 opacity，玻璃本体保持不动。
  * ========================================================================== */
 
-/* ----------------------------------------------------------------------------
- *  路由切换：内容淡入 / 卡片形变 / 合并再分裂
- * ----------------------------------------------------------------------------
- *  磨砂红线：
- *  - 只能动卡片自己的 transform，不能给卡片或祖先加 opacity / filter / 快照
- *  - 卡片内容单独做 opacity，玻璃本体始终保持不透明
- * -------------------------------------------------------------------------- */
-
+/* ---- 缓动曲线 ---- */
 :root {
-  /*  轻微回弹，避免长距离位移结束时“硬停” */
+  /*  轻微回弹：长距离位移收尾时不会硬停 */
   --ease-card: cubic-bezier(0.32, 1.06, 0.58, 1);
   --ease-fade: cubic-bezier(0.4, 0, 0.2, 1);
-  /*  汇聚到合并矩形时不再刹停：交棒瞬间还留着速度，直接接上分裂的起步 */
+  /*  汇聚：收尾仍在移动，把速度直接交给分裂，两段接得上 */
   --ease-collect: cubic-bezier(0.3, 0.45, 0.6, 0.6);
-  /*  分裂：起步速度接得住合并的收尾，整段平顺外扩，不先窜出去再拖尾 */
+  /*  分裂：起步就快，之后平顺外扩，不先窜出去再拖尾 */
   --ease-split: cubic-bezier(0.2, 0.85, 0.36, 1);
-  /*  导航滑块：中段一口气滑到位，末尾一点点回弹收住 */
+  /*  导航滑块（SiteHeader.css 使用）：中段一口气滑到位，末尾一点回弹收住 */
   --ease-slide: cubic-bezier(0.3, 1.1, 0.42, 1);
 }
 
+/* ---- 卡片位移与内容淡入 ---- */
+/*  --card-delay 由 App.tsx 内联写入，用来推迟卡片起步；
+ *  形变类过渡会在下面把时长改短，其余过渡走这里的 900ms。 */
 [data-card] {
   transition: transform 900ms var(--ease-card);
   transition-delay: var(--card-delay, 0ms);
 }
 
+/*  文字单独淡出：--out-fade 按当前合并时长由 JS 写入，默认 300ms */
 [data-card] > * {
   transition: opacity var(--out-fade, 300ms) var(--ease-fade);
 }
 
+/*  旧页退场：内容先隐去；需要位移时由 JS 的内联 transform 接管 */
 .page-view.is-card-out [data-card] > * {
   opacity: 0;
   transition-duration: var(--out-fade, 260ms);
 }
 
-/* Main 只停留 150ms，旧内容要在这之前退干净 */
+/*  Main 交棒只等 90ms（App.tsx 的 MAIN_OUT_MS），淡出压到 120ms，
+ *  旧文字在交棒时已经接近全隐。 */
 .page-view.is-card-out.is-main [data-card] > * {
   transition-duration: 120ms;
 }
 
+/*  新页内容按 --content-delay 延后出现，该值由 JS 按过渡类型写入：
+ *  content 0ms、collect 360 / 380ms、main 400ms、其余 560ms。 */
 .page-view.is-card-morph [data-card] > * {
   animation: card-content-in var(--content-fade, 540ms) var(--ease-fade)
     var(--content-delay, 0ms) both;
 }
 
+/*  收尾：直接置为不透明并取消过渡，不留残余动画状态 */
 .page-view.is-card-in [data-card] > * {
   opacity: 1;
   transition: none;
@@ -60,14 +70,16 @@
   }
 }
 
-/* 卡片先走完形变，文字最后浮上来 */
+/*  这三类过渡里卡片先铺开、文字后浮出：淡入压到 300ms，
+ *  与 App.tsx 的 CONTENT_FADE_MS 对应（它据此推算 morph 阶段何时结束）。 */
 .page-view.is-card-morph.is-main,
 .page-view.is-card-morph.is-collect-split,
 .page-view.is-card-morph.is-collect-shrink {
   --content-fade: 300ms;
 }
 
-/* 分裂/收拢的行程：变长之后，"分开"和"位移"能同时发生 */
+/*  分裂 / 收拢的形变统一 400ms + --ease-split：
+ *  目标卡从旧卡碎片（main）或合并矩形（collect）展开，起步速度接得住合并的收尾。 */
 .page-view.is-card-morph.is-main [data-card],
 .page-view.is-card-morph.is-collect-split [data-card],
 .page-view.is-card-morph.is-collect-shrink [data-card] {
@@ -75,13 +87,18 @@
   transition-timing-function: var(--ease-split);
 }
 
-/* 回到 Main：标题也等到主卡收拢后再出现 */
+/*  回到 Main：标题等主卡收拢后再出现（360ms 起、300ms 走完）。
+ *  关键帧仍由下方通用的 title-in 提供，这里只覆盖时长与延迟（权重更高）。 */
 .page-view.is-card-morph.is-collect-shrink .home-title-block {
   animation-delay: 360ms;
   animation-duration: 300ms;
 }
 
-/* 合并阶段的桥接玻璃 */
+/* ---- 合并阶段的桥接玻璃 ---- */
+/*  合并再分裂时，这块固定玻璃先盖住目标碎片之间的接缝，再随卡片散开化掉。
+ *  位置与尺寸由 JS 内联写入；z-index 4 高于正文，低于顶栏（50）与按钮层（41+）。
+ *  -webkit- 前缀写在标准属性之前：压缩器会合并同族声明，
+ *  标准 backdrop-filter 放在后面才是最终生效的那条。 */
 .transition-bridge {
   position: fixed;
   z-index: 4;
@@ -97,7 +114,7 @@
   animation: bridge-veil 280ms var(--ease-fade) forwards;
 }
 
-/* 交棒瞬间盖住碎片接缝：先轻轻浮上来，再随卡片散开化掉 */
+/*  三段：前 30% 快速浮上来盖住接缝，余下的时间淡干净 */
 @keyframes bridge-veil {
   0% {
     opacity: 0;
@@ -110,36 +127,40 @@
   }
 }
 
-/* 目标页放不下的旧卡：向下让位，然后在新页出现前卸载 */
+/*  普通过渡里目标页放不下的旧卡：向下缩一点让位，换页时随旧页一起卸载 */
 [data-card].is-card-exit {
   transform: translateY(18px) scale(0.97);
   transition-duration: 200ms;
 }
 
+/*  动画期间整页不吃指针事件：位移中的卡片上不会误触链接 */
 .page-view.is-card-out,
 .page-view.is-card-morph,
 .page-view.is-card-in {
   pointer-events: none;
 }
 
+/*  只在这几个阶段提示提升合成层，类名消失后自动释放 */
 .page-view.is-card-out [data-card],
 .page-view.is-card-morph [data-card],
 .page-view.is-card-in [data-card] {
   will-change: transform;
 }
 
-/* 首屏的 .intro 入场只在第一次加载时播放；切回首页时不能再给卡片整体加 opacity */
+/*  首屏 .intro 只在首次加载时播放：has-routed 之后换页不再重播，
+ *  否则玻璃卡片会先整体透明一次。 */
 .page-view.has-routed .intro {
   animation: none;
 }
 
-/* 首页标题不是玻璃卡，可以安全地淡出/淡入 */
+/*  标题块不是玻璃材质，可以直接淡出 / 淡入 */
 .page-view.is-card-out .home-title-block {
   opacity: 0;
   transition: opacity 200ms var(--ease-fade);
 }
 
-/* Main 分裂：标题随主卡一起离开 */
+/*  Main 分裂：标题随主卡一起放大离开，transform-origin 取左下角，
+ *  与卡列的底边对齐。 */
 .page-view.is-main .home-title-block {
   opacity: 0;
   transform: scale(1.04);
@@ -147,7 +168,8 @@
   transition: transform 400ms var(--ease-card);
 }
 
-/* Main 标题跨页淡出：换页后由 ghost 继续收尾 */
+/*  Main 标题跨页淡出：JS 复制一份标题块挂在 body 上，
+ *  以 fixed 停在原处、z-index -1 垫到正文后面，760ms 后移除。 */
 .home-title-ghost {
   position: fixed !important;
   z-index: -1 !important;
@@ -158,6 +180,7 @@
   animation: title-ghost-out 700ms var(--ease-fade) forwards;
 }
 
+/*  副本里的 .intro 关掉入场动画，否则会重播一次 */
 .home-title-ghost .intro {
   animation: none !important;
 }
@@ -173,6 +196,7 @@
   }
 }
 
+/*  形变结束时标题重新浮出（各过渡类型共用；collect-shrink 另有时长覆盖） */
 .page-view.is-card-morph .home-title-block {
   animation: title-in 700ms var(--ease-fade) both;
 }
@@ -188,6 +212,7 @@
   }
 }
 
+/*  系统要求减少动画：过渡与动画全部关掉，切换直接落到终点 */
 @media (prefers-reduced-motion: reduce) {
   [data-card],
   [data-card] > *,

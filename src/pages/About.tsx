@@ -1,7 +1,8 @@
 /* ============================================================================
  *  Shizuku · About
  * ----------------------------------------------------------------------------
- *  游戏 / 游戏账号 / 站外链接，不放页面大标题。
+ *  三张卡片按 12 栅格排：游戏（4 列）、游戏账号（8 列）、站外链接（12 列）。
+ *  不放页面大标题，靠页边竖排小字与卡片标题建立层级。
  * ========================================================================== */
 
 import { GlassCard } from '@/components/GlassCard'
@@ -23,6 +24,7 @@ export function About() {
                 </span>
               ))}
             </div>
+            {/* MC 单独占一行：它是唯一带玩法说明的游戏 */}
             <p className="sub-note">
               <Icon name="cube" size={14} />
               Minecraft · {profile.minecraft}
@@ -40,12 +42,14 @@ export function About() {
                     <strong>{account.game}</strong>
                     <span>UID {account.uid}</span>
                   </div>
+                  {/* 行内没有等级字段（MC 这类）就不渲染右侧徽标 */}
                   {account.level && <span className="level">{account.level}</span>}
                 </div>
               ))}
             </div>
           </GlassCard>
 
+          {/* 外链统一新标签页打开，加 noreferrer 断开 referrer */}
           <GlassCard span={12} title="链接" icon="folder" className="span-12">
             <div className="link-grid">
               {profile.links.map((link) => (

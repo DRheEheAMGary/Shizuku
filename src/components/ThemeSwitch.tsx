@@ -1,12 +1,12 @@
 /* ============================================================================
- *  Shizuku · 主题切换钮
+ *  Shizuku · 明暗模式切换钮
  * ----------------------------------------------------------------------------
- *  总共只有三个选项，没有「触发钮 + 三个选项」的第四份重复内容。
- *  收起时只显示当前激活项；展开时它移动到自己在列表里的位置，
- *  另外两个选项淡入。再点激活项 / 点外面 / Esc 收回去。
+ *  三个选项复用为「触发钮」：收起时只显示当前模式，
+ *  展开时它滑到自己的槽位、另外两项淡入。
+ *  再点激活项 / 点外面 / Esc 收起；点其他项则切换并收起。
  *
- *  展开方式仍学登录坞：整块玻璃从 37px 的圆向下长开，
- *  高度 420ms，圆角固定 28px，激活项随面板一起移动。
+ *  展开几何与登录坞一致：玻璃从 37px 圆钮向下长开（420ms），
+ *  圆角固定 28px，激活项随面板一起移动。
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
@@ -15,15 +15,16 @@ import { useTheme } from '@/hooks/useTheme'
 import type { ThemeMode } from '@/hooks/useTheme'
 import './ThemeSwitch.css'
 
+// 三个模式与显示名，顺序即展开后的槽位顺序（0 / 1 / 2）
 const OPTIONS: { id: ThemeMode; label: string }[] = [
   { id: 'light', label: '浅色' },
   { id: 'dark', label: '深色' },
   { id: 'auto', label: '跟随系统' },
 ]
 
-/** 主题图标：太阳 / 月牙 / 自动 */
+// 主题图标：太阳 / 月牙 / 自动。size 为边长，mode 决定画哪一枚。
 function ThemeGlyph({ size = 20, mode }: { size?: number; mode: ThemeMode }) {
-  /*  自动：一半实心的圆（镂空那半是"跟着系统走"的意思） */
+  // 自动：一半实心的圆，镂空的一半表示「跟随系统」
   if (mode === 'auto') {
     return (
       <svg
@@ -53,8 +54,7 @@ function ThemeGlyph({ size = 20, mode }: { size?: number; mode: ThemeMode }) {
       aria-hidden="true"
     >
       {mode === 'dark' ? (
-        /*  月牙：开口朝右上，比原来大一圈；
-         *  墨迹重心偏左下，单独向右上补一点做光学居中 */
+        /*  月牙：开口朝右上；墨迹重心偏左下，向右上补 1.5 个单位做光学居中 */
         <path
           className="theme-switch__moon"
           d="M18.29 14.3A8.6 8.6 0 1 1 9.11 3.45A8 8 0 0 0 18.29 14.3Z"
@@ -98,6 +98,7 @@ export function ThemeSwitch() {
     }
   }, [open, transitioning])
 
+  // 收起态点任意项都先展开；展开后点非激活项切换并收起
   const select = (next: ThemeMode) => {
     if (!open) {
       setOpen(true)

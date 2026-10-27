@@ -1,8 +1,10 @@
 /* ============================================================================
  *  Shizuku · 内联 SVG 图标
  * ----------------------------------------------------------------------------
- *  取代 FontAwesome 图标字体：省掉约 60KB 的字体文件与一次额外请求，
- *  且图标颜色可直接跟随 currentColor。
+ *  图标直接内联成 SVG，省掉图标字体文件与额外请求；
+ *  颜色跟随 currentColor，随主题与父级文字色变化。
+ *  描边图标统一 24×24 视框、1.6px 描边；
+ *  github 这类标志走 SOLID_PATHS 的实心路径（小尺寸下描边会糊成一团）。
  * ========================================================================== */
 
 export type IconName =
@@ -81,10 +83,18 @@ interface IconProps {
   name: IconName
   size?: number
   className?: string
-  /** 实心填充（用于 heart / star 这类实心图标） */
+  /** 用 currentColor 实心填充；仅对描边表里的图标生效，实心表始终按实心渲染 */
   filled?: boolean
 }
 
+/**
+ * 内联 SVG 图标。
+ * @param name 图标名，必须在 IconName 联合类型内
+ * @param size 边长（px），宽高相同，默认 18
+ * @param filled 用 currentColor 实心填充；仅对 PATHS 里的描边图标生效，
+ *   SOLID_PATHS 中的图标始终按实心渲染
+ * 纯装饰元素：aria-hidden + focusable=false，语义由外层按钮的 aria-label 提供。
+ */
 export function Icon({ name, size = 18, className, filled = false }: IconProps) {
   const solid = SOLID_PATHS[name]
   if (solid) {

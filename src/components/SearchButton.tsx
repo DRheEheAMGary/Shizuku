@@ -1,10 +1,10 @@
 /* ============================================================================
- *  Shizuku · 顶栏右侧的搜索按钮
+ *  Shizuku · 顶栏搜索按钮
  * ----------------------------------------------------------------------------
- *  圆形磨砂玻璃钮。点开之后：
- *    · 钮的玻璃溶进顶栏的玻璃
- *    · 放大镜图标一路向左飞进顶栏的胶囊，落成输入框左侧的图标
- *  图标自己待在按钮里：按钮的位置是稳的，飞回去也就是回到原处。
+ *  圆形磨砂玻璃钮。打开搜索后：
+ *    · 钮的玻璃层淡出，溶进顶栏
+ *    · 放大镜图标由 SiteHeader 算出位移，飞到胶囊左端的落点槽位
+ *  图标始终留在按钮内部，按钮位置固定，所以收起时回到原位即可。
  * ========================================================================== */
 
 import { forwardRef } from 'react'
@@ -15,6 +15,11 @@ interface SearchButtonProps {
   onToggle: () => void
 }
 
+/**
+ * 顶栏搜索钮，通过 forwardRef 把内部 <svg> 交给 SiteHeader 做飞行动画。
+ * @param searching 搜索是否展开：true 时玻璃层淡出、图标进入飞行态
+ * @param onToggle 点击回调，由 SiteHeader 决定开还是关
+ */
 export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
   function SearchButton({ searching, onToggle }, iconRef) {
     return (

@@ -1,29 +1,39 @@
 <!doctype html>
+<!-- data-theme 的兜底值：内联引导脚本执行前、或脚本被禁用时先按浅色渲染，
+     不会出现既没有主题属性也没有样式的空档 -->
 <html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="UTF-8" />
+    <!-- viewport-fit=cover 让页面铺到刘海屏安全区，实际留白由 CSS 的 env() 决定 -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
     <title>Shizuku · DRheEheAM_Gary</title>
+    <!-- 搜索引擎抓取用的基础元信息；只有写在静态 HTML 里才一定被读到 -->
     <meta name="description" content="高一生 | OIer | 二次元 — DRheEheAM_Gary 的个人主页" />
     <meta name="keywords" content="DRheEheAM,DRheEheAM_Gary,个人主页,Shizuku,dreamgary,dreamgary.cn" />
     <meta name="author" content="DRheEheAM_Gary" />
+    <!-- 地址栏 / 移动端状态栏配色，按系统深浅色切换；与站内 data-theme 设置相互独立 -->
     <meta name="theme-color" content="#f7f9fa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1418" media="(prefers-color-scheme: dark)" />
 
-    <!-- 分享预览：QQ / 微信 / Discord 等爬虫不执行 JS，必须写在静态 HTML 里 -->
+    <!-- 分享预览：QQ / 微信 / Discord / Telegram 的抓取程序都不执行 JS，
+         这些卡片信息必须固定在静态 HTML 里，交给 React 运行时写入是抓不到的 -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Shizuku · DRheEheAM_Gary" />
     <meta property="og:description" content="高一生 | OIer | 二次元" />
     <meta property="og:url" content="https://dreamgary.cn" />
     <meta property="og:image" content="https://r.dreamgary.cn/images/headround.jpg" />
+    <!-- twitter:card 走 X / 部分聚合器的卡片协议，与上面的 og:* 各自独立 -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Shizuku · DRheEheAM_Gary" />
     <meta name="twitter:description" content="高一生 | OIer | 二次元" />
 
+    <!-- favicon 用图床绝对地址，浏览器与阅读器都直接请求这个 URL -->
     <link rel="icon" href="https://r.dreamgary.cn/images/headround.png" />
 
-    <!-- 加载页一上来就显示「Shizuku」，这个字体先预加载，避免先闪一下无衬线 -->
+    <!-- 首屏加载页（PageLoader）用 --font-wordmark 渲染站名「Shizuku」，字体自托管、
+         font-display: swap，不预加载会先闪一下回退的无衬线字体再跳成手写体。
+         preload 必须写在静态 HTML 的 head 里，等 React 挂载再插就已经晚于首屏了。 -->
     <link
       rel="preload"
       href="/fonts/eduqld-hand-bold.woff2"
@@ -32,6 +42,9 @@
       crossorigin
     />
 
+    <!-- 主题引导：在首屏绘制和 React 挂载之前，把 data-theme / data-theme-mode /
+         data-accent 写到 <html> 上，样式一上来就是对的。内联而不放进 bundle，
+         是因为它必须先于首屏执行，且 bundle 加载失败时也要独立生效。 -->
     <script>
       // 在任何渲染之前确定主题和主题色，避免首屏闪烁
       ;(function () {
@@ -40,20 +53,22 @@
 
           // 浅色 / 深色 / 自动
           var key = 'shizuku-theme'
-          // ?theme=dark / light / auto 用于预览与分享时强制主题
+          // ?theme=dark / light / auto 优先级最高，用于预览与分享时强制主题
           var q = new URLSearchParams(location.search).get('theme')
           var mode = q || localStorage.getItem(key)
-          // 没有存过（或存的值不对）就按系统偏好定一次，此后固定
+          // 没存过（或值不合法）时按系统偏好取当前值；React 挂载后会把选定的档
+          // 写回 localStorage，之后以存下来的为准
           if (mode !== 'dark' && mode !== 'light' && mode !== 'auto') {
             mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
           }
-          // 真正生效的明暗：自动那一档交给系统
+          // data-theme 是真正生效的明暗（CSS 全看它），自动那一档交给系统
           root.dataset.theme =
             mode === 'auto'
               ? window.matchMedia('(prefers-color-scheme: dark)').matches
                 ? 'dark'
                 : 'light'
               : mode
+          // data-theme-mode 记用户选的那一档（可能是 auto），切换按钮的图标看它
           root.dataset.themeMode = mode
 
           // 主题色：青蓝 / 暖黄 / 紫罗兰
@@ -63,7 +78,8 @@
           if (['blue', 'yellow', 'purple'].indexOf(accent) < 0) accent = 'blue'
           root.dataset.accent = accent
 
-          // 背景图随主题色走，提前预加载对应那张
+          // 背景图随主题色走（三张图与 tokens.css 里 --bg-image 的取值一致），
+          // 这里提前建 preload，让背景图与后续 JS 并行下载，缩短加载页停留
           var bg =
             accent === 'yellow'
               ? '/bg-yellow.webp'
@@ -76,12 +92,13 @@
           pre.href = bg
           document.head.appendChild(pre)
         } catch (e) {
-          /* localStorage 不可用时保持默认 */
+          /* localStorage 被禁用时保持 <html> 上的默认值 */
         }
       })()
     </script>
   </head>
   <body>
+    <!-- 挂载点：页面内容全部由 React 渲染，静态 HTML 里只留这个空容器 -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

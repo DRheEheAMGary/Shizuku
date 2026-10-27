@@ -1,10 +1,9 @@
 /* ============================================================================
  *  Shizuku · 搜索结果面板
  * ----------------------------------------------------------------------------
- *  从顶栏胶囊底下拉出来的一块玻璃。
- *  输入框在顶栏里（顶栏本身就是搜索框），这里只负责列结果。
- *
- *  结果按站点分组，组与组之间用细行线分开。
+ *  从顶栏胶囊底下拉出的一块玻璃。输入框本身在顶栏里，这里只负责列结果。
+ *  结果按站点分组，组标题带命中条数；每条结果含标题、类型、日期、
+ *  标签/作者等 facet 命中与正文摘要。
  * ========================================================================== */
 
 import { useEffect, useMemo, useRef } from 'react'
@@ -13,7 +12,8 @@ import { SITE_NAMES, SITE_TYPES, searchItems } from '@/lib/search'
 import type { Highlight } from '@/lib/search'
 import './SearchPanel.css'
 
-/** 把命中的片段切出来，命中部分单独包一层 */
+// 把命中的片段切出来，命中部分包一层 <mark>。
+// hits 可能乱序，先按 start 排序再顺序拼接，避免重叠切片错位。
 function highlight(text: string, hits: Highlight[]) {
   if (!hits.length) return text
   const sorted = [...hits].sort((a, b) => a.start - b.start)
@@ -57,7 +57,7 @@ export function SearchPanel({
     return [...map.entries()]
   }, [results])
 
-  // 结果变化时把面板滚回顶部
+  // 查询词变化时把面板滚回顶部，避免停留在上一次的滚动位置
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0
   }, [query])

@@ -1,11 +1,11 @@
 /* ============================================================================
  *  Shizuku · 图片预加载
  * ----------------------------------------------------------------------------
- *  站点里真正会显示的图片只有：三套主题背景 + 头像。favicon 也顺手带上。
+ *  站内真正会显示的图片：三套主题背景 + 头像（favicon 顺手预热）。
  *
- *  加载页只等「当前主题背景 + 头像」这两张关键图，
- *  另外两套背景和图标在后台预热 —— 切主题色时不会再临时拉图。
- *  所有请求都有超时兜底，绝不因为一张图挂了把加载页卡死。
+ *  加载页只等「当前主题背景 + 头像」这两张关键图，其余在后台预热，
+ *  切换主题色时就不用临时拉图。
+ *  所有请求都有超时兜底，任何一张挂掉都不会把加载页卡死。
  * ========================================================================== */
 
 import { site } from '@/content/site'
@@ -17,7 +17,7 @@ const CRITICAL_TIMEOUT = 4000
 /** 后台预热图：给更宽裕的时间，反正不挡加载页 */
 const WARM_TIMEOUT = 12000
 
-/** 从 --bg-image 里取出当前主题的背景地址 */
+/** 从 --bg-image 里取出当前主题的背景地址；取不到返回 null */
 function currentBackground(): string | null {
   if (typeof window === 'undefined') return null
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--bg-image').trim()
@@ -25,7 +25,7 @@ function currentBackground(): string | null {
   return match ? match[2] : null
 }
 
-/** 加载一张图；成功、失败、超时都 resolve，绝不 reject */
+/** 加载一张图（含解码）；成功、失败、超时都 resolve，绝不 reject */
 function preloadImage(src: string, timeout: number): Promise<void> {
   if (!src) return Promise.resolve()
 
@@ -39,6 +39,7 @@ function preloadImage(src: string, timeout: number): Promise<void> {
 
     const img = new Image()
     img.decoding = 'async'
+    // onload 只说明字节到了，decode() 之后才真的能画
     img.onload = () => {
       if (typeof img.decode === 'function') img.decode().then(done, done)
       else done()

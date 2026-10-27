@@ -1,8 +1,8 @@
 /* ============================================================================
  *  Shizuku · Contact
  * ----------------------------------------------------------------------------
- *  QQ / 哔哩哔哩 / 邮箱。
- *  QQ 与邮箱提供复制按钮，邮箱本身也能直接点开写邮件。
+ *  两张卡片：社交（QQ + 哔哩哔哩）与邮箱。
+ *  QQ 号与每个邮箱都带复制按钮，邮箱本身还能直接 mailto 点开写信。
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
@@ -12,7 +12,10 @@ import { PageShell } from '@/components/PageShell'
 import { profile } from '@/content/site'
 import './Subpage.css'
 
-/** 剪贴板 API 不可用时的兜底 */
+/**
+ * 剪贴板 API 不可用（非安全上下文、老浏览器、权限被拒）时的兜底：
+ * 造一个不可见的 textarea，选中后走已废弃但仍广泛支持的 execCommand。
+ */
 function fallbackCopy(value: string) {
   const area = document.createElement('textarea')
   area.value = value
@@ -28,6 +31,10 @@ function fallbackCopy(value: string) {
   document.body.removeChild(area)
 }
 
+/**
+ * 复制按钮：点击后图标切成对勾，1.4s 后自动复原。
+ * 卸载时清掉计时器，避免在已卸载组件上 setState。
+ */
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<number | null>(null)
@@ -41,12 +48,14 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
   const copy = async () => {
     try {
+      // 优先用异步剪贴板 API；写失败（权限/焦点问题）再退回 execCommand
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value)
       else fallbackCopy(value)
     } catch {
       fallbackCopy(value)
     }
 
+    // 不论成功与否都给一次视觉反馈：按钮状态只做提示，不承诺结果
     setCopied(true)
     if (timer.current) window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => setCopied(false), 1400)

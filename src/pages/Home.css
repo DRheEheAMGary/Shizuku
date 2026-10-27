@@ -1,8 +1,13 @@
 /* ============================================================================
- *  Shizuku · 首页样式
+ *  Shizuku · 首页
+ * ----------------------------------------------------------------------------
+ *  首屏分栏：左侧大名 + 副标题，右侧一列玻璃卡片，两块的定位靠百分比互相咬合。
+ *  只有两个断点：1080px 改竖堆、720px 收窄竖线间距。
+ *  .intro 的错峰入场也定义在这里。
  * ========================================================================== */
 
-/* 首屏入场：只用 opacity + transform，按 --i 依次错开 */
+/*  首屏入场：只动 opacity 与 transform，按 --i 每级错开 70ms、整体延后 80ms。
+ *  只在首次加载播放，换页后由 App.css 的 has-routed 关掉。 */
 @keyframes intro-in {
   from {
     opacity: 0;
@@ -19,16 +24,17 @@
   animation-delay: calc(var(--i, 0) * 70ms + 80ms);
 }
 
+/*  系统要求减少动画：不播放入场 */
 @media (prefers-reduced-motion: reduce) {
   .intro {
     animation: none;
   }
 }
 
-/* ---------- 首页大标题 ---------- */
-/*  左侧一列：大名 + 一行小副标题。
- *  字顶落在「下方 1/3」分界线上：正文区顶端距视口顶 = 顶栏 72px + 壳 padding 64px，
- *  页脚那块约 68px，两下相抵后 66.667% 与 2/3 视口几乎重合（误差 < 1px）。 */
+/* ---- 首页大标题 ---- */
+/*  左侧一列：大名 + 一行小副标题。绝对定位贴在 hero 高度的 2/3 处，
+ *  让字顶落在「下方 1/3」的分界线上；配合 50vh 的底部遮罩，
+ *  大名正好处在遮罩最实的一段，所以不需要玻璃底板托底。 */
 .home-title-block {
   position: absolute;
   left: 0;
@@ -39,11 +45,11 @@
   align-items: flex-start;
 }
 
-/*  用户名：顶栏署名同款连笔手写体（Pacifico，只有 400 一个字重），主题色填充。
- *  没有玻璃底板 —— 靠页面下方 1/3 的渐隐遮罩托住对比度。 */
+/*  用户名：与顶栏署名同一套连笔手写体（Pacifico，只有 400 一个字重），
+ *  用主题色填充，字号随视口伸缩。 */
 .home-title {
   position: relative;
-  z-index: 0;   /* 自成层叠上下文，垫底那层字才能稳稳压在正文后面 */
+  z-index: 0;   /* 自成层叠上下文：::before 的 z-index:-1 才能垫在文字后面而不落到页底 */
   font-family: var(--font-hand);
   font-size: clamp(1.65rem, 5vw, 4rem);
   font-weight: 400;
@@ -54,7 +60,8 @@
   transition: color var(--dur-base) var(--ease-apple);
 }
 
-/*  大名下方的小副标题：亮色黑、暗色白 */
+/*  大名下方一行小副标题：Florida Vibes，字距略放开；
+ *  颜色取 --text（亮色近黑、暗色近白）。 */
 .home-subtitle {
   margin-top: var(--sp-2);
   font-family: 'Florida Vibes', var(--font-sans);
@@ -65,9 +72,9 @@
   color: var(--text);
 }
 
-/*  底部垫一层：同字同号，向右下各偏 1px。
- *  颜色取当前主题色的「浅色对应」——亮色模式下就是它；
- *  暗色模式换成同一只色的「深色对应」（见下面的 data-theme 规则）。 */
+/*  同一段文字再垫一层，向右下各偏 1px：
+ *  亮色取当前配色的浅色对应（--primary-tint），
+ *  暗色换成同一只色的深色对应（--primary-shade，见下一条规则）。 */
 .home-title::before {
   content: attr(data-text);
   position: absolute;
@@ -82,9 +89,9 @@
   color: var(--primary-shade);
 }
 
-/*  左侧短竖线：距标题左边界 20px，长度取大写字母高度的一半，与标题中线对齐。
- *  Pacifico 实测：大写高 0.86em（半高即 0.43em），而大写字母的光学中心
- *  正好落在行框中心上（0.545em vs 0.55em，差 0.3px），所以按 50% 居中即可。
+/*  标题左侧的短竖线：右缘贴住标题左边界，再往左让出 20px。
+ *  Pacifico 的大写高约 0.86em，高度取 0.43em 即其一半；
+ *  top 50% + translate 让它与行框中线对齐。
  *  颜色取 --text：亮色下近黑，暗色下近白。 */
 .home-title::after {
   content: '';
@@ -100,9 +107,9 @@
   pointer-events: none;
 }
 
-/* ---------- 下方 1/2 的遮罩 ---------- */
-/*  白（暗色下黑）从底部 1 渐隐到 1/2 线上的 0，外加 1px 模糊。
- *  z-index:-1：盖住壁纸，但在所有正文之下（body::before 是 -2，在这层下面）。 */
+/* ---- 下方 1/2 的遮罩 ---- */
+/*  白（暗色下黑）从底部实色向上渐隐到 1/2 视口高处，再加 1px 模糊化掉色带。
+ *  z-index -1：盖住壁纸（body::before 为 -2），又在所有正文之下。 */
 .home-scrim {
   position: fixed;
   inset-inline: 0;
@@ -125,9 +132,9 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 }
 
-/* ---------- 首屏分栏：左大名，右卡片列 ---------- */
-/*  撑满正文区，两块咬住同一条线：
- *  大名的字顶在 2/3 线上（top: 66.667%），卡列底边与大名底边齐平。 */
+/* ---- 首屏分栏：左大名，右卡片列 ---- */
+/*  撑满正文区；桌面端两个孩子都是绝对定位，flex 只在竖堆后才真正生效。
+ *  两块咬住同一条线：大名字顶在 2/3 处，卡列底边与大名底边齐平。 */
 .home-hero {
   position: relative;
   flex: 1;
@@ -137,9 +144,8 @@
 .home-side {
   position: absolute;
   right: 0;
-  /*  大名高 = 字号 × 1.1（line-height）。
-   *  大名顶在 bottom:33.333% 那条线上，卡列再往下挪一个大名行高，
-   *  卡列底边就正好落在大名的底边上（字号随屏宽变，偏移也跟着变）。 */
+  /*  卡列底边要与大名底边齐平：大名顶端在 2/3 处，底部还要再往下
+   *  一个大名行高（字号 × 1.1）。字号用 clamp 随屏宽变，偏移量取同一个 clamp。 */
   bottom: calc(33.333% - 1.1 * clamp(1.65rem, 5vw, 4rem));
   width: 340px;
   display: flex;
@@ -169,6 +175,7 @@
   letter-spacing: 0.06em;
 }
 
+/*  句前留出约两三个空格宽，再放那枚圆点 */
 .home-card__quote {
   display: flex;
   align-items: center;
@@ -178,7 +185,7 @@
   color: var(--text-muted);
 }
 
-/*  句前的主题色小圆点（直径 4px） */
+/*  句前的主题色小圆点 */
 .home-card__quote::before {
   content: '';
   flex-shrink: 0;
@@ -188,7 +195,7 @@
   background: var(--primary);
 }
 
-/*  窄屏竖堆：一行要 ≈ 大名 + 340px 卡列 + 48px 缝，1081px 起才放得下 */
+/*  窄屏竖堆：单行要放下大名 + 340px 卡列 + 两侧留白，1081px 起才够 */
 @media (max-width: 1080px) {
   .home-hero {
     flex-direction: column;
@@ -202,8 +209,8 @@
     width: 100%;
   }
 
-  /*  竖堆后标题列回到文档流，独占一行并放大。
-   *  .home-title 保持 relative，::before / ::after 仍以标题自身为基准 */
+  /*  竖堆后标题列回到文档流并独占一行，字号也放大一档；
+   *  .home-title 仍是 relative，::before / ::after 继续以标题自身为基准。 */
   .home-title-block {
     position: static;
   }
@@ -214,14 +221,16 @@
   }
 }
 
-/* ---------- 手机：页面左右留白只有 20px，竖线间距收窄 ---------- */
+/* ---- 手机：页边留白变窄，竖线间距同步收紧 ---- */
+/*  竖线外侧的 20px 收到 12px，标题才不会贴到屏幕边缘 */
 @media (max-width: 720px) {
   .home-title::after {
     margin-right: 12px;
   }
 }
 
-/* ---------- Hero ---------- */
+/* ---- Hero 竖排块 ---- */
+/*  头像 / 名字 / 描述 / 操作按钮 / 歌词依次排开，宽度收到 40rem 保持阅读节奏 */
 .hero {
   display: flex;
   flex-direction: column;
@@ -272,13 +281,14 @@
   color: var(--text-muted);
 }
 
-/* ---------- 锚点定位 ---------- */
-/*  sticky 顶栏会盖住目标，给锚点留出上边距 */
+/* ---- 锚点定位 ---- */
+/*  sticky 顶栏会盖住目标，用 scroll-margin-top 预留 7rem */
 .section[id] {
   scroll-margin-top: 7rem;
 }
 
-/* ---------- 关于 ---------- */
+/* ---- 关于 ---- */
+/*  引用与定义行在本页各再加一档上边距 */
 .prose .quote {
   margin-top: var(--sp-5);
 }
@@ -287,7 +297,8 @@
   margin-top: var(--sp-6);
 }
 
-/* ---------- 贡献热力图 ---------- */
+/* ---- 贡献热力图 ---- */
+/*  折叠区：summary 去掉浏览器默认的三角标记，展开后右侧提示淡出 */
 .works-heat {
   margin-top: var(--sp-5);
   border-top: 1px solid var(--hairline);
@@ -332,7 +343,8 @@
   overflow-x: auto;
 }
 
-/* ---------- 复制按钮 ---------- */
+/* ---- 复制按钮 ---- */
+/*  细边框胶囊小按钮：悬停染主题色并轻抬 1px */
 .contact-copy {
   display: inline-flex;
   align-items: center;
@@ -355,7 +367,8 @@
   transform: translateY(-1px);
 }
 
-/* ---------- 响应式 ---------- */
+/* ---- 响应式 ---- */
+/*  手机：hero 的上下留白收紧一档 */
 @media (max-width: 720px) {
   .hero {
     padding: var(--sp-6) 0 var(--sp-7);

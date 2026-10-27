@@ -1,33 +1,36 @@
 /* ============================================================================
  *  Shizuku · 主题切换动画
  * ----------------------------------------------------------------------------
- *  用 View Transitions API 做圆形揭示：
- *  浏览器在切换时拍下「旧状态」和「新状态」两张快照，
- *  旧快照垫在下面不动，新快照用圆形裁切从开关位置铺开。
+ *  View Transitions 的圆形揭示：浏览器为切换前后各拍一张快照，
+ *  旧快照垫在下面不动，新快照用 circle() 裁切从触发点扩散铺满。
+ *  圆心与半径由 hooks/useTheme.tsx 写进 --vt-x / --vt-y / --vt-r，
+ *  半径取到视口最远角，保证圆最终盖满整屏。
  *
- *  拨动滑块单独处理：
- *  它有自己的 view-transition-name，图层抬到揭示层之上，
- *  于是既不进快照（不会被圆形裁切吞掉），又能独立播放拨动动画。
- *  拨动时长与揭示时长都是 --dur-reveal，两者严格同步。
+ *  圆钮里的图标挂独立的 view-transition-name，不进 root 快照：
+ *  揭示进行时它始终可见，图标切换也在自己的组里完成。
  * ========================================================================== */
 
+/* ---- 揭示参数 ---- */
 :root {
+  /*  兜底路径的过渡、以及 useTheme.tsx 的 FALLBACK_MS 都对齐这 0.5s */
   --dur-reveal: 0.5s;
+  /*  两头慢、中段快：扩散像被推开，收尾不急停 */
   --ease-reveal: cubic-bezier(0.35, 0, 0.25, 1);
 }
 
+/*  关掉 UA 默认的交叉淡入：两层都交给 clip-path 控制可见范围 */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-/* 旧快照压在下面，不淡出 */
+/*  旧快照压在下面，全程不动，也不淡出 */
 ::view-transition-old(root) {
   z-index: 1;
 }
 
-/* 新快照在上面做圆形揭示 */
+/*  新快照在上面：从 0 半径的圆扩到盖住视口 */
 ::view-transition-new(root) {
   z-index: 2;
   clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%));
@@ -43,10 +46,12 @@
   }
 }
 
-/* ---------- 拨动滑块 ---------- */
-/*  滑块单独成快照组，抬到揭示层之上，这样它在圆形揭示的过程中依然可见。
- *  已知副作用：组的盒子是「旧位置到新位置的并集」，快照可能被拉伸，
- *  在滑块旁留下一个放大的色块 —— 这个先接受。 */
+/* ---- 拨动滑块 ---- */
+/*  圆钮单独成组并抬到揭示层之上（z-index 10），圆形揭示扫过时图标依然可见。
+ *  快照组的取景盒是前后两帧的并集，圆钮在两个模式下的位置不同，
+ *  组盒子会被撑大，边缘可能带出一点重影。
+ *  useTheme.tsx 另写入 --knob-dir（浅→深 +1、深→浅 −1）记录拨动方向；
+ *  本文件的图标动画只用 opacity，不消费这个方向值。 */
 .theme-switch__knob {
   view-transition-name: theme-switch-knob;
 }
@@ -55,9 +60,9 @@
   z-index: 10;
 }
 
-/*  滑块里图标要换（太阳 ⇄ 月牙），但不能糊着叠太久：
- *  旧快照里的太阳快退干净，新快照里的月牙跟着进来。
- *  玻璃部分两层一模一样，叠出来的透明度始终是 1，不会发虚。 */
+/*  图标要换（太阳 / 月牙 / 自动）：旧图标 160ms 退干净，
+ *  新图标延 60ms 再用 200ms 进来 —— 两段短促交叉，
+ *  避免两个图标在同一位置糊着叠太久。 */
 ::view-transition-old(theme-switch-knob) {
   animation: knob-swap-out 160ms linear both;
 }
@@ -84,9 +89,9 @@
   }
 }
 
-/* ---------- 兜底 ---------- */
-/*  不支持 View Transitions 时，颜色平滑过渡，滑块用 CSS 过渡拨动。
- *  只在切换的这半秒内挂上，避免污染其它常态过渡。 */
+/* ---- 兜底：浏览器不支持 View Transitions ---- */
+/*  退化成颜色过渡：只在这 0.5s 内给整棵文档挂过渡，
+ *  结束后由 useTheme.tsx 移除，避免污染常态的颜色变化。 */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
@@ -99,13 +104,13 @@ html.theme-transition *::after {
     stroke 0.5s ease !important;
 }
 
-/*  滑块平时由 CSS 过渡拨动；有 View Transitions 时改由快照动画接管，
- *  否则 DOM 会在动画途中被拍进快照，起点就不对了。 */
+/*  兜底路径没有快照层接管圆钮：过渡参数对齐揭示的时长与曲线，
+ *  避免 DOM 已经切完、图标还在按自己的节奏走。 */
 html.theme-transition .theme-switch__knob {
   transition: transform var(--dur-reveal) var(--ease-reveal) !important;
 }
 
-/* 系统关掉动画时，两种方案都不生效 */
+/*  系统要求减少动画：快照动画与兜底过渡都关掉 */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root),

@@ -1,19 +1,21 @@
 /* ============================================================================
  *  Shizuku · 左上角登录坞
  * ----------------------------------------------------------------------------
- *  收起态是一枚圆形头像按钮；点击后从圆形展开成一块玻璃面板。
+ *  收起态是一枚圆形头像按钮，悬停时横向撑开预览名字/邮箱，
+ *  点击后从圆形展开成一块玻璃面板。
  *
  *    收起  ⬤
- *    展开  ┌──────────────────────┐
- *          │ (头像)       [开关][退出]│
- *          │ 14:32                 │
- *          │ 下午好                 │
- *          │ ────────────────────  │
- *          │ ☀ 24° 晴      上海     │
- *          └──────────────────────┘
+ *    展开  ┌────────────────────────────┐
+ *          │ (头像) │ 名字 / 邮箱        │
+ *          │ 14:32  下午好              │
+ *          │ ────────────────────────── │
+ *          │ GitHub 贡献          [⌄]   │
+ *          │ ▦▦▦▦▦▦▦▦▦▦▦▦▦              │
+ *          │ ☀ 24° 晴    上海    [退出]  │
+ *          └────────────────────────────┘
  *
- *  未登录只有一枚「登录 / 注册」主按钮。
- *  登录后不再放账号中心之类的链接 —— 那些在 sso.dreamgary.cn/account 里。
+ *  未登录展开时面板只包一颗拉长的「登录 / 注册」按钮；
+ *  账号中心等链接在 SSO 站点里，坞内不放。
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
@@ -24,7 +26,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useWeather } from '@/hooks/useWeather'
 import './AuthDock.css'
 
-/** 按小时给问候语 */
+// 按小时给问候语；hour 为本地 0–23 时，返回对应时段的中文问候
 function greetingOf(hour: number): string {
   if (hour < 5) return '夜深了'
   if (hour < 9) return '早上好'
@@ -35,7 +37,9 @@ function greetingOf(hour: number): string {
   return '夜深了'
 }
 
-/** 天气代码 → 图标（用现成图标近似，避免为天气再引一套图形） */
+// 天气代码（WMO weather code）→ 现成图标：
+// 0/1 晴用日/月，2–3 多云用风，45–48 雾与 51–86 的雨雪统一用「水」，
+// 其余（雷暴等）用风。用现成图标近似，避免为天气再引一套图形。
 function weatherIcon(code: number, isDay: boolean) {
   if (code === 0 || code === 1) return isDay ? 'sun' : 'moon'
   if (code <= 3) return 'wind'
@@ -49,7 +53,7 @@ export function AuthDock() {
   const { user, loading, error, login, logout, dismissError } = useAuth()
   const { transitioning } = useTheme()
   const [open, setOpen] = useState(false)
-  /** 热力图展开：最近一个月 ↔ 最近半年 */
+  /** 热力图展开：最近半年 ↔ 最近一年 */
   const [heatFull, setHeatFull] = useState(false)
   /** 退出登录的二次确认 */
   const [confirmLogout, setConfirmLogout] = useState(false)
@@ -58,7 +62,7 @@ export function AuthDock() {
   const rootRef = useRef<HTMLDivElement>(null)
   const { weather, locate, failed, request, address } = useWeather()
 
-  // 本地时间，每分钟刷新一次就够（显示到分钟）
+  // 本地时间：20 秒刷新一次，分钟数最多滞后 20 秒
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 20_000)
@@ -227,7 +231,7 @@ export function AuthDock() {
                 <span className="auth-dock__wcity">{address || '--'}</span>
 
                 {/*  退出按钮放在这一行最右边：
-                 *  和上面的主题开关右侧对齐，一列两个小圆钮。 */}
+                 *  与内容行的右内边距对齐，不跟天气信息挤在一起。 */}
                 <button
                   type="button"
                   className="auth-dock__logout"

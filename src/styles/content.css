@@ -1,11 +1,13 @@
 /* ============================================================================
  *  Shizuku · 内容排版
  * ----------------------------------------------------------------------------
- *  正文不使用卡片。层次靠三样东西建立：留白、细线、字重。
- *  玻璃材质只留给顶栏，正文尽量"直接落在背景上"。
+ *  正文不用玻璃卡片：层次靠留白、细线、字重建立，材质只留给顶栏、按钮与独立卡片。
+ *  这里是一套可复用的排版类（小节 / 行列表 / 定义行 / 文本列），
+ *  尺寸与颜色全部取自 tokens.css。
  * ========================================================================== */
 
-/* ---------- 小节 ---------- */
+/* ---- 小节 ---- */
+/*  小节之间固定留一档（--sp-8），页面内部不再各写各的间距 */
 .section {
   margin-bottom: var(--sp-8);
 }
@@ -29,6 +31,7 @@
   letter-spacing: var(--tracking-jp);
 }
 
+/*  横线用 flex: 1 吃掉剩余宽度；父级 align-items: baseline 让线落在文字基线上 */
 .section-head::after {
   content: '';
   flex: 1;
@@ -36,7 +39,8 @@
   background: var(--hairline);
 }
 
-/* ---------- 行列表（替代卡片） ---------- */
+/* ---- 行列表（替代卡片） ---- */
+/*  分隔线由每行的下边框给出，首行另补一条上边框 */
 .rows {
   display: flex;
   flex-direction: column;
@@ -58,6 +62,7 @@
   border-top: 1px solid var(--hairline);
 }
 
+/*  悬停：整行右移一档（加大左内边距），再垫一层半透明白 */
 a.row:hover,
 .row--interactive:hover {
   color: var(--text);
@@ -95,13 +100,14 @@ a.row:hover,
   line-height: 1.35;
 }
 
-/* 等级标签跟在标题后面 —— 若放在行尾，uid 的右边缘会随行参差 */
+/*  等级标签跟在标题后面：放到行尾会让 uid 的右边缘随行参差 */
 .row__level {
   font-size: 0.625rem;
   padding: 0.1rem 0.45rem;
   font-weight: 500;
 }
 
+/*  单行截断：长 uid / 说明不撑破行 */
 .row__sub {
   font-size: var(--fs-xs);
   color: var(--text-muted);
@@ -111,6 +117,7 @@ a.row:hover,
   white-space: nowrap;
 }
 
+/*  等宽字体：数字与 uid 按列对齐 */
 .row__meta {
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
@@ -118,6 +125,7 @@ a.row:hover,
   flex-shrink: 0;
 }
 
+/*  箭头默认藏在右下 4px，悬停时滑入并染主题色 */
 .row__arrow {
   color: var(--text-muted);
   flex-shrink: 0;
@@ -134,7 +142,8 @@ a.row:hover .row__arrow {
   color: var(--primary);
 }
 
-/* ---------- 定义行（标签 + 值） ---------- */
+/* ---- 定义行（标签 + 值） ---- */
+/*  auto-fit + minmax(10rem)：按可用宽度自动增减列数，不需要断点 */
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -153,7 +162,8 @@ a.row:hover .row__arrow {
   font-weight: 500;
 }
 
-/* ---------- 文本列 ---------- */
+/* ---- 文本列 ---- */
+/*  同样是自适应列，最小 12rem —— 文本块比定义行宽 */
 .cols {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
@@ -180,14 +190,15 @@ a.row:hover .row__arrow {
   line-height: var(--lh-snug);
 }
 
-/* ---------- 标签 ---------- */
+/* ---- 标签 ---- */
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
 }
 
-/* ---------- 引用 ---------- */
+/* ---- 引用 ---- */
+/*  用左侧 2px 主题色细线代替引号 */
 .quote {
   padding-left: var(--sp-4);
   border-left: 2px solid var(--primary-soft);
@@ -196,7 +207,8 @@ a.row:hover .row__arrow {
   line-height: var(--lh-snug);
 }
 
-/* ---------- 正文段落 ---------- */
+/* ---- 正文段落 ---- */
+/*  限宽 38em：行长控制在阅读舒适区，比 --content-max 更窄 */
 .prose p {
   color: var(--text-secondary);
   line-height: var(--lh-base);

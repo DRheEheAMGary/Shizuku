@@ -1,7 +1,11 @@
 /* ============================================================================
  *  Shizuku · 玻璃材质
  * ----------------------------------------------------------------------------
- *  全站的主材质。层次靠模糊与微光，不靠重阴影。
+ *  全站主材质：半透明底 + 大口径模糊 + 极细描边 + 顶部亮线。
+ *  层次靠模糊与微光建立，不靠重阴影。
+ *
+ *  -webkit-backdrop-filter 一律写在标准 backdrop-filter 之前：
+ *  压缩器会把同族声明合并，标准属性放在后面才是最终生效的那条。
  * ========================================================================== */
 
 .glass {
@@ -14,17 +18,17 @@
     var(--glass-shadow),
     var(--glass-inner);
 
-  /* 圆角由使用方用 --glass-radius 指定 —— 不写成固定值，
-   * 否则组件想改成胶囊时会和这里打权重官司。 */
+  /*  圆角由使用方通过 --glass-radius 指定：写成固定值的话，
+   *  胶囊之类的组件还得在权重上跟这里较劲。 */
   border-radius: var(--glass-radius, var(--r-lg));
 }
 
-/* 强玻璃：悬浮的主卡片 */
+/*  更强的一档：换成更实的 --glass-bg-strong */
 .glass--strong {
   background: var(--glass-bg-strong);
 }
 
-/* 内嵌玻璃：卡片里再套一层，比外层更淡 */
+/*  内嵌的一档：更淡、无投影，圆角收到 --r-md */
 .glass--inset {
   background: rgba(255, 255, 255, 0.28);
   border-color: var(--hairline);
@@ -32,11 +36,15 @@
   --glass-radius: var(--r-md);
 }
 
+/*  暗色下几乎全透：只留一层极淡的白 */
 [data-theme='dark'] .glass--inset {
   background: rgba(255, 255, 255, 0.035);
 }
 
-/* 玻璃上的高光描边 —— 顶部一条亮线，制造厚度 */
+/*  高光描边：靠 1px padding 撑出内框，再用双层 mask 挖掉中间，
+ *  只留边框那一圈斜向渐变 —— 顶部最亮，到 40% 处消失，玻璃因此有厚度。
+ *  -webkit-mask-composite: xor 与标准 mask-composite: exclude 等价，
+ *  前缀版写在前面。 */
 .glass::before {
   content: '';
   position: absolute;
@@ -58,12 +66,11 @@
 }
 
 [data-theme='dark'] .glass::before {
-  /*  暗色下不要这条高光斜切：深玻璃顶上一道亮带就是"打光"，
-   *  看着发亮发脏。直接不画。 */
+  /*  暗色下不画这道高光：深玻璃顶上一条亮带会显得发亮发脏 */
   display: none;
 }
 
-/* ---------- 悬停态：轻微上浮 + 阴影加深 ---------- */
+/* ---- 悬停态：轻微上浮 + 阴影加深 ---- */
 .glass--hover {
   transition:
     transform var(--dur-base) var(--ease-apple),
@@ -78,7 +85,8 @@
     var(--glass-inner);
 }
 
-/* ---------- 按钮 ---------- */
+/* ---- 按钮 ---- */
+/*  独立的一档玻璃：面积小，模糊与饱和度都比 .glass 收一档 */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -121,7 +129,7 @@
   color: #fff;
 }
 
-/* ---------- 胶囊标签 ---------- */
+/* ---- 胶囊标签 ---- */
 /*  底色用「实心玻璃 + 色调叠加」：单层半透明色在花背景上会发灰 */
 .chip {
   display: inline-flex;
@@ -143,6 +151,7 @@
     transform var(--dur-fast) var(--ease-apple);
 }
 
+/*  变体：把色调换成 --accent */
 .chip--accent {
   color: var(--accent);
   background:
@@ -154,7 +163,7 @@
   transform: translateY(-1px);
 }
 
-/* ---------- 细分割线 ---------- */
+/* ---- 细分割线 ---- */
 .hairline {
   height: 1px;
   background: var(--hairline);

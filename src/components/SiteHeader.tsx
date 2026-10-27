@@ -1,14 +1,13 @@
 /* ============================================================================
  *  Shizuku · 顶部栏
  * ----------------------------------------------------------------------------
- *  三段式：左侧一枚独立悬浮的圆形头像 + 中间一枚居中胶囊 + 右侧的搜索钮。
- *  胶囊内左端是连笔手写体的署名，右侧是站名与副标题（两行，位置固定）。
- *  页面下滚后只折叠署名，Shizuku / 个人主页 两行的相对位置始终不变。
+ *  三段式：左侧独立悬浮的圆形头像（左上角另挂登录坞）、中间居中胶囊、
+ *  右侧工具组（搜索 / 明暗 / 主题色）。
+ *  胶囊左端是连笔署名，右侧是站名；滚动或窄屏时把「细线 + 站名」折起，署名保留。
  *
- *  打开搜索时，顶栏自己变成搜索框：
- *  签名淡出、输入框浮现，左侧头像溶进顶栏，
- *  放大镜图标一路向左飞进胶囊，
- *  胶囊同时横向撑开，横跨头像左缘到搜索钮右缘之间的整段。
+ *  打开搜索时顶栏自己变成搜索框：署名淡出、输入框浮现，头像原地淡出，
+ *  放大镜图标飞进胶囊左端的槽位，胶囊同时撑开，
+ *  横跨头像左缘到搜索钮右缘之间的整段。
  * ========================================================================== */
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -40,8 +39,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const collapsed = useScrollCollapse()
   const [searching, setSearching] = useState(false)
   const [query, setQuery] = useState('')
-  // 异步回调（字体就绪、尺寸观察）里要用最新的状态，
-  // 闭包里的 searching 可能是旧的
+  // 搜索状态的同步镜像：ref 不受闭包快照影响，异步回调里读到的是最新值
   const searchingRef = useRef(false)
   searchingRef.current = searching
 
@@ -51,12 +49,12 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const avatarRef = useRef<HTMLSpanElement>(null)
   const slotRef = useRef<HTMLSpanElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // 图标飞行量：开的时候现算（偏移要跟着点击次数走）
+  // 图标相对按钮原位的位移，每次打开时按最新基准重算
   const flyRef = useRef({ x: 0, y: 0 })
   // 量好的基准位置：落点槽位、图标当前位置
   const baseRef = useRef({ slotOffset: 0, slotW: 16, avatarLeft: 0, pillTop: 0, pillH: 0, iconX: 0, iconY: 0 })
   const navRef = useRef<HTMLElement>(null)
-  /*  点击时就先把滑块挪到目标上，不等 70ms 后的路由提交 —— 否则会有半拍迟滞 */
+  /*  点击时先把滑块挪到目标上，不等路由提交并重渲染 —— 否则会晚一拍才动 */
   const [hopeful, setHopeful] = useState<string | null>(null)
   const activeHref = hopeful ?? path
   const sliderRef = useRef<HTMLSpanElement>(null)
@@ -93,22 +91,19 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     setQuery('')
   }, [])
 
-  /*  任何一次开合都记一次数：奇偶始终跟开着/关着对得上 */
+  // 打开搜索；测量由调用方在打开前完成（此时布局还是收起态，量得准）
   const open = useCallback(() => {
     setSearching(true)
   }, [])
 
-  /*  开 / 关以 DOM 上的 data-search 为准，不用 state 也不用计数。
+  /*  开 / 关以 DOM 上的 data-search 为准，不用 state。
    *
-   *  为什么不读 state：一次点击里这个回调会被触发两次（实测如此），
-   *  两次都在同一个 React 批次里 —— 读 state 的话第二次读到的还是旧值，
-   *  于是「开一次又关一次」，合并渲染后状态没变，看着就是点了没反应。
-   *  读 DOM 属性则两次都读到「未开」，两次都执行打开，天然幂等。
+   *  同一次交互里回调若被重复触发（事件合成或冒泡），读 state 时两次都可能
+   *  拿到旧值，导致「开一次又关一次」，合并渲染后等于没反应；
+   *  读 DOM 属性则两次读到同一个值，操作天然幂等。
    *
-   *  为什么不用计数：计数只在「点按钮 / Esc / ⌘K」里加，
-   *  从背景遮罩或结果条目关闭时没加，奇偶会与实际状态错位 ——
-   *  下一次点按钮落在「偶数」上又执行关闭，
-   *  表现就是「关掉之后要点两下才能再打开」。 */
+   *  也不用计数器：背景遮罩、结果条目、Esc、⌘K 都能关闭搜索，
+   *  计数未必同步，奇偶一旦错位就会出现「关掉之后要点两下才能再打开」。 */
   const toggle = useCallback(() => {
     const isOpen = wrapRef.current?.dataset.search === 'true'
     if (isOpen) {
@@ -119,12 +114,20 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     }
   }, [close])
 
-  /*  量两件事（都在收起状态下量，量完存起来）：
-   *    · 胶囊撑开后的宽度与左右外边距
-   *      —— 左缘对齐头像左缘、右缘对齐搜索钮右缘，
-   *         整组的总宽不变，居中关系就不会跑
-   *    · 放大镜图标要飞多远（落到胶囊左内缘的槽位上）
-   */
+  /*  量出四组几何，全部在收起态下取得，量完写进 CSS 变量：
+   *    · --pill-w  胶囊的自然宽度（由内容推算，见下）
+   *    · --field-w / --field-ml / --field-mr
+   *                撑开后的宽度与左右外边距：以胶囊原中心为基准向两边等量扩展，
+   *                左缘对齐头像左缘、右缘对齐搜索钮右缘
+   *    · --field-left  结果面板的左缘（相对容器边距盒）
+   *    · baseRef   放大镜的落点槽位与图标当前位置
+   *
+   *  只有「开着」的时候才把胶囊临时还原成收起态尺寸再量：那时胶囊是撑开的，
+   *  直接量中心和外边距基准全是错的。还原与恢复都在同一个 JS 任务里同步完成，
+   *  浏览器还没绘制，不会闪。
+   *
+   *  收起态一律不动胶囊：这里改样式会污染紧接着的展开过渡，把动画吃掉。
+   *  收起时需要的自然宽度改用内容推算。 */
   const measure = useCallback(() => {
     const wrap = wrapRef.current
     const icon = iconRef.current
@@ -133,20 +136,6 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     const slot = slotRef.current
     if (!wrap || !icon || !pill || !avatar || !slot) return
 
-    /*  要量的都是「收起态」的几何：胶囊的自然宽度、它原来的中心等等。
-     *  所以每次都先把内联样式还原成收起态（width: fit-content、外边距归零），
-     *  量完立刻清掉 —— 整个过程在同一个 JS 任务里同步完成，
-     *  浏览器还没绘制，不会闪。
-     *
-     *  这一步不能只在「开着」的时候做：收起的那一刻胶囊还在过渡中途
-     *  （宽度正从撑开的 403px 动画回 85px），那时量到的是中间值，
-     *  会把 --pill-w 写坏，之后每开合一次就偏一点。 */
-    /*  只在「开着」的时候还原成收起态几何 —— 那时胶囊是撑开的，
-     *  量到的中心、外边距基准全是错的。
-     *
-     *  收起态一律不动胶囊：这里动它就会污染紧接着那次样式变化，
-     *  把「点开」的展开动画吃掉（实测中间帧从 19 个掉到 1 个）。
-     *  收起态本来就不需要动 —— 自然宽度改用下面的内容推算。 */
     const opened = wrap.dataset.search === 'true'
     const savedCss = pill.style.cssText
     if (opened) {
@@ -179,9 +168,9 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     const center = (pillRect.left + pillRect.right) / 2
     const half = fieldW / 2
     /*  收起时的宽度：不能读胶囊自己的宽度 —— 那正是 --pill-w 渲染出来的值，
-     *  自我锁定（首帧 Pacifico 没加载时量到偏窄，之后永远纠正不过来）。
-     *  改用内容推算：.brand 是 flex-shrink:0，它的宽度就是自然宽度，
-     *  再加内层的内边距与边框。这样收起态完全不用碰胶囊。 */
+     *  会自我锁定（首帧手写体没加载时量到偏窄，之后永远纠正不过来）。
+     *  改用内容推算：签名宽 + 目标 gap + 站名块自然宽，再加内层内边距与边框。
+     *  这样收起态完全不用碰胶囊。 */
     const brand = pill.querySelector('.brand') as HTMLElement | null
     const nav = pill.querySelector('.site-nav') as HTMLElement | null
     const inner = pill.firstElementChild as HTMLElement | null
@@ -223,9 +212,9 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
     wrap.style.setProperty('--field-w', `${fieldW}px`)
     wrap.style.setProperty('--field-ml', `${center - half - pillRect.left}px`)
     wrap.style.setProperty('--field-mr', `${center + half - (pillRect.left + fieldW)}px`)
-    /*  结果卡片的位置：不能用「容器居中」，那会跟展开后的胶囊差几像素
+    /*  结果面板的位置：不能用「容器居中」，那会跟展开后的胶囊差几像素
      *  （胶囊以原中心为基准，容器居中的是视口中心）。直接记展开后的左缘，
-     *  相对容器边距盒，卡片就跟胶囊严丝合缝。 */
+     *  相对容器边距盒，面板就跟胶囊严丝合缝。 */
     wrap.style.setProperty('--field-left', `${center - half - wrapRect.left}px`)
 
     // 落点的基准：胶囊左内缘的槽位
@@ -265,15 +254,14 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       requestAnimationFrame(() => {
         icon.style.transition = ''
       })
-      /*  这里刻意不测量。收起的那一刻胶囊正在回缩途中：measure() 会把
-       *  transition 关掉、把宽度直接按到收起值，回缩动画就没了
-       *  （实测关闭瞬间宽度从 415 直接跳到 278，没有任何中间帧）。
-       *  基准由「点开之前」和「缩放时」两次测量保证，够了。 */
+      /*  这里刻意不测量：收起瞬间胶囊正在回缩，measure() 会关掉 transition
+       *  并把宽度直接按到收起值，回缩动画会消失。
+       *  基准由「点开之前」和视口变化时的测量保证，已经够用。 */
     }
   }, [searching])
 
   /*  收紧状态一变，胶囊宽度就变了（折起了「细线 + 站名」），
-   *  基准也得跟着更新，否则搜索展开时会按旧宽度算外边距。 */
+   *  基准要跟着更新，否则搜索展开时会按旧宽度算外边距。 */
   useEffect(() => {
     measureRef.current()
   }, [collapsed])
@@ -350,8 +338,8 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
       <AuthDock />
 
-      {/* 左侧占位：右边新添的明暗钮 + 色板会把中间这组往左挤，
-          补一块等宽透明占位，头像和胶囊就停在原来的位置 */}
+      {/* 左侧透明占位：右侧工具组比左侧重，补一块 88px 的等宽占位，
+          让头像与胶囊停在原来的居中位置（窄屏由 CSS 撤掉） */}
       <span className="site-header__lead" aria-hidden="true" />
 
       {/* 独立悬浮的圆形头像，后面垫一枚磨砂玻璃圆 */}
@@ -438,8 +426,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
         </div>
       </header>
 
-      {/* 平衡块：右边这组工具比头像宽，补一块透明占位，
-          中间的头像 + 胶囊才会停在原来的居中位置 */}
+      {/* 右侧透明平衡块：微调两侧配重，中间的头像 + 胶囊保持居中 */}
       <span className="site-header__balance" aria-hidden="true" />
 
       {/* 右侧工具组：搜索钮 → 明暗钮 → 主题色板 */}

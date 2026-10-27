@@ -1,14 +1,15 @@
 /* ============================================================================
  *  Shizuku · 玻璃卡片
  * ----------------------------------------------------------------------------
- *  主页的最小布局单元。所有内容都装在这里面，页面靠网格排布。
+ *  子页面（About / Contact / Github）的内容容器：标题行（图标 + 标题 + 操作区）加正文。
  *
  *    <GlassCard span={8} title="标题" icon="star" minH={220}>
  *      …
  *    </GlassCard>
  *
- *  span 是 12 栅格里的跨度：桌面端 12 列，平板 6 列，手机 1 列。
- *  不给 span 就默认 4（桌面三列之一）。
+ *  span 只写进 --card-span，供横向卡片排的宽度公式读取；
+ *  当前放进 .page-grid 后宽度交给网格（Subpage.css 覆盖为 100%），
+ *  实际栏位由调用方附加的 span-4 / span-8 / span-12 类决定。
  * ========================================================================== */
 
 import type { CSSProperties, ReactNode } from 'react'
@@ -18,7 +19,7 @@ import './GlassCard.css'
 
 interface GlassCardProps {
   children?: ReactNode
-  /** 12 栅格跨度，默认 4 */
+  /** 横向卡片排的 12 栅格跨度（写进 --card-span），默认 4 */
   span?: number
   title?: string
   icon?: IconName
@@ -29,6 +30,14 @@ interface GlassCardProps {
   className?: string
 }
 
+/**
+ * 玻璃卡片容器：标题行可选，正文放进 __body。
+ * @param span 写进 --card-span；放进 .page-grid 时由网格接管宽度
+ * @param title 标题文字，与 icon / actions 任一存在时渲染整行标题
+ * @param icon 标题前的图标
+ * @param actions 标题行右侧操作区
+ * @param minH 最小高度（px），写进 --card-min-h，让空卡片也有形状
+ */
 export function GlassCard({
   children,
   span = 4,

@@ -1,5 +1,24 @@
 /* ============================================================================
  *  Shizuku · 应用根组件
+ * ----------------------------------------------------------------------------
+ *  站点没有路由库：路径直接读 window.location，导航用 history.pushState。
+ *  这里同时是跨页过渡的唯一调度中心，换页分四个阶段：
+ *
+ *    out    旧页退场：旧卡片开始位移 / 淡出
+ *    morph  提交新路径并挂载新页，新卡片从旧卡片的位置与尺寸长到自己的位置
+ *    in     过渡收尾，等待下一次导航
+ *    idle   清理所有内联样式
+ *
+ *  过渡形态由 getTransitionKind 在宽屏下挑选（窄屏一律走 normal）：
+ *
+ *    main            Main → 内容页：主卡分裂成目标页的每张卡
+ *    collect-split   内容页 → 内容页：旧卡先并成一块，再裂成新卡
+ *    collect-shrink  内容页 → Main：旧卡并成一块后缩回主卡
+ *    content         About ↔ Github：卡片不动，只换内容
+ *    normal          其余情况：淡出淡入 + 轻微上浮
+ *
+ *  几何量都在换页前用 getBoundingClientRect 量好，新页挂载后反向算出起始
+ *  transform，再用两帧 rAF 把过渡交还给 CSS —— 避免同帧读写样式导致跳变。
  * ========================================================================== */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -17,7 +36,9 @@ function readPath() {
   return path || '/'
 }
 
+/** 换页阶段：退场 → 形变 → 收尾 → 静止 */
 type Phase = 'idle' | 'out' | 'morph' | 'in'
+/** 过渡形态，决定卡片怎么动 */
 type TransitionKind =
   | 'normal'
   | 'content'
@@ -25,6 +46,7 @@ type TransitionKind =
   | 'collect-split'
   | 'collect-shrink'
 
+/** 视口坐标系下的一块矩形，单位 px */
 interface CardRect {
   x: number
   y: number
@@ -32,9 +54,10 @@ interface CardRect {
   h: number
 }
 
+/** 除 Main 之外的页面；过渡形态的判断都基于这份集合 */
 const CONTENT_PATHS = new Set(['/about', '/github', '/contact'])
 
-/** 各路由的卡片数量，普通过渡时用来决定哪些旧卡要退场 */
+/** 各路由的卡片数量，normal 过渡时用来决定哪些旧卡要退场 */
 const CARD_COUNTS: Record<string, number> = {
   '/': 1,
   '/about': 3,
@@ -42,6 +65,8 @@ const CARD_COUNTS: Record<string, number> = {
   '/contact': 2,
 }
 
+/* 各阶段的时长（ms）。拆成几个常量是为了让「立即退场」和「完整形变」分开调：
+ * Main 的旧内容几乎不留，内容页之间的合并要留出足够的位移时间。 */
 const OUT_MS = 230
 const MAIN_OUT_MS = 90
 const MORPH_MS = 1160
@@ -50,12 +75,14 @@ const MAIN_SPLIT_MS = 740
 const COLLECT_OUT_MS = 220
 const COLLECT_SPLIT_MS = 700
 const COLLECT_SHRINK_MS = 720
+/** 合并的最短交棒时长：两张卡本来就贴在一起时也得走一小段，避免动画被吃掉 */
 const COLLECT_HANDOFF_MS = 70
+/** 桥接玻璃与收缩前的静止帧，0 表示不留停顿、直接接下一段 */
 const BRIDGE_HOLD_MS = 0
 const SHRINK_HOLD_MS = 0
 const IN_MS = 140
 
-/** 旧卡要走的距离越短，合并这一拍就越短；已经在同一位置时直接交棒 */
+/** 合并阶段时长按位移量取：走得越远给得越久，返回区间 [handoff, max] */
 function collectOutMs(rects: CardRect[], union: CardRect | null) {
   if (!union) return COLLECT_OUT_MS
 
@@ -83,7 +110,11 @@ function contentDelayFor(kind: TransitionKind) {
   return 560
 }
 
-/** Main 的标题复制一份，换页后继续在原位淡出 */
+/**
+ * Main 的标题不是玻璃卡，没法参与卡片形变，
+ * 所以复制一份 fixed 定位的副本留在原位继续淡出（真实标题立刻隐藏）。
+ * 副本由 CSS 的 title-ghost-out 动画收尾，760ms 后移除。
+ */
 function createTitleGhost() {
   const title = document.querySelector<HTMLElement>('.home-title-block')
   if (!title) return
@@ -104,7 +135,10 @@ function createTitleGhost() {
   window.setTimeout(() => ghost.remove(), 760)
 }
 
-/** 合并阶段的桥接玻璃：先把源卡汇聚到这块矩形，再由它裂成目标卡 */
+/**
+ * 合并后再分裂时的桥接玻璃：一块铺在合并矩形上的空玻璃，
+ * 用来盖住目标碎片之间的缝，让「先并成一块、再裂开」在视觉上连续。
+ */
 function createBridge(rect: CardRect) {
   const el = document.createElement('div')
   el.className = 'transition-bridge'
@@ -117,6 +151,7 @@ function createBridge(rect: CardRect) {
   return el
 }
 
+/** 求一组矩形的并集外框，作为合并阶段的目标位置 */
 function unionRect(rects: CardRect[]): CardRect | null {
   if (rects.length === 0) return null
   const x = Math.min(...rects.map((r) => r.x))
@@ -126,7 +161,11 @@ function unionRect(rects: CardRect[]): CardRect | null {
   return { x, y, w: right - x, h: bottom - y }
 }
 
-/** 把一块矩形按目标卡片数量切成首尾相接的碎片 */
+/**
+ * 把一块矩形按目标卡片数量切成首尾相接的碎片，比例与内容页的 12 栅格一致：
+ * 三张卡 → 上排 4/8 两列 + 下排通栏；两张卡 → 左右 4/8。
+ * 碎片互不重叠是关键：透明玻璃叠在一起会明显发白。
+ */
 function cardPieces(stage: CardRect, count: number): CardRect[] {
   if (count >= 3) {
     const splitY = stage.h * 0.56
@@ -143,6 +182,7 @@ function cardPieces(stage: CardRect, count: number): CardRect[] {
   ]
 }
 
+/** 按起止路径挑过渡形态；窄屏没有足够空间做卡片形变，统一退回 normal */
 function getTransitionKind(from: string, to: string): TransitionKind {
   if (!window.matchMedia('(min-width: 981px)').matches) return 'normal'
 
@@ -162,6 +202,10 @@ function getTransitionKind(from: string, to: string): TransitionKind {
   return 'normal'
 }
 
+/**
+ * normal 过渡里目标页卡片更少时，多出来的旧卡没有对应目标，
+ * 直接标记退场，避免它们停在原地。特殊过渡由形变逻辑接管，不做标记。
+ */
 function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
   cards.forEach((el) => el.classList.remove('is-card-exit'))
   if (kind !== 'normal') return
@@ -173,23 +217,31 @@ function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
 }
 
 export function App() {
+  /** 地址栏当前的路径（点击后立即更新，用于顶栏高亮） */
   const [path, setPath] = useState(readPath)
+  /** 当前实际渲染的页面路径（过渡到 morph 阶段才更新） */
   const [shownPath, setShownPath] = useState(path)
   const [phase, setPhase] = useState<Phase>('idle')
+  /** 首次加载不播放跨页过渡，只播放入场动画 */
   const [hasNavigated, setHasNavigated] = useState(false)
+  /** 首页底部那层渐变遮罩，只在 Main 显示 */
   const [scrimVisible, setScrimVisible] = useState(path === '/')
+
   const pathRef = useRef(path)
   pathRef.current = path
   const shownPathRef = useRef(shownPath)
   shownPathRef.current = shownPath
   const navigateRef = useRef<(to: string, push?: boolean) => void>(() => {})
+  /** 一次只跑一个过渡；false 才允许开启新的 */
   const busyRef = useRef(false)
+  /** 过渡中又点了导航：记下来，等这一轮结束立刻接着跑 */
   const pendingRef = useRef<string | null>(null)
   const oldRectsRef = useRef<CardRect[]>([])
   const collectUnionRef = useRef<CardRect | null>(null)
   const bridgeRef = useRef<HTMLElement | null>(null)
   const kindRef = useRef<TransitionKind>('normal')
 
+  /** 提交新路径：切换渲染的页面、把地址和滚动位置一起归位 */
   const commit = (to: string) => {
     setHasNavigated(true)
     setScrimVisible(to === '/')
@@ -205,11 +257,13 @@ export function App() {
     bridgeRef.current = null
   }
 
+  /** 跑一次完整的换页过渡 */
   const run = (to: string) => {
     busyRef.current = true
     document.querySelectorAll('.home-title-ghost').forEach((el) => el.remove())
     removeBridge()
 
+    // 系统里关掉了动画：直接换页，不进入过渡状态机
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       commit(to)
       setPhase('idle')
@@ -218,6 +272,7 @@ export function App() {
     }
 
     const from = shownPathRef.current
+    // 离开 Main 时先收掉底部遮罩，避免它跟着页面一起被缩进卡片
     if (from === '/') setScrimVisible(false)
 
     const oldCards = Array.from(
@@ -229,6 +284,7 @@ export function App() {
     })
     oldRectsRef.current = oldRects
 
+    // 先按「当前目标」预判形态；若过渡中又来了新目标，会在下面按最终目标重判
     const kind = getTransitionKind(from, to)
     kindRef.current = kind
     markExitCards(oldCards, kind, to)
@@ -262,6 +318,7 @@ export function App() {
     setPhase('out')
 
     window.setTimeout(() => {
+      // 过渡期间如果又点了别的页面，以最后一个目标为准
       const target = pendingRef.current ?? to
       pendingRef.current = null
       const finalKind = getTransitionKind(from, target)
@@ -308,6 +365,7 @@ export function App() {
           setPhase('idle')
           busyRef.current = false
 
+          // 排队的目标与当前页不同才接着跑
           const next = pendingRef.current
           pendingRef.current = null
           if (next && next !== pathRef.current) run(next)
@@ -320,6 +378,8 @@ export function App() {
         : OUT_MS)
   }
 
+  /* 新页已经挂载（morph 阶段）：把每张新卡瞬移到它的「起点矩形」，
+   * 下一帧放开过渡，让浏览器从起点补间到卡片自己的 layout 位置。 */
   useLayoutEffect(() => {
     if (phase !== 'morph') return
 
@@ -341,6 +401,7 @@ export function App() {
     cards.forEach((el, i) => {
       el.style.setProperty('--content-delay', contentDelay)
 
+      // 只换内容：卡片本身不动，清掉可能残留的形变样式即可
       if (content) {
         el.style.transform = ''
         el.style.zIndex = ''
@@ -367,22 +428,27 @@ export function App() {
         source = union!
         delay = `${SHRINK_HOLD_MS}ms`
       } else {
+        // normal：目标卡与旧卡按序号一一对应
         source = old[i]
       }
 
       if (source) {
+        // 反向求逆变换：把卡片从 source 矩形搬到自己的位置
         const sx = source.w / r.width
         const sy = source.h / r.height
         const dx = source.x - r.x
         const dy = source.y - r.y
         el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`
       } else {
+        // 没有对应的旧卡（目标页卡片更多）：从下方轻微上浮登场
         el.style.transform = 'translate3d(0, 36px, 0) scale(0.94)'
       }
 
       el.style.setProperty('--card-delay', delay)
     })
 
+    // 两帧：第一帧让上面写入的起点样式生效并被绘制，第二帧再清掉 transform
+    // 触发过渡。合并到一帧里浏览器会把首末状态视作同一帧，动画不播。
     let raf2 = 0
     const raf1 = requestAnimationFrame(() => {
       cards.forEach((el) => {
@@ -401,6 +467,8 @@ export function App() {
     }
   }, [phase, shownPath])
 
+  /* 回到 idle：把过渡期间写在卡片上的内联样式全部清掉，
+   * 否则会影响下一次过渡，也会污染正常状态下的卡片布局。 */
   useEffect(() => {
     if (phase !== 'idle') return
     document.querySelectorAll<HTMLElement>('.page-view [data-card]').forEach((el) => {
@@ -418,11 +486,13 @@ export function App() {
   }, [phase])
 
   const navigate = (to: string, push = true) => {
+    // 已在目标页：不重复换页，滚回顶部当作反馈
     if (to === pathRef.current && !busyRef.current) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
+    // 过渡进行中：只记下目标，等这一轮结束后由 run 接着跑
     if (busyRef.current) {
       if (push) window.history.pushState(null, '', to)
       pendingRef.current = to
@@ -433,8 +503,10 @@ export function App() {
     run(to)
   }
 
+  // popstate 里读到的 navigate 可能已经过期，统一走 ref
   navigateRef.current = navigate
 
+  // 浏览器前进 / 后退：不再 push，只按新路径重放过渡
   useEffect(() => {
     const onPopState = () => navigateRef.current(readPath(), false)
     window.addEventListener('popstate', onPopState)
@@ -452,6 +524,7 @@ export function App() {
       <Home />
     )
 
+  /* 过渡形态同时是 CSS 的钩子：App.css 按这些类名决定每类过渡怎么演 */
   const kindClass =
     phase === 'idle'
       ? ''
@@ -478,6 +551,7 @@ export function App() {
   return (
     <>
       <PageLoader />
+      {/* 首页底部的渐变遮罩：换页时由 scrimVisible 控制进出 */}
       <div
         className={`home-scrim${scrimVisible ? ' is-visible' : ''}`}
         aria-hidden="true"

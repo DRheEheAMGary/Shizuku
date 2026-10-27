@@ -1,11 +1,11 @@
 /* ============================================================================
  *  Shizuku · 顶栏滚动收缩
  * ----------------------------------------------------------------------------
- *  滚过阈值后把顶栏收成更小的胶囊：站名字样、假名副标隐去，内边距收紧。
+ *  滚过阈值后把顶栏收成更小的胶囊（收起态下品牌区只留署名）。
  *
- *  两个细节来自 MC 站的经验：
- *    1. 迟滞 —— 收起与展开用不同阈值，避免在临界点反复抖动
- *    2. 动画锁 —— 一次切换后等动画播完再允许反向，避免中途被拽回导致闪现
+ *  两个必要的处理：
+ *    1. 迟滞 —— 收起与展开用不同阈值，避免滚动停在临界点时反复抖动
+ *    2. 动画锁 —— 一次切换后等过渡播完才允许反向，避免中途被拽回
  * ========================================================================== */
 
 import { useEffect, useRef, useState } from 'react'
@@ -13,12 +13,13 @@ import { useEffect, useRef, useState } from 'react'
 interface Options {
   /** 触发阈值（px） */
   threshold?: number
-  /** 迟滞区间（px） */
+  /** 迟滞区间（px）：收起要滚过 threshold + hysteresis，展开要回到 threshold - hysteresis 以内 */
   hysteresis?: number
-  /** 动画时长（ms），需与 CSS 的 --dur-base 对齐 */
+  /** 动画锁时长（ms），需与 CSS 的顶栏过渡时长对齐 */
   lockMs?: number
 }
 
+/** 返回顶栏是否处于收起态 */
 export function useScrollCollapse({
   threshold = 32,
   hysteresis = 18,
@@ -32,13 +33,14 @@ export function useScrollCollapse({
 
     const update = () => {
       const y = window.scrollY
+      // 两套阈值：已经收起时要回得更深才展开，已经展开时要滚得更远才收起
       const want = s.collapsed ? y > threshold - hysteresis : y > threshold + hysteresis
 
       if (want === s.collapsed) return
 
       const now = performance.now()
       if (now < s.lockedUntil) {
-        // 动画还没播完：等它播完再按当时的位置决定
+        // 动画还没播完：等它播完再按当时的位置重新判断
         s.raf = window.setTimeout(update, s.lockedUntil - now + 16)
         return
       }
@@ -48,6 +50,7 @@ export function useScrollCollapse({
       setCollapsed(want)
     }
 
+    // 滚动事件每个 rAF 只处理一次
     const onScroll = () => {
       if (s.raf) return
       s.raf = window.requestAnimationFrame(() => {
@@ -56,7 +59,7 @@ export function useScrollCollapse({
       })
     }
 
-    // 首屏就可能已经在滚动位置（刷新 / 前进后退恢复），先对齐一次
+    // 首屏就可能已经在滚动位置（刷新、前进后退恢复），先对齐一次
     s.collapsed = window.scrollY > threshold
     setCollapsed(s.collapsed)
 

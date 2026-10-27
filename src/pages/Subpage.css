@@ -1,14 +1,18 @@
 /* ============================================================================
  *  Shizuku · About / Github / Contact
  * ----------------------------------------------------------------------------
- *  统一使用玻璃卡片 + 12 栏网格。
- *  顶栏下面不放页面大标题，内容直接从卡片开始。
+ *  三张子页共用的一套版式：12 栏网格 + 玻璃卡片，顶栏下不放大标题，
+ *  内容直接从卡片开始。
+ *
+ *  981px 是分界：App.tsx 以 (min-width: 981px) 决定是否走卡片形变过渡，
+ *  所以固定卡片高度也从 981px 起，窄屏在 980px 收成一列 —— 两侧互补，
+ *  保证形变的两端都有确定的几何。
  * ========================================================================== */
 
 .subpage {
   width: 100%;
   max-width: 64rem;
-  /*  子页统一从同一高度开始，避免 About / Github 切换时整体上下跳。 */
+  /*  子页统一从同一高度起排，About / Github 切换时整体不上下跳 */
   margin: 0 auto;
   padding-top: clamp(8px, 2.4vh, 28px);
   display: flex;
@@ -23,18 +27,21 @@
   align-items: stretch;
 }
 
-/* GlassCard 默认宽度是横向卡片排算的，放进网格里要交回给 grid */
+/*  GlassCard 自带的是横向卡片的宽度算法，进网格后交回给 grid：
+ *  width 100% 铺满所在列，min-width / min-height 归零，内容撑不破列 */
 .page-grid > .glass-card {
   width: 100%;
   min-width: 0;
   min-height: 0;
 }
 
+/*  跨列工具类：4 / 7 / 8 / 12 栏 */
 .span-4 { grid-column: span 4; }
 .span-8 { grid-column: span 8; }
 .span-7 { grid-column: span 7; }
 .span-12 { grid-column: span 12; }
 
+/*  Contact 内容少：整块垂直居中，也不留顶部间距 */
 .subpage--contact {
   margin-block: auto;
   padding-top: 0;
@@ -44,7 +51,8 @@
   padding: var(--sp-5);
 }
 
-/* About / Github 是同一套卡片栅格。把卡片高度统一，切换时只换内容不跳几何。 */
+/*  About / Github 共用同一套栅格：两页卡片位置一一对应，
+ *  统一固定高度（240 / 240 / 200）后切换只换内容，几何不动。 */
 @media (min-width: 981px) {
   .subpage--paired .page-grid > .glass-card:nth-child(1),
   .subpage--paired .page-grid > .glass-card:nth-child(2) {
@@ -56,20 +64,22 @@
   }
 }
 
-/* 同一行卡片被拉高时，内容垂直居中，避免空白全堆在底部 */
+/*  同一行被拉高时内容垂直居中，空白不会全压在底部 */
 .subpage .glass-card__body {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-/* ---------- 标签 ---------- */
+/* ---- 标签 ---- */
+/*  标签行：自动换行，间距固定 8px */
 .tag-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+/*  圆角标签：默认用中性底色，首个标签换成主题色（见下一条） */
 .tag {
   padding: 6px 11px;
   border-radius: var(--r-full);
@@ -84,6 +94,7 @@
   background: var(--primary-soft);
 }
 
+/*  行末的补充说明，图标跟着主题色 */
 .sub-note {
   display: flex;
   align-items: center;
@@ -98,7 +109,8 @@
   color: var(--primary);
 }
 
-/* ---------- 游戏账号 ---------- */
+/* ---- 游戏账号 ---- */
+/*  账号卡两列排，窄屏在 640px 收成一列 */
 .account-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -140,6 +152,7 @@
   color: var(--text);
 }
 
+/*  数字等宽（tabular-nums）：uid 变化时各位不左右抖 */
 .account-main span {
   font-size: 11px;
   color: var(--text-muted);
@@ -156,13 +169,15 @@
   background: var(--hairline);
 }
 
-/* ---------- 链接 ---------- */
+/* ---- 链接 ---- */
+/*  链接卡五列，窄屏依次收到两列、一列 */
 .link-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
+/*  卡片式链接：细边框 + 半透明玻璃底，悬停抬 1px */
 .link-card {
   position: relative;
   display: flex;
@@ -205,6 +220,7 @@
   width: 100%;
 }
 
+/*  右侧留 14px：箭头绝对定位在右上角，长名字换行时不压到箭头 */
 .link-main strong {
   padding-right: 14px;
   overflow-wrap: anywhere;
@@ -214,6 +230,7 @@
   color: var(--text);
 }
 
+/*  单行省略：副标题不撑高卡片 */
 .link-main span {
   overflow: hidden;
   font-size: 10px;
@@ -222,6 +239,7 @@
   text-overflow: ellipsis;
 }
 
+/*  箭头固定在右上角，悬停时右移、上移各 1px 并染主题色 */
 .link-arrow {
   position: absolute;
   top: 10px;
@@ -238,7 +256,8 @@
   transform: translate(1px, -1px);
 }
 
-/* ---------- Github ---------- */
+/* ---- Github ---- */
+/*  Github 卡单独用 20px 内边距，比 .subpage .glass-card 的 24px 更紧 */
 .subpage .github-card {
   padding: 20px;
 }
@@ -247,6 +266,7 @@
   margin-bottom: var(--sp-2);
 }
 
+/*  撑满卡片高度：底部 CTA 用 margin-top: auto 沉到卡底 */
 .github-profile {
   display: flex;
   flex-direction: column;
@@ -285,6 +305,7 @@
   color: var(--text-muted);
 }
 
+/*  主色实底按钮：文字取 --bg 形成反色对比；悬停靠 brightness 提亮，不换底色 */
 .page-cta {
   display: inline-flex;
   align-items: center;
@@ -309,6 +330,7 @@
   transform: scale(0.98);
 }
 
+/*  仓库卡四列，980px 以下两列、520px 以下一列 */
 .repo-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -363,14 +385,14 @@
   color: var(--text-muted);
 }
 
-/* 热力图只占内容宽度，桌面端居中，别全堆在左边 */
+/*  861px 起热力图在内容宽度内居中，不再全堆在左边 */
 @media (min-width: 861px) {
   .subpage .heat__grid {
     justify-content: center;
   }
 }
 
-/* 8 栏里的热力图改用更小的格子，整年不用横向滚动 */
+/*  981px 起格子缩到 8px、间距 2px：整年在一屏内放下，不用横向滚动 */
 @media (min-width: 981px) {
   .subpage .heat__day {
     width: 8px;
@@ -383,12 +405,13 @@
   }
 }
 
-/* ---------- Contact ---------- */
+/* ---- Contact ---- */
 .contact-list {
   display: flex;
   flex-direction: column;
 }
 
+/*  联系行：用内边距与下边框分隔，首尾行各去掉一侧多余的内边距 */
 .contact-row {
   display: flex;
   align-items: center;
@@ -416,6 +439,7 @@
   color: var(--text);
 }
 
+/*  小标签统一大写 + 字距，字号压到 10px */
 .contact-label {
   font-size: 10px;
   letter-spacing: 0.06em;
@@ -423,6 +447,7 @@
   color: var(--text-muted);
 }
 
+/*  长邮箱 / 链接强制换行，不撑破卡片 */
 .contact-value {
   overflow-wrap: anywhere;
   font-size: var(--fs-sm);
@@ -443,6 +468,7 @@
   color: var(--primary);
 }
 
+/*  30px 圆形复制按钮：图标居中，复制成功后换成主题色底 */
 .icon-btn {
   display: grid;
   place-items: center;
@@ -465,6 +491,7 @@
   background: var(--hairline-strong);
 }
 
+/*  复制成功的状态：换成主题色底，图标同时换成对勾 */
 .icon-btn.is-copied {
   color: var(--primary);
   background: var(--primary-soft);
@@ -476,7 +503,8 @@
   color: var(--text-muted);
 }
 
-/* ---------- 窄屏 ---------- */
+/* ---- 窄屏 ---- */
+/*  980px 是 981px 的另一侧：网格收成一列，跨列类退化为整行，仓库卡两列 */
 @media (max-width: 980px) {
   .page-grid {
     grid-template-columns: 1fr;
@@ -494,12 +522,14 @@
   }
 }
 
+/*  链接卡两列 */
 @media (max-width: 860px) {
   .link-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/*  卡片内边距收紧，账号列表改一列 */
 @media (max-width: 640px) {
   .subpage .glass-card {
     padding: var(--sp-4);
@@ -514,6 +544,7 @@
   }
 }
 
+/*  仓库卡一列，链接仍保持两列 */
 @media (max-width: 520px) {
   .link-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -524,6 +555,7 @@
   }
 }
 
+/*  最窄：链接也收成一列 */
 @media (max-width: 360px) {
   .link-grid {
     grid-template-columns: 1fr;

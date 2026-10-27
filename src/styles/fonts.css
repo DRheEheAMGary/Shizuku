@@ -1,20 +1,16 @@
 /* ============================================================================
  *  Shizuku · 字体声明
  * ----------------------------------------------------------------------------
- *  Edu QLD Hand —— 手写体（Google Fonts），专门渲染「Shizuku」这个站名。
- *  原文件是 546KB 的静态 Bold，这里按实际用到的字符子集化并压成 woff2：
- *  站名字母 + 大小写 + 数字 + 常用标点，共 51 个字符，39KB。
+ *  三套字体全部自托管在 public/fonts/，不引 Google Fonts CDN：
+ *  国内访问 fonts.googleapis.com 不可靠，直接放进 public/ 由本站分发。
+ *  统一用 font-display: swap —— 字体未就绪时先用后备字体渲染，不阻塞首屏。
  *
- *  Pacifico —— 连笔手写体（Google Fonts），给顶栏的署名用。
- *
- *  Florida Vibes —— 首页副标题用，只有 Regular 一个字重。
- *
- *  这里自托管而不是引 Google Fonts CDN：
- *  国内访问 fonts.googleapis.com 不可靠，而 gstatic 的 woff2 又只有 22KB，
- *  一次请求就能拿到，直接放进 public/ 最省事。
- *  latin 子集（224 字形）已足够覆盖拉丁署名。
+ *  Pacifico       连笔手写体，顶栏署名与首页大名（--font-hand）
+ *  Edu QLD Hand   手写体，只渲染「Shizuku」站名（--font-wordmark）
+ *  Florida Vibes  首页副标题，只有 400 一个字重
  * ========================================================================== */
 
+/*  顶栏署名与首页大名用；字体本身只有 400 一个字重 */
 @font-face {
   font-family: 'Pacifico';
   src: url('/fonts/pacifico.woff2') format('woff2');
@@ -23,7 +19,7 @@
   font-display: swap;
 }
 
-/* 站名专用：只渲染「Shizuku」那几处，子集到 51 个字符 */
+/*  站名专用：只覆盖「Shizuku」用到的字符，因此是子集化后的 woff2 */
 @font-face {
   font-family: 'Edu QLD Hand';
   src: url('/fonts/eduqld-hand-bold.woff2') format('woff2');
@@ -32,7 +28,7 @@
   font-display: swap;
 }
 
-/* 首页副标题专用：Florida Vibes，只有 400 一个字重 */
+/*  首页副标题专用：Florida Vibes，只有 400 一个字重，提供的是 otf */
 @font-face {
   font-family: 'Florida Vibes';
   src: url('/fonts/florida-vibes.otf') format('opentype');

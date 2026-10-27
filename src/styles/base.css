@@ -1,7 +1,8 @@
 /* ============================================================================
  *  Shizuku · 基础样式
  * ----------------------------------------------------------------------------
- *  reset + 排版基线 + 全局背景层
+ *  reset + 排版基线 + 全局背景层。
+ *  只放全站默认值与底层元素样式，组件样式一律不进这里。
  * ========================================================================== */
 
 *,
@@ -15,12 +16,13 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
-  /*  About/Github 比 Contact 高，换页时滚动条会忽有忽无，
-   *  整页因此横移半个滚动条宽度 —— 正好落在卡片缩放的当口。
-   *  固定预留这条沟，滚动条不再参与布局，动画期间就不会跳。 */
+  /*  About / Github 比 Contact 高，换页时滚动条会忽有忽无，
+   *  整页随之横移半个滚动条宽度，正好撞在卡片缩放的当口。
+   *  固定预留这条沟，滚动条不参与布局，动画期间不再横跳。 */
   scrollbar-gutter: stable;
 }
 
+/*  系统要求减少动画：滚动也改成瞬时，并压缩所有动画与过渡 */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *,
@@ -48,31 +50,30 @@ body {
     color var(--dur-base) var(--ease-apple);
 }
 
-/*  顶栏有 margin-top，如果让它从 #root 里穿透出去，
- *  会变成 body 的外边距 —— 整个 body 被顶下去 16px，
- *  文档就比视口高出 16px，多出一根细滚动条。
- *  flow-root 让 #root 自己成为包含块，外边距留在里面。 */
+/*  顶栏自带 margin-top；若它从 #root 穿透出去，外边距会算到 body 上，
+ *  整个文档比视口高 16px，多出一根细滚动条。
+ *  flow-root 让 #root 自成包含块，外边距留在内部。 */
 #root {
   display: flow-root;
 }
 
-/* ---------- 背景层：原图，不加任何遮罩 ---------- */
-/*  光晕、模糊、白色/黑色遮罩都去掉了 —— 背景就是原图本身。 */
+/* ---- 背景层 ---- */
+/*  背景即原图：只叠一层 --bg-veil 薄纱，不加光晕、模糊或额外遮罩；
+ *  图片本身由 --bg-image 随主题色切换。 */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
-  /*  背景图随主题色走，由 --bg-image 决定 */
+  /*  两层背景：上面一层是 --bg-veil 的纯色薄纱（同色渐变铺满），
+   *  下面才是图；center / cover 保证横竖屏都居中裁切。 */
   background:
     linear-gradient(var(--bg-veil), var(--bg-veil)),
     var(--bg-image) center / cover no-repeat;
   pointer-events: none;
 }
 
-/*  竖屏用裁切更聚焦的版本，避免外套大面积留白 */
-
-/* ---------- 排版 ---------- */
+/* ---- 排版 ---- */
 h1, h2, h3, h4 {
   font-weight: 600;
   line-height: var(--lh-tight);
@@ -118,7 +119,7 @@ ul, ol {
   color: var(--text);
 }
 
-/* ---------- 滚动条 ---------- */
+/* ---- 滚动条 ---- */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -128,6 +129,8 @@ ul, ol {
   background: transparent;
 }
 
+/*  透明边框 + background-clip 把滑块收窄：视觉上是一条细线，
+ *  可点区域仍占满 10px，不必精确对准 */
 ::-webkit-scrollbar-thumb {
   background: var(--hairline-strong);
   border-radius: var(--r-full);
@@ -140,7 +143,7 @@ ul, ol {
   background-clip: content-box;
 }
 
-/* ---------- 焦点可见性（键盘导航） ---------- */
+/* ---- 焦点可见性（键盘导航） ---- */
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;

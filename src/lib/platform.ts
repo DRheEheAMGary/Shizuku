@@ -1,8 +1,8 @@
 /* ============================================================================
  *  Shizuku · 平台判断
  * ----------------------------------------------------------------------------
- *  只用来决定快捷键提示怎么写：macOS 上写 ⌘，Windows / Linux 上写 Ctrl。
- *  键盘监听本身两边都收（metaKey || ctrlKey），这里纯粹是文案。
+ *  只影响快捷键的文案：Apple 平台写 ⌘，其余写 Ctrl+。
+ *  键盘监听本身两边都收（metaKey || ctrlKey），这里不做行为分支。
  * ========================================================================== */
 
 /** 是不是 Apple 平台（macOS / iOS / iPadOS） */
@@ -19,7 +19,7 @@ export function isApplePlatform(): boolean {
   return /macintosh|mac os x|iphone|ipad|ipod/i.test(navigator.userAgent)
 }
 
-/** 快捷键提示里那个修饰键：⌘ 或 Ctrl+ */
+/** 快捷键提示里的修饰键：⌘ 或 Ctrl+ */
 export function modKeyLabel(): string {
   return isApplePlatform() ? '⌘' : 'Ctrl+'
 }

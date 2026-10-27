@@ -1,8 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""全域搜索索引器 —— 产出 search-index.json（格式契约见仓库根 docs / 契约文档）。
+"""全域搜索索引器 —— 产出 search-index.json，供前端在浏览器里做全域搜索。
 
-在**服务器上**运行：读服务器上的站点文件、博客数据库，抓 PHP 渲染后的 HTML。
+在**服务器上**运行，不在构建期跑：直接读服务器上的站点文件与博客数据库，
+对需要服务端渲染的页面用 curl 走本机回环抓取，最后写出静态 JSON。
+前端拉 `/search-index.json` 后在浏览器里按子串匹配，所以这套搜索不需要
+给静态站加后端接口，也没有查询时的网络往返。
+
+产物
+
+    默认 DEFAULT_OUT = /www/wwwroot/shizuku/search-index.json，即站点根目录下，
+    与前端 src/hooks/useSearchIndex.ts 里写死的 /search-index.json 对应。
+
+索引结构（与 src/lib/search.ts 的 SearchIndex / SearchItem 字段一致）::
+
+    {"generatedAt": "2026-10-17T21:10:00+08:00",
+     "items": [{"site": "blog", "type": "post", "title": "...",
+                "url": "https://blog.dreamgary.cn/slug/", "text": "...",
+                "date": "2026-10-17", "author": "...",
+                "tags": ["..."], "cats": ["..."]}]}
+
+    site     站点 id，当前只有 "blog" / "mc"（前端 SITE_NAMES 用同一套 id）
+    type     post / page / doc，需与 site 匹配（见 ALLOWED_TYPES）
+    url      https 绝对地址，域名必须落在 SITES 的域名白名单内
+    text     正文纯文本，截断到 TEXT_LIMIT
+    date     YYYY-MM-DD 或 null
+    author / tags / cats  只有博客文章写，其余条目整个字段省略（省体积）
 
 用法::
 
@@ -12,7 +35,10 @@
     python3 tools/build_search_index.py --site blog --site mc --no-verify
     python3 tools/build_search_index.py --self-test      # 离线自测文本清洗逻辑
 
-只用标准库，Python 3.8+。数据库口令运行时从 wp-config.php 读取，不写死。
+只用标准库，Python 3.8+；curl 与 MySQL 客户端（mariadb / mysql）由系统提供。
+数据库口令运行时从 wp-config.php 读取，不写死在代码里。
+
+退出码：0 成功；1 写文件失败；2 自检不通过（此时不写文件）。
 """
 
 import argparse
@@ -25,36 +51,41 @@ import subprocess
 import sys
 import tempfile
 
-# ---------------------------------------------------------------------------
-# 契约常量
-# ---------------------------------------------------------------------------
+# ---- 常量与白名单 ----
 
+# 写进 JSON 的正文上限；verify() 按同一上限复核截断结果。
 TEXT_LIMIT = 1200
 
-# site id -> (展示名, 域名)；前端按这份映射分组，新增站点两边都要改
+# 站点元信息的唯一来源，每条 = (site id, 展示名, 域名, 站点根目录, 抓取用 server_name)。
+# 前端 src/lib/search.ts 的 SITE_NAMES 用同一套 site id。
+#
+# 只有列进 SITES 的站点会被采集：当前是 blog（WordPress）与 mc（VitePress 文档）。
+# main / oitr / rdm 的采集函数与相关常量仍然保留，但没有列进这里 ——
+# main() 只按 SITES 迭代，--site 的 choices 也取自 SITES，所以它们跑不到。
 SITES = [
-    # (site, 展示名, 域名, 站点根, 抓取时用的 server_name)
-    # 只索引博客和 MC 文档：主站以后要换成 shizuku，所以整站先不收。
     ("blog", "博客", "blog.dreamgary.cn", "/www/wwwroot/blog", "blog.dreamgary.cn"),
     ("mc", "MC 文档", "mc.dreamgary.cn", "/www/wwwroot/mc", "mc.dreamgary.cn"),
 ]
 SITE_MAP = dict((s[0], s) for s in SITES)
 ALLOWED_DOMAINS = frozenset(s[2] for s in SITES)
 
-# main 站：契约写的是 dreamgary.cn，但该域名 301 到 www.dreamgary.cn，
-# 契约的 domain_rules 也把 main 配成 www.dreamgary.cn —— 对外 URL 用 www，
-# 抓取时用 dreamgary.cn 走 --resolve 也拿得到（会 301，curl -L 跟随）。
+# main 站（未接入 SITES）：条目对外 URL 的前缀固定用 www.dreamgary.cn。
+# collect_main 抓取时按 server_name 走 --resolve 打到本机，重定向交给 curl -L。
 MAIN_PUBLIC_DOMAIN = "www.dreamgary.cn"
 MAIN_PUBLIC_ORIGIN = "https://" + MAIN_PUBLIC_DOMAIN
 
+# 默认产物路径，以及 blog 的 wp-config.php（数据库口令运行时从这里读，不写死）。
 DEFAULT_OUT = "/www/wwwroot/shizuku/search-index.json"
 WP_CONFIG = "/www/wwwroot/blog/wp-config.php"
 
-# blog：只收这两种 post_type，别的（revision/attachment/nav_menu_item/...）一律不收
+# blog：只收这两种 post_type；revision / attachment / auto-draft / nav_menu_item /
+# micropost 等在 SQL 的白名单里就被排除，不进结果集。
 BLOG_POST_TYPES = ("post", "page")
 BLOG_TYPE_MAP = {"post": "post", "page": "page"}
 
-# 每个站允许的 type（契约：post=文章、page=页面、doc=文档页）
+# 各站允许的 type，verify() 用它检查 type 与 site 是否匹配：
+# post=文章（blog）、page=页面（blog 与单页站）、doc=文档页（mc）。
+# 未接入 SITES 的站也保留在这里，接入时不必再改校验逻辑。
 ALLOWED_TYPES = {
     "blog": ("post", "page"),
     "main": ("page",),
@@ -63,11 +94,13 @@ ALLOWED_TYPES = {
     "rdm": ("page",),
 }
 
-# main：pages/*.php 是页面；includes/ components/ config.php README / cache 等都不是
+# main：pages/*.php 视为页面；文件名命中这里的跳过
+# （README / LICENSE / CHANGELOG / CONTRIBUTING / TODO、config.php、点开头文件）。
 MAIN_SKIP_FILES = re.compile(
     r"(^readme|^license|^changelog|^contributing|^todo|^config\.php$|^\.)", re.I
 )
 
+# 以下两组是 oitr 的目录与文件过滤规则；collect_oitr 未接入 SITES，当前不会执行。
 OITR_SKIP_DIRS = frozenset(
     ["assets", "lib", "node_modules", ".git", ".well-known", "fonts", "images", "img"]
 )
@@ -75,18 +108,18 @@ OITR_SKIP_FILES = re.compile(
     r"(^404\.|^(?:readme|license|changelog|api_summary|zen)\b|^test-|-test\.html$)", re.I
 )
 
+# mc（VitePress）：配置目录、静态资源、依赖、脚本、构建产物、缓存与 README 都不是文档页。
 MC_PRUNE_DIRS = frozenset(
     [".vitepress", "public", "node_modules", ".git", "scripts", "dist", "cache"]
 )
 MC_SKIP_NAMES = re.compile(r"^readme\b", re.I)
 
+# curl 单次抓取的超时秒数，以字符串形式交给 --max-time。
 CURL_TIMEOUT = "25"
 
-# ---------------------------------------------------------------------------
-# 文本清洗
-# ---------------------------------------------------------------------------
+# ---- 文本清洗 ----
 
-# annotation（MathML 的 TeX 源码）会和渲染出来的公式重复，整段丢掉
+# annotation（MathML 里的 TeX 源码）会和渲染出的公式重复，整段丢弃。
 _DROP_TAGS = r"script|style|noscript|template|svg|iframe|object|embed|annotation"
 _DROP_BLOCK = re.compile(r"<(%s)\b[^>]*>.*?</\1\s*>" % _DROP_TAGS, re.I | re.S)
 _DROP_OPEN = re.compile(r"<(%s)\b[^>]*?/?>" % _DROP_TAGS, re.I | re.S)
@@ -103,7 +136,16 @@ _WS = re.compile(r"\s+")
 
 
 def strip_tags(markup, limit=None):
-    """HTML 片段 -> 纯文本：丢 script/style/svg 整段、解实体、压缩空白。"""
+    """HTML 片段 -> 纯文本。
+
+    整段丢弃 script / style / svg / iframe / object / embed / template 与
+    annotation；未闭合的上述开标签、HTML 注释、CDATA、DOCTYPE 声明一并清掉。
+    块级标签换成空格（避免相邻段落粘连），行内标签直接删除（避免把词劈开）。
+    最后做实体反转义、NBSP / 全角空格归一、连续空白压缩。
+
+    limit 不为 None 时按 truncate 的规则截断。
+    返回清洗后的字符串；空输入返回 ""。
+    """
     if not markup:
         return ""
     text = _DROP_BLOCK.sub(" ", markup)
@@ -123,8 +165,10 @@ def strip_tags(markup, limit=None):
 def truncate(text, limit=None):
     """截断到 limit 个字符。
 
-    limit 为 None 时不截。截断点尽量落在「语义边界」（空白 / 标点）上，
-    避免把单词和数字（比如 URL、代码）切成半截。
+    limit 为 None 或长度未超限时原样返回。超限时在 limit 的 70% 之后再找最近的
+    空白或中文逗号 / 句号 / 顿号处下刀，避免把 URL、数字、代码切成半截；
+    找不到可用的边界就在 limit 处硬截。
+    返回截断后的字符串，不追加省略号。
     """
     if limit is None or len(text) <= limit:
         return text
@@ -153,7 +197,14 @@ _MD_BADGE = re.compile(r"\[!\[[^\]]*\]\([^)]*\)\]\([^)]*\)")
 
 
 def strip_markdown(md):
-    """Markdown -> 纯文本（足够用于检索与摘要，不做完整解析）。"""
+    """Markdown -> 纯文本，只求够用（检索与摘要），不做完整解析。
+
+    处理顺序是「先删整段、再拆结构、最后兜底」：frontmatter（从正文里剔除）、
+    代码围栏、徽章、引用式链接定义、表格分隔行、独立 HTML 行、分隔线，然后是
+    引用 / 标题 / 列表标记、表格竖线、强调符号，残留的内联 HTML 交给 strip_tags。
+
+    返回 (纯文本, frontmatter 里的 title 或 None)。
+    """
     text = md
     front = _MD_FRONT.match(text)
     title = None
@@ -183,13 +234,10 @@ def strip_markdown(md):
     return text, title
 
 
-# 数组下标 a[i] / 数学区间 x[0,1) 前面紧贴字母数字，不能当 shortcode
-# 注意：正则字符类里 ] 紧跟在 \] 后面会提前闭合字符类 —— 所以这里写成
-#   (?<![A-Za-z0-9_$\]])
-# 形式：\] 是转义的右方括号，外层方括号单独闭合。
-# 「前一个字符不是字母/数字/_/$/\]」的负向后顾。
-# 源码里多出来的一个 ] 是给 re 看的：字符类里 \] 优先解释为「转义的 ]」，
-# 而它后面紧跟的那个 ] 才闭合字符类。
+# 数组下标 a[i]、数学区间 x[0,1) 不能当 shortcode。负向后顾在这里表达
+# 「前面不是字母/数字/_/$，也不是两个连续右方括号」；反斜杠由 _BACKSLASH
+# 拼出来，避免源码里多层转义难读。该断言实际拦的是「某字符 + ]]」这样的
+# 三字符结尾，所以 a[i] 仍会进入匹配 —— 靠 repl 里的裸名称规则原样保留。
 _BACKSLASH = chr(92)
 _NOT_ARRAY_SUB = "(?<![A-Za-z0-9_$" + _BACKSLASH + _BACKSLASH + "]]" + _BACKSLASH + "])"
 _CLOSE_SUB = _NOT_ARRAY_SUB
@@ -207,12 +255,16 @@ _FORM_TAG = re.compile(
 
 
 def strip_shortcodes(text):
-    """去掉 [gallery] / [caption id='x']...[/caption] 这类 WP shortcode。
+    """去掉 WP shortcode 与主题的 emoji shortcode。
 
-    - 前面紧贴字母/数字/下划线/$ 的 `[xxx]`（数组下标 a[i]）不算；
-    - 名字带下划线/连字符、或带 key=value 属性 => 一定是 shortcode；
-    - 同名开/闭标签成对出现 => 是 shortcode（顺便去掉内容，如 [caption] 说明文字）；
-    - 其余单个裸 `[word]`（可能是 markdown 残留链接）保留。
+    判定规则（宁可保留，不误删正文）：
+    - 名字带下划线 / 连字符，或后面跟 key=value 属性 => 一定是 shortcode，删；
+    - 同名开闭标签成对出现 => 是 shortcode，连中间内容一起删（如 [caption] 说明文字）；
+    - 孤立的 [/name] => 删；
+    - 其余裸单个 [word]（可能是 markdown 残留链接）原样保留。
+
+    {hanser1_peach} 这类 emoji shortcode 无条件删掉。
+    返回压缩空白后的字符串。
     """
 
     # [/name] 的 name 集合（re 返回 tuple，取第一个分组）
@@ -255,7 +307,13 @@ _TITLE_DASH_ROUNDS = 2
 
 
 def clean_title(title, fallback):
-    """标题清洗：去标签/实体/空白；「标题 - 站点名」后缀去掉；无意义标题退回 fallback。"""
+    """标题清洗。
+
+    先去标签与实体；标题里出现 | ｜ · • – — 这类宽分隔符时只留前一段；
+    再用 rpartition 最多去掉两段「 - xxx」尾巴（模板常见「标题 - 站点名 - 站点名」）。
+    结果为空、命中 _BAD_TITLE（Home / Untitled / 404 / 未命名 等）或短于 2 个字符时
+    退回 fallback。返回清洗后的标题或 fallback 本身。
+    """
     if title:
         title = strip_tags(title)
         if _TITLE_WIDE_SEP.search(title):  # 「标题 | 站点名」：留前半段
@@ -273,7 +331,12 @@ def clean_title(title, fallback):
 
 
 def title_from_path(path, base_dir):
-    """退回文件名 / URL 末段。"""
+    """用相对路径的最后一段当标题。
+
+    去掉扩展名（md / markdown / html / php）后按目录切开；末段是 index 时改用
+    所在目录名，根目录的 index 用站点根目录名。下划线、连字符换成空格。
+    返回至少为 "index" 的非空字符串。
+    """
     rel = os.path.relpath(path, base_dir) if base_dir else path
     stem = re.sub(r"\.(?:md|markdown|html?|php)$", "", rel, flags=re.I)
     stem = stem.replace("\\", "/").strip("/")
@@ -288,7 +351,11 @@ def title_from_path(path, base_dir):
 
 
 def norm_date(value):
-    """各种日期格式 -> YYYY-MM-DD / None。"""
+    """各种日期表示 -> "YYYY-MM-DD"，认不出或非法日期返回 None。
+
+    接受 2026-10-17 / 2026/10/17 / 2026.10.17（可带时间部分）与 20261017；
+    空值、"null"、"0000-00-00" 这类全零日期都归为 None。
+    """
     if not value:
         return None
     s = str(value).strip()
@@ -306,20 +373,25 @@ def norm_date(value):
         return None
 
 
-# ---------------------------------------------------------------------------
-# 通用工具
-# ---------------------------------------------------------------------------
+# ---- 通用工具 ----
 
 
 def warn(msg):
+    """告警写 stderr；stdout 只留给最终统计报告。"""
     sys.stderr.write("[warn] %s\n" % msg)
 
 
 def info(msg):
+    """进度写 stderr。"""
     sys.stderr.write("[info] %s\n" % msg)
 
 
 def read_text(path):
+    """读文本文件：按 utf-8-sig -> utf-8 -> gb18030 依次尝试。
+
+    全都不行时用 utf-8 + replace 兜底，宁可留替换字符也不中断整次构建。
+    返回解码后的字符串；文件不存在或不可读时抛 OSError。
+    """
     with open(path, "rb") as fh:
         raw = fh.read()
     for enc in ("utf-8-sig", "utf-8", "gb18030"):
@@ -331,10 +403,11 @@ def read_text(path):
 
 
 def make_item(site, itype, title, url, text, date, author=None, tags=None, cats=None):
-    """条目对象。
+    """构造一条索引条目（dict）。
 
-    author / tags / cats 只有博客文章才有，没有就整个字段不写
-    （MC 文档不需要，也省体积）。
+    date 一律经 norm_date 归一，非法值写成 null；author / tags / cats 只有博客文章传，
+    为空时整个键都不写（mc 文档用不到，也省体积）。
+    返回可直接交给 json.dumps 的 dict。
     """
     item = {
         "site": site,
@@ -353,13 +426,21 @@ def make_item(site, itype, title, url, text, date, author=None, tags=None, cats=
     return item
 
 
-# ---------------------------------------------------------------------------
-# 抓取工具：PHP 页面走本机 --resolve
-# ---------------------------------------------------------------------------
+# ---- 抓取工具：PHP 页面走本机 --resolve ----
 
 
 def fetch(url, host, local="127.0.0.1"):
-    """curl --resolve <host>:443:127.0.0.1 抓完整 HTML。失败返回 None。"""
+    """抓一份完整 HTML，失败返回 None。
+
+    --resolve 把 <host>:443 钉到本机回环：不管域名对外解析到哪里，请求都落在
+    本机 Nginx 上，同时仍用真实域名做 SNI / Host，能匹配到对应站点，拿到的是
+    服务器当前真实渲染结果（而不是 CDN 缓存或外网版本）。
+    -k 跳过证书校验，-L 跟随重定向，--max-time 是 curl 侧超时（CURL_TIMEOUT 秒），
+    subprocess 再套 120 秒上限兜底。
+
+    超时、curl 非 0 退出、空响应都只 warn 并返回 None，由调用方跳过该条；
+    不抛异常，避免单页失败中断整站采集。
+    """
     cmd = [
         "curl",
         "-sS",
@@ -394,6 +475,7 @@ def fetch(url, host, local="127.0.0.1"):
 
 
 def page_title(doc):
+    """整页 HTML -> 标题文本：优先 <title>，没有就退回第一个 <h1>，都没有返回 None。"""
     m = re.search(r"<title[^>]*>(.*?)</title>", doc, re.I | re.S)
     if m:
         return m.group(1)
@@ -402,7 +484,11 @@ def page_title(doc):
 
 
 def drop_html_noise(doc):
-    """从整页 HTML 里摘出正文区域，丢掉页面骨架/导航/页脚等噪声。"""
+    """从整页 HTML 里摘出正文区域。
+
+    先丢掉 script / style / svg 等整段，再丢 <head>、<nav> / <footer> / <aside>，
+    最后丢掉 form 与其控件标签。返回仍是 HTML 片段（标签由调用方交给 strip_tags 清）。
+    """
     text = _DROP_BLOCK.sub(" ", doc)
     text = re.sub(r"<head\b[^>]*>.*?</head\s*>", " ", text, flags=re.I | re.S)
     text = re.sub(r"<(nav|footer|aside)\b[^>]*>.*?</\1\s*>", " ", text, flags=re.I | re.S)
@@ -411,7 +497,12 @@ def drop_html_noise(doc):
 
 
 def extract_main_region(doc, segments):
-    """按 <section id="X"> 切分 main 站页面。"""
+    """按 <section id="..."> 把 main 站单页切成多块。
+
+    segments 是 [(segment_id, 文件路径)]，只用来生成 id 的 OR 正则；
+    返回 {segment_id: 该 section 起点到下一个 section 起点的 HTML}。
+    渲染结果里没有的 segment 不会出现在返回值里，由调用方记 skipped_empty。
+    """
     regions = {}
     pattern = re.compile(
         r'<section[^>]*\bid\s*=\s*"(%s)"[^>]*>' % "|".join(re.escape(s) for s, _ in segments),
@@ -424,13 +515,20 @@ def extract_main_region(doc, segments):
     return regions
 
 
-# ---------------------------------------------------------------------------
-# 各站采集
-# ---------------------------------------------------------------------------
+# ---- 各站采集 ----
+# 采集函数都接收 per_site 里的统计 dict 并就地累加 rows / skipped_empty /
+# skipped_asset，返回条目列表；单条失败只 warn + 计数，不抛异常。
+# 当前只有 collect_blog 与 collect_mc 会被调用，其余三个保留未接入（见 SITES）。
 
 
 def parse_wp_config(path):
-    """从 wp-config.php 读 DB_* 常量（不写死口令）。"""
+    """从 wp-config.php 里读 DB_* 常量。
+
+    只取 DB_NAME / DB_USER / DB_PASSWORD / DB_HOST / DB_CHARSET 这几个 define，
+    口令不在代码里出现；三者缺任一项、或文件读不到时抛 RuntimeError，
+    由 main() 捕获后跳过整站。
+    返回 dict（DB_HOST 缺省 127.0.0.1，字符串已按 PHP 转义还原）。
+    """
     try:
         src = read_text(path)
     except OSError as exc:
@@ -453,7 +551,11 @@ def parse_wp_config(path):
 
 
 def unescape_php_string(s):
-    """PHP 单引号/双引号字符串里常见的转义。"""
+    """还原 PHP 字符串里的反斜杠转义（连写反斜杠、\\'、\\"、\\$）。
+
+    没有反斜杠时原样返回。先把连续反斜杠换成占位符再处理其余转义，
+    避免 \\\\' 被误判成「已转义的单引号」。
+    """
     if "\\" not in s:
         return s
     return (
@@ -466,7 +568,10 @@ def unescape_php_string(s):
 
 
 def mysql_backend():
-    """挑一个能连上 MariaDB 的客户端；**必须走 TCP**（socket 路径不对会 ERROR 2002）。"""
+    """挑一个可用的 MySQL 客户端命令：优先 mariadb，其次 mysql。
+
+    返回 (kind, cmd)；两个都没有时抛 RuntimeError。
+    """
     for kind, cmd in (("mariadb", "mariadb"), ("mysql", "mysql")):
         try:
             subprocess.run([cmd, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -477,7 +582,13 @@ def mysql_backend():
 
 
 def run_query(cfg, sql, backend):
-    """用 --defaults-extra-file 传凭据，避免口令出现在进程参数里。"""
+    """执行一条 SQL，返回 --batch --raw 的原始 stdout。
+
+    凭据写在临时 .cnf 里用 --defaults-extra-file 传入：口令不进进程参数（ps 可见），
+    文件权限 0600、查询结束即删除。连接固定走 TCP 127.0.0.1，避免 socket 路径
+    与面板配置不一致时连不上。字符集统一 utf8mb4。
+    查询失败抛 RuntimeError（带客户端 stderr）；不重试。
+    """
     kind, cmd = backend
     fd, cnf = tempfile.mkstemp(prefix=".search-index-", suffix=".cnf")
     try:
@@ -506,8 +617,8 @@ def run_query(cfg, sql, backend):
 
 
 _RAW_CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-# 文本列一律用 HEX() 取原始字节、在 Python 侧解码：不依赖 mysql 客户端的转义
-# （--batch 会把 \n 转成字面量、内容里还有裸 CR，行结构很容易被打乱）。
+# 文本列一律用 HEX() 取原始字节、在 Python 侧解码：正文里可能带换行、制表符
+# 或裸 CR，直接取文本会把按行与按 \t 切分的表格结构打乱。
 _COLS = (
     "ID, HEX(post_type), HEX(post_status), HEX(post_title), HEX(post_name), "
     "HEX(post_date), HEX(post_excerpt), HEX(post_content), post_parent, post_author"
@@ -516,6 +627,7 @@ _COL_COUNT = 10
 
 
 def hex_to_text(value):
+    """HEX() 列 -> 文本：NULL / 空串 / 非法十六进制都返回 ""。"""
     if value is None or value == "" or value.upper() == "NULL":
         return ""
     try:
@@ -525,14 +637,24 @@ def hex_to_text(value):
 
 
 def sql_escape(s):
+    """按 MySQL 字符串字面量转义：反斜杠、单引号、换行。
+
+    用于把值拼进 -e 的 SQL（没有参数化通道）；拼完仍需由调用方加引号。
+    """
     return s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
 
 
 def collect_blog(stat):
-    """blog：直接读 post_content + post_excerpt。
+    """blog（WordPress）：直接读 wp_posts 的 post_content 与 post_excerpt。
 
-    白名单写死在 SQL 里：post_type IN ('post','page') AND post_status='publish'，
-    revision / attachment / auto-draft / nav_menu_item / micropost ... 全部不进结果集。
+    SQL 白名单写死：post_type IN ('post','page') AND post_status='publish'，
+    revision / attachment / auto-draft / nav_menu_item / micropost 等不进结果集。
+    另查两次：wp_users 取作者（user_login 与 display_name 都收，搜哪个都能中）、
+    wp_term_relationships 取分类与标签。正文与摘要都过 shortcode 与标签清洗，
+    摘要不在正文里时前置拼接，保证摘要里的字同样能被搜到。
+
+    就地累加 stat["blog"] 的 rows / skipped_empty；正文为空的条目只 warn 不产出。
+    返回条目列表。数据库连不上、wp-config.php 缺项等异常向上抛，由 main() 跳过整站。
     """
     cfg = parse_wp_config(WP_CONFIG)
     backend = mysql_backend()
@@ -636,6 +758,7 @@ def collect_blog(stat):
         excerpt = strip_tags(strip_shortcodes(pexcerpt or ""))
         text = strip_tags(strip_shortcodes(body))
         if excerpt and excerpt not in text:
+            # 摘要没出现在正文里（主题手写摘要）时前置拼上，摘要里的字也能被搜到
             text = (excerpt + " " + text).strip()
         fallback = pname or ("%s-%s" % (ptype, pid))
         title = clean_title(ptitle, fallback)
@@ -662,6 +785,12 @@ def collect_blog(stat):
 
 
 def wp_permalink(ptype, slug, pid, parent, page_slugs, domain):
+    """拼出 blog 条目的对外 URL（固定 https、以 / 结尾）。
+
+    post 直接用 slug；page 沿 post_parent 往上收集父级 slug，拼成层级路径，
+    最多回溯 10 层，父级取不到或出现环就停在当前层级。
+    slug 为空时退回 ?p=<id> 形式。
+    """
     slug = (slug or "").strip()
     if not slug:
         slug = "?p=%s" % pid
@@ -682,10 +811,17 @@ def wp_permalink(ptype, slug, pid, parent, page_slugs, domain):
 
 
 def collect_mc(stat):
-    """mc：VitePress 文档页面 docs/**/*.md。
+    """mc（VitePress 文档）：扫 docs/**/*.md，一条文档一条索引。
 
-    站点根 /www/wwwroot/mc，docs 目录 = <root>/docs。
-    排除 .vitepress/（配置目录）、public/、node_modules/、scripts/、README。
+    站点根取 SITES 里的 /www/wwwroot/mc，文档目录 = <root>/docs；
+    跳过 MC_PRUNE_DIRS（.vitepress / public / node_modules / scripts / dist / cache 等）、
+    点开头目录与 README。
+    URL 由相对路径推出（去掉 index 后缀），date 取文件 mtime。
+    标题优先级：侧边栏文案 > 正文第一个 h1 > frontmatter title > 路径末段；
+    首页（layout: home）正文通常为空，改用 frontmatter 的 hero / features 当正文。
+
+    就地累加 stat["mc"] 的 rows / skipped_empty；读不到或正文为空的条目只 warn。
+    返回条目列表；docs 目录不存在时 warn 并返回空列表。
     """
     site_meta = SITE_MAP["mc"]
     domain = site_meta[2]
@@ -750,7 +886,11 @@ _FM_LINE = re.compile(r"^\s*(?:-\s*)?([A-Za-z_][\w-]*)\s*:\s*(.*)$")
 
 
 def frontmatter_text(src):
-    """把 frontmatter 的键值对拼成可检索文本（首页 hero/features 用）。"""
+    """把 frontmatter 的键值对拼成一段可检索文本（首页 hero / features 用）。
+
+    只取「值」不看键；src / link / image / logo / pattern 这些资源路径跳过，
+    纯 `key:` 空行与注释行也跳过。没有 frontmatter 时返回 ""。
+    """
     m = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", src, re.S)
     if not m:
         return ""
@@ -772,7 +912,12 @@ def frontmatter_text(src):
 
 
 def read_sidebar(docs_root):
-    """从 config.mts / config.ts / config.js 里抠出 link -> 侧边栏文案。"""
+    """读 VitePress 侧边栏配置，抠出「路由 -> 显示文案」。
+
+    依次找 .vitepress/config.mts / config.ts / config.mjs / config.js，
+    用第一个存在的文件；匹配 text 与 link 相邻出现的条目，
+    键是 link 去掉尾斜杠再转小写后的路由。返回 dict，没有配置文件时为空。
+    """
     mapping = {}
     cfg_dir = os.path.join(docs_root, ".vitepress")
     for name in ("config.mts", "config.ts", "config.mjs", "config.js"):
@@ -790,10 +935,15 @@ def read_sidebar(docs_root):
 
 
 def collect_main(stat):
-    """main：pages/*.php 是页面（includes/ components/ config.php README cache 都不收）。
+    """main：pages/*.php 各算一个页块（未接入 SITES，当前不会执行）。
 
-    所有 section 在同一页里服务端渲染 + 锚点切换，所以先抓一次整页，
-    再按 <section id="X"> 切块，每块出一条。
+    文件名命中 MAIN_SKIP_FILES（README / config.php / 点开头等）的跳过。
+    所有 section 在同一页里服务端渲染 + 锚点切换，所以只抓一次整页，
+    再按 <section id="..."> 切块，每块出一条，URL 是首页 + #锚点。
+    标题用 components 里 $tabs 的导航文案，退回「文案 - 站点标题」或文件名。
+
+    整页抓取失败时整站跳过；找不到对应 section 或正文为空记 skipped_empty。
+    返回条目列表。
     """
     site_meta = SITE_MAP["main"]
     root = site_meta[3]
@@ -854,7 +1004,12 @@ def collect_main(stat):
 
 
 def read_tab_labels(root):
-    """导航文案来自 components/tab-bar.php 的 $tabs（只读，不索引它）。"""
+    """从导航模板里读 section id -> 导航文案（只读，模板本身不索引）。
+
+    依次试 components/tab-bar.php、components/sidebar.php、includes/header.php，
+    解析 $tabs 里成对的 id / label（两种书写顺序都认），第一个解析出结果的文件生效。
+    返回 dict，取不到时为空。
+    """
     labels = {}
     for rel in ("components/tab-bar.php", "components/sidebar.php", "includes/header.php"):
         path = os.path.join(root, rel)
@@ -874,7 +1029,13 @@ def read_tab_labels(root):
 
 
 def collect_oitr(stat):
-    """oitr：静态 html 页面；资源文件、脚本、README、测试页、404 都不收。"""
+    """oitr：扫静态 html 页面（未接入 SITES，当前不会执行）。
+
+    目录按 OITR_SKIP_DIRS 剪掉（assets / lib / node_modules / fonts / images 等），
+    文件名按 OITR_SKIP_FILES 排除（404、README、测试页等）。
+    首页 index.html 映射成站点根 URL，其余按相对路径拼；date 取文件 mtime。
+    就地累加 stat["oitr"]，正文为空的跳过。返回条目列表。
+    """
     site_meta = SITE_MAP["oitr"]
     root = site_meta[3]
     domain = site_meta[2]
@@ -916,10 +1077,12 @@ def collect_oitr(stat):
 
 
 def collect_rdm(stat):
-    """rdm：urls.txt 里列的页面；其它（index.php 的重定向逻辑）不是页面。
+    """rdm：按 urls.txt 逐个抓取页面（未接入 SITES，当前不会执行）。
 
-    urls.txt 目前全部是 .webp 图片，图片不能索引 —— 只有条目本身是可读页面
-    （html/htm 或路径末段像文章 slug）时才收，其余按「资源文件」跳过。
+    urls.txt 一行一个地址，# 开头是注释。条目先归一成 https 页面：
+    图片、视频、压缩包、css/js 等资源扩展名直接算「非页面资源」，记 skipped_asset；
+    同一 URL 只抓一次。抓取失败或正文为空记 skipped_empty。
+    这类条目没有可信日期，date 一律写 null。返回条目列表。
     """
     site_meta = SITE_MAP["rdm"]
     root = site_meta[3]
@@ -964,7 +1127,11 @@ _ASSET_EXT = re.compile(
 
 
 def normalize_page_url(raw, domain):
-    """urls.txt 条目 -> (https 页面 URL, 抓取用的 host)；资源文件返回 None。"""
+    """urls.txt 条目 -> (https 页面 URL, 抓取用的 host)。
+
+    补全协议、去掉 userinfo 与端口得到 host；路径末段命中 _ASSET_EXT
+    说明是资源文件，返回 None。domain 参数当前未参与拼接（保留签名）。
+    """
     url = raw.strip()
     if url.startswith("//"):
         url = "https:" + url
@@ -983,6 +1150,7 @@ def normalize_page_url(raw, domain):
 
 
 def title_from_url(url):
+    """网页 URL -> 标题：取末段，去掉 .html/.htm，下划线与连字符换成空格。"""
     m = re.match(r"^https?://[^/]+/(.*)$", url)
     tail = (m.group(1) if m else "").strip("/")
     tail = tail.split("?")[0].split("#")[0]
@@ -992,7 +1160,7 @@ def title_from_url(url):
 
 
 def page_date(path):
-    """文件日期 -> YYYY-MM-DD（作为 doc/page 的 date）。"""
+    """文件 mtime -> "YYYY-MM-DD"，作为无更好来源的 doc / page 的 date；取不到返回 None。"""
     try:
         ts = os.path.getmtime(path)
     except OSError:
@@ -1000,13 +1168,17 @@ def page_date(path):
     return datetime.date.fromtimestamp(ts).isoformat()
 
 
-# ---------------------------------------------------------------------------
-# 自检
-# ---------------------------------------------------------------------------
+# ---- 自检 ----
 
 
 def verify(items, known_slugs=None):
-    """按契约最后一节自检；返回问题列表（空 = 通过）。"""
+    """按字段契约检查整份索引，返回问题描述列表（空列表 = 通过）。
+
+    检查项：必填字段非空、type 合法且与 site 匹配、date 缺失或为 YYYY-MM-DD、
+    url 必须是 https 且域名在白名单内并与 site 对应、text 已截断、
+    全局 url 不重复；known_slugs 不为 None 时再加一道 blog 来源核对。
+    只读，不改动 items。
+    """
     errors = []
     required = ("site", "title", "url", "text")
     valid_types = ("post", "page", "doc")
@@ -1021,7 +1193,7 @@ def verify(items, known_slugs=None):
         if "type" not in it or it.get("type") not in valid_types:
             errors.append("%s type 非法: %r" % (tag, it.get("type")))
         elif it.get("type") not in ALLOWED_TYPES.get(it.get("site"), valid_types):
-            # post 只来自 blog、doc 只来自 mc；main/rdm 是页面但不是 VitePress 文档
+            # 各站只出自己的 type：post/doc 分别只来自 blog/mc，单页站只出 page
             errors.append(
                 "%s type 与 site 不符: site=%s type=%s"
                 % (tag, it.get("site"), it.get("type"))
@@ -1052,7 +1224,8 @@ def verify(items, known_slugs=None):
             if known_slugs is not None and not is_blog_url_whitelisted(url, known_slugs):
                 errors.append("%s blog url 对应不到 post/page: %s" % (tag, url))
         text = it.get("text") or ""
-        # 契约要求「截断到 1200 字符」：检查的是截断语义，不是硬上限（首个词就可能超长）
+        # text 必须已经是 truncate(text, TEXT_LIMIT) 的结果：
+        # 检查的是截断语义，不是硬上限（截断点可能落在语义边界，长度不到 limit）
         if text and truncate(text, TEXT_LIMIT) != text:
             errors.append("%s text 未截断到 %d 字符 (%d)" % (tag, TEXT_LIMIT, len(text)))
     # 重复 URL
@@ -1067,6 +1240,10 @@ def verify(items, known_slugs=None):
 
 
 def is_blog_url_whitelisted(url, known_slugs):
+    """blog URL 的路径是否对应库里的 post/page。
+
+    去掉域名后按整条路径查 known_slugs；?p=<id> 短链接形式直接放行。
+    """
     stem = re.sub(r"^https://blog\.dreamgary\.cn/", "", url).strip("/")
     if stem.startswith("?p="):
         return True
@@ -1074,7 +1251,11 @@ def is_blog_url_whitelisted(url, known_slugs):
 
 
 def blog_slug_set():
-    """从 DB 取 post/page 的 slug 集合，用于核对 blog 条目来源。"""
+    """从数据库取已发布 post/page 的 slug 集合，供 verify 核对 blog 条目来源。
+
+    取不到（wp-config 缺失、连不上库）时只 warn 并返回 None，
+    调用方据此跳过来源核对，避免自检把整次构建打挂。
+    """
     try:
         cfg = parse_wp_config(WP_CONFIG)
         backend = mysql_backend()
@@ -1096,17 +1277,22 @@ def blog_slug_set():
     return slugs
 
 
-# ---------------------------------------------------------------------------
-# 输出
-# ---------------------------------------------------------------------------
+# ---- 输出 ----
 
 
 def overall_date(items):
+    """条目里最新的 date；没有带日期的条目时返回 None。当前构建流程未调用。"""
     dates = [it["date"] for it in items if it.get("date")]
     return max(dates) if dates else None
 
 
 def print_report(items, per_site, out_path, dry_run, write_error=None):
+    """把各站收录数、站点根与输出情况打到 stdout。
+
+    per_site 是采集阶段累计的统计；候选数与实际收录数不同、或有跳过项时括号里给出原因。
+    dry_run 时只打印「预计写到哪」；write_error 非空时打印写入失败原因，不报文件大小。
+    只写 stdout，不返回值。
+    """
     order = [s[0] for s in SITES]
     print("")
     print("== 各站收录 ==")
@@ -1146,10 +1332,17 @@ def print_report(items, per_site, out_path, dry_run, write_error=None):
 
 
 def items_by_site(items, site):
+    """挑出属于某个 site 的条目（只做过滤，不改顺序）。"""
     return [it for it in items if it.get("site") == site]
 
 
 def write_index(out_path, items):
+    """写 JSON 产物，返回写入的字节数（UTF-8）。
+
+    先写同目录下的 .tmp.<pid> 再 os.replace 原子替换，前端不会读到写了一半的文件；
+    目录不存在会自动创建。JSON 用紧凑分隔符、不转义中文，减小体积。
+    磁盘错误以 OSError 抛出，由调用方决定退出码。
+    """
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     payload = {
         "generatedAt": generated_at(),
@@ -1165,13 +1358,14 @@ def write_index(out_path, items):
 
 
 def generated_at():
+    """当前本地时区的 ISO 8601 时间（秒精度），写进 JSON 的 generatedAt。"""
     return datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 
 
-# ---------------------------------------------------------------------------
-# 离线自测
-# ---------------------------------------------------------------------------
+# ---- 离线自测 ----
 
+# 每条 = (无参 lambda, 期望值)。只覆盖纯函数（清洗 / 日期 / 标题 / permalink / 校验器），
+# 不联网、不读站点文件，也不写产物，可以直接在任意机器上运行。
 SELF_TESTS = [
     (lambda: strip_tags("<p>hello <b>world</b></p><script>alert(1)</script>"), "hello world"),
     (
@@ -1236,6 +1430,12 @@ SELF_TESTS = [
 
 
 def verifier_probe():
+    """verify() 的正反用例：正常条目必须全部通过，各类坏字段必须被拒。
+
+    返回 "ok"；否则返回第一处不符合预期的说明（供 SELF_TESTS 比对）。
+    good 里那条 main 条目要求 main 在 SITES 中才能通过校验：
+    main 未接入 SITES 时它会因「域名不在白名单 / site 非法」被判成问题。
+    """
     good = [
         make_item("blog", "post", "t", "https://blog.dreamgary.cn/t/", "x" * 10, "2026-10-17"),
         make_item("main", "page", "t", "https://www.dreamgary.cn/#home", "x", None),
@@ -1281,6 +1481,10 @@ def verifier_probe():
 
 
 def self_test():
+    """逐条跑 SELF_TESTS，打印失败项与期望值。
+
+    返回退出码：全部通过 0，有失败 1。只读写 stdout，不碰文件与网络。
+    """
     failed = 0
     for idx, (fn, expected) in enumerate(SELF_TESTS):
         try:
@@ -1299,10 +1503,10 @@ def self_test():
     return 0
 
 
-# ---------------------------------------------------------------------------
-# main
-# ---------------------------------------------------------------------------
+# ---- main ----
 
+# site id -> 采集函数。只有列在 SITES 里的站会被 main() 调用，
+# 其余三个保留着，接入站点时直接加进 SITES 即可。
 DEFAULT_COLLECTORS = {
     "blog": collect_blog,
     "main": collect_main,
@@ -1313,6 +1517,15 @@ DEFAULT_COLLECTORS = {
 
 
 def main(argv=None):
+    """入口：采集 -> 排序 -> 自检 -> 写文件 -> 打印报告。
+
+    argv 为 None 时取 sys.argv[1:]（方便测试传入参数列表）。
+    --site 可重复，只跑其中列出的站；--dry-run 不写文件；--no-verify 跳过自检；
+    --self-test 只跑离线自测后返回。
+
+    单站采集抛异常时只 warn + 打 traceback 并跳过该站，不中断其它站。
+    返回退出码：0 成功；1 写文件失败；2 自检不通过（此时不写文件）。
+    """
     ap = argparse.ArgumentParser(description="生成全域搜索索引 search-index.json")
     ap.add_argument("--out", default=DEFAULT_OUT, help="输出路径（默认 %s）" % DEFAULT_OUT)
     ap.add_argument("--dry-run", action="store_true", help="只打印统计，不写文件")
@@ -1343,7 +1556,7 @@ def main(argv=None):
         info("  %s: %d 条" % (site, len(got)))
         items.extend(got)
 
-    # 排序：站点顺序 -> 日期倒序 -> 标题
+    # 排序键：站点在 SITES 里的顺序 -> date 升序（None 用 0000-00-00 占位，排最前）-> 标题升序
     site_order = dict((s[0], i) for i, s in enumerate(SITES))
     items.sort(key=lambda it: (site_order.get(it["site"], 99), neg_date(it.get("date")), it.get("title") or ""))
 
@@ -1377,6 +1590,7 @@ def main(argv=None):
 
 
 def neg_date(date):
+    """排序用的 date 键：None 用 "0000-00-00" 占位以保证可比较，不做取负。"""
     return date or "0000-00-00"
 
 

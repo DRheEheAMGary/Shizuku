@@ -1,11 +1,11 @@
 /* ============================================================================
  *  Shizuku · 登录状态
  * ----------------------------------------------------------------------------
- *  启动时：先读本地快照把界面点亮，再尝试消费 OAuth 回调。
- *  回调消费成功就换成真实资料；失败则清掉并给出错误。
+ *  启动时先读本地快照把界面点亮，再尝试消费 OAuth 回调：
+ *  成功就换成真实资料，失败则清掉中间态并抛出可展示的错误。
  *
- *  access_token 不出现在任何 React 状态里 —— 只在 handleCallback 内部
- *  用一次拿 userinfo，随后丢弃。界面只依赖 sub / name / picture 这些公开字段。
+ *  本地只存 sub / 昵称 / 头像 / 邮箱这类公开字段。access_token 不进入任何
+ *  React 状态，只在 handleCallback 内部用一次拿 userinfo，随后丢弃。
  * ========================================================================== */
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
@@ -33,6 +33,7 @@ let callbackConsumed = false
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SsoUser | null>(loadUser)
+  // 带 code + state 说明这是 OAuth 回跳，先按「处理中」渲染
   const [loading, setLoading] = useState(() => {
     const p = new URLSearchParams(window.location.search)
     return p.has('code') && p.has('state')

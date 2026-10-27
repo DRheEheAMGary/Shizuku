@@ -1,7 +1,8 @@
 /* ============================================================================
  *  Shizuku · Github
  * ----------------------------------------------------------------------------
- *  GitHub 主页入口 / 贡献热力图 / 仓库链接。
+ *  三张卡片：GitHub 主页入口、贡献热力图、仓库列表。
+ *  数据取 profile.github，热力图自己按登录名去 SSO 代理取数。
  * ========================================================================== */
 
 import { GlassCard } from '@/components/GlassCard'
@@ -39,6 +40,7 @@ export function Github() {
             </div>
           </GlassCard>
 
+          {/* 热力图自带加载 / 失败 / 未绑定三种降级，这里不需要额外包状态 */}
           <GlassCard span={8} title="贡献热力图" icon="github" className="span-8">
             <GithubHeatmap login={github.username} />
           </GlassCard>
