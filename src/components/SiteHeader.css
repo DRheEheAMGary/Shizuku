@@ -168,13 +168,15 @@
     margin-right 420ms var(--ease-apple);
 }
 
-/*  折射必须排在模糊**前面**。
- *  Chromium 给 backdrop 做降采样时按模糊半径决定采样面尺寸，
- *  blur 在 url() 之前会把位移几乎全部抹掉（实测：blur(12px)+url 只剩一片灰，
- *  blur(4px)+url 或 url+blur(12px) 才正常）。所以这里先掰弯、再模糊。 */
+/*  折射链里**不放模糊**：
+ *  1. Chromium 给 backdrop 做降采样时按模糊半径决定采样面尺寸，blur 排在 url()
+ *     之前会把位移几乎抹平（blur 在后还行，但在前就废）；
+ *  2. 干脆不要模糊 —— 玻璃的柔化交给折射本身与半透底色，
+ *     背后的画面才会像隔着真玻璃那样被"掰弯"而不是被糊掉。
+ *  不支持 url() 的浏览器不会拿到 data-liquid，走上面的纯模糊兜底。 */
 .site-header[data-liquid] {
-  -webkit-backdrop-filter: var(--lg-filter) blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: var(--lg-filter) blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
 }
 
 .site-header-wrap.is-collapsed .site-header {
