@@ -57,8 +57,15 @@ interface Lens {
 
 const MAPS = new Map<string, Map>()
 const LENSES = new WeakMap<HTMLElement, Lens>()
-/** 每个元素最近一次用过的贴图：过渡中先拿它拉伸顶住，避免逐帧重画 */
-const LASTMAP = new WeakMap<HTMLElement, Map>()
+/** 每个元素最近一次用过的贴图，以及它是按多大尺寸烘的 */
+const LASTMAP = new WeakMap<HTMLElement, { map: Map; width: number; height: number; density: number }>()
+
+/**
+ * 动画里多大的尺寸差才值得重画一张。
+ * 实测：尺寸动到 16px 之外，倒角/厚度的变化才勉强能看出来（0.2px 量级起）；
+ * 比这更小的差别直接拿上一张拉伸，省掉逐帧生成 PNG + 上传纹理 —— 这才是卡的主因。
+ */
+const REBAKE_STEP = 16
 let defs: SVGDefsElement | null = null
 let serial = 0
 
@@ -103,8 +110,7 @@ function profile(bezel: number, thickness: number): { samples: Float32Array; max
 /*  ---------- 2. 生成位移图与高光图 ----------
  *  位移图：R 通道 = x 偏移、G 通道 = y 偏移，128 表示不偏移（中性）。
  *  高光图：白色 + alpha，越靠近边框越亮，铺在玻璃表面当镜面反光。 */
-function buildMap(width: number, height: number, radius: number, shape: Shape): Map {
-  const density = Math.min(devicePixelRatio || 1, 2)
+function buildMap(width: number, height: number, radius: number, shape: Shape, density: number): Map {
   const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.12, 4, 10)
   const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.2, 8, 24)
   const { samples, maximum } = profile(bezel, thickness)
@@ -175,11 +181,11 @@ function buildMap(width: number, height: number, radius: number, shape: Shape): 
 const MAP_LIMIT = 48
 
 /** 同尺寸的玻璃复用同一份贴图（3 个 37px 圆钮只烘焙一次） */
-function mapFor(width: number, height: number, radius: number, shape: Shape): Map {
-  const key = keyOf(width, height, radius, shape)
+function mapFor(width: number, height: number, radius: number, shape: Shape, density: number): Map {
+  const key = keyOf(width, height, radius, shape) + '@' + density
   const cached = MAPS.get(key)
   if (cached) return cached
-  const built = buildMap(width, height, radius, shape)
+  const built = buildMap(width, height, radius, shape, density)
   MAPS.set(key, built)
   if (MAPS.size > MAP_LIMIT) {
     //  淘汰最早的一张（Map 保持插入顺序）
@@ -280,35 +286,58 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   if (!width || !height) return false
 
   const { radius, shape } = readShape(element, width, height)
-  const key = keyOf(width, height, radius, shape)
+  const previous = LASTMAP.get(element)
 
-  let map = MAPS.get(key)
+  //  动画中：尺寸只挪了几像素就继续用上一张（拉伸），不重新生成 PNG。
+  //  收尾（mode='exact'）时无条件按最终尺寸烘一张全分辨率的。
+  const near =
+    previous &&
+    Math.abs(width - previous.width) < REBAKE_STEP &&
+    Math.abs(height - previous.height) < REBAKE_STEP
+
+  let map: Map
+  let density: number
   let stretched = false
-  if (!map) {
-    const previous = LASTMAP.get(element)
-    //  小元素直接按当前尺寸烘焙（1–2ms，动画每帧都扛得住，边缘始终精确）；
-    //  大元素才退而求其次用拉伸。
-    if (mode === 'auto' && previous && width * height > BAKE_AREA_LIMIT) {
-      map = previous
+  if (mode === 'auto' && previous && near) {
+    map = previous.map
+    density = previous.density
+    stretched = true
+  } else {
+    //  动画中先按 dpr 1 烘，省一半以上的像素与纹理；停稳后再换全分辨率
+    density = mode === 'exact' ? Math.min(devicePixelRatio || 1, 2) : 1
+    const big = width * height * density * density > BAKE_AREA_LIMIT
+    if (mode === 'auto' && previous && big) {
+      map = previous.map
+      density = previous.density
       stretched = true
     } else {
-      map = mapFor(width, height, radius, shape)
+      map = mapFor(width, height, radius, shape, density)
     }
   }
-  LASTMAP.set(element, map)
+  LASTMAP.set(element, { map, width, height, density })
 
   const lens = lensFor(element)
-  const box = { x: 0, y: 0, width, height }
-  for (const [name, value] of Object.entries(box)) {
-    lens.filter.setAttribute(name, String(value))
-    lens.image.setAttribute(name, String(value))
+  //  盒子没变就别写属性：写一次会让 Chromium 丢弃滤镜结果重算
+  const boxW = `${width}x${height}`
+  if (lens.filter.getAttribute('data-box') !== boxW) {
+    lens.filter.setAttribute('data-box', boxW)
+    for (const [name, value] of Object.entries({ x: 0, y: 0, width, height })) {
+      lens.filter.setAttribute(name, String(value))
+      lens.image.setAttribute(name, String(value))
+    }
+    lens.displace.setAttribute('scale', String(map.maximum * 2 * shape.level))
   }
-  lens.image.setAttribute('href', map.displacement)
-  lens.displace.setAttribute('scale', String(map.maximum * 2 * shape.level))
+  if (lens.image.getAttribute('href') !== map.displacement) {
+    lens.image.setAttribute('href', map.displacement)
+  }
 
   element.dataset.liquid = ''
-  element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
-  element.style.setProperty('--lg-rim', `url("${map.highlight}")`)
+  if (element.style.getPropertyValue('--lg-filter') !== `url("#${lens.filter.id}")`) {
+    element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
+  }
+  if (element.style.getPropertyValue('--lg-rim') !== `url("${map.highlight}")`) {
+    element.style.setProperty('--lg-rim', `url("${map.highlight}")`)
+  }
 
   return stretched
 }
