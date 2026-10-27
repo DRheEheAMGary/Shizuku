@@ -83,6 +83,8 @@ export function useWeather() {
   const [weather, setWeather] = useState<Weather | null>(null)
   const [place, setPlace] = useState<Place | null>(null)
   const [failed, setFailed] = useState(false)
+  /** 失败是被浏览器拦下的（权限被 block），还是超时/不可用 —— 两者的挽救方式不一样 */
+  const [blocked, setBlocked] = useState(false)
 
   /**
    * 用一组坐标并行拉天气与地址，共用一个 AbortController 与 15s 超时。
@@ -137,10 +139,17 @@ export function useWeather() {
     setLocate('asking')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        setBlocked(false)
         setLocate('granted')
         load(pos.coords.latitude, pos.coords.longitude)
       },
-      () => setLocate('denied'),
+      (err) => {
+        //  1 = PERMISSION_DENIED：浏览器把这个站点的定位拉黑了，
+        //  再点按钮也不会弹窗，必须去站点设置里恢复。
+        //  2 / 3 = 位置不可用 / 超时，重试有意义。
+        setBlocked(err.code === 1)
+        setLocate('denied')
+      },
       {
         // 只要城市级精度，关掉高精度可以更快出结果
         enableHighAccuracy: false,
@@ -151,7 +160,10 @@ export function useWeather() {
     )
   }, [load])
 
-  // 进入时先查权限状态：已授权就直接取，没授权就等用户点按钮
+  //  进入时先查权限状态：已授权就直接取，没授权就等用户点按钮。
+  //  同时订阅权限变化 —— 用户去地址栏把定位改回「允许」之后，
+  //  不用刷新页面就能自己恢复（这是之前「点了授权也没用」的死角：
+  //  浏览器一旦 block，再调 getCurrentPosition 只会立刻失败）。
   useEffect(() => {
     if (!('geolocation' in navigator)) {
       setLocate('unsupported')
@@ -162,14 +174,39 @@ export function useWeather() {
       setLocate('prompt')
       return
     }
+
+    let alive = true
+    let status: PermissionStatus | undefined
+
+    const sync = () => {
+      if (!alive || !status) return
+      if (status.state === 'granted') {
+        setBlocked(false)
+        request()
+      } else if (status.state === 'denied') {
+        setBlocked(true)
+        setLocate('denied')
+      } else {
+        setBlocked(false)
+        //  刚从 denied 放开时，界面停在「被拦」，要退回到可点状态
+        setLocate((prev) => (prev === 'denied' ? 'prompt' : prev))
+      }
+    }
+
     navigator.permissions
       .query({ name: 'geolocation' })
-      .then((p) => {
-        if (p.state === 'granted') request()
-        else if (p.state === 'denied') setLocate('denied')
-        else setLocate('prompt')
+      .then((s) => {
+        if (!alive) return
+        status = s
+        s.addEventListener('change', sync)
+        sync()
       })
-      .catch(() => setLocate('prompt'))
+      .catch(() => alive && setLocate('prompt'))
+
+    return () => {
+      alive = false
+      status?.removeEventListener('change', sync)
+    }
   }, [request])
 
   return {
@@ -177,6 +214,8 @@ export function useWeather() {
     place,
     locate,
     failed,
+    /** 权限被浏览器 block（不是超时）—— 界面要给「去站点设置里恢复」的提示 */
+    blocked,
     request,
     /** 已拼好的地址文本，未取到时为空串 */
     address: formatPlace(place),
