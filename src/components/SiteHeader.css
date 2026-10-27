@@ -330,10 +330,14 @@
  *  不用每个链接自己带背景 —— 那样切换时是「闪一下」，不是「滑过去」。 */
 .site-nav__slider {
   position: absolute;
-  top: 0;
+  /*  比导航文字那一条更高：上下各探出 2px，像 iOS 分段控件里被选中的那块，
+   *  文字压在上面而不是被它包住。用 top + 固定高度做居中，
+   *  因为 transform 已经被 JS 拿去写位移了。 */
+  --nav-slider-h: 28px;
+  top: calc(50% - var(--nav-slider-h) / 2);
   left: 0;
   z-index: 0;
-  height: 100%;
+  height: var(--nav-slider-h);
   width: var(--nav-w, 0px);
   border-radius: var(--r-full);
   background: color-mix(in srgb, var(--primary) 16%, transparent);
