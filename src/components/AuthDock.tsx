@@ -60,7 +60,7 @@ export function AuthDock() {
   /** 悬停预览：收起态下悬浮头像，圆往右撑开露出名字和邮箱 */
   const [peek, setPeek] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const { weather, locate, failed, request, address } = useWeather()
+  const { weather, locate, failed, blocked, request, address } = useWeather()
 
   // 本地时间：20 秒刷新一次，分钟数最多滞后 20 秒
   const [now, setNow] = useState(() => new Date())
@@ -242,12 +242,23 @@ export function AuthDock() {
                   <Icon name="logout" size={15} />
                 </button>
 
-                {/*  没授权就盖一层，写清楚要授权什么 */}
+                {/*  没授权就盖一层，写清楚要授权什么。
+                    被浏览器 block 和单纯超时是两回事：前者再点也不会弹窗，
+                    只能去站点设置里放开，所以文案和按钮都要换个说法。 */}
                 {locate !== 'granted' && (
                   <div className="auth-dock__wveil">
-                    <span className="auth-dock__wveil-text">
+                    <span
+                      className="auth-dock__wveil-text"
+                      title={
+                        blocked
+                          ? '浏览器已阻止本站定位：点地址栏左侧的图标 → 网站设置 → 位置 → 允许，再点重试'
+                          : undefined
+                      }
+                    >
                       {locate === 'denied'
-                        ? '已拒绝定位权限'
+                        ? blocked
+                          ? '浏览器已阻止定位'
+                          : '定位失败'
                         : locate === 'unsupported'
                           ? '浏览器不支持定位'
                           : locate === 'asking'
@@ -255,8 +266,13 @@ export function AuthDock() {
                             : '当前无法获取地址'}
                     </span>
                     {locate !== 'asking' && locate !== 'unsupported' && (
-                      <button type="button" className="auth-dock__wgrant" onClick={request}>
-                        授权
+                      <button
+                        type="button"
+                        className="auth-dock__wgrant"
+                        onClick={request}
+                        title={blocked ? '先在上面的站点设置里允许定位，再点这里' : undefined}
+                      >
+                        {locate === 'denied' ? '重试' : '授权'}
                       </button>
                     )}
                   </div>
