@@ -139,26 +139,7 @@
   width: var(--pill-w, fit-content);
   max-width: 100%;
   --glass-radius: var(--r-full);   /* 正圆胶囊：圆角取到高度的一半 */
-  /*  顶栏比全站其它玻璃更透、模糊更小 —— 折射才有东西可掰。
-   *  0.84 白 + 24px 模糊的话，边缘位移完全被糊没了。
-   *  color-mix 让明暗两套主题都还能用同一行。 */
-  --glass-blur: 12px;
-  background: color-mix(in srgb, var(--glass-bg-strong) 58%, transparent);
-
-  /*  ---------- 液态玻璃 ----------
-   *  useRefraction() 会把两条变量写到元素上：
-   *    --lg-filter  形如 url("#shizuku-lens-0")，接在模糊后面，只作用于背后的画面
-   *    --lg-rim     一张 PNG，铺在玻璃表面当边缘高光
-   *  不支持 backdrop SVG 滤镜的浏览器（Safari / Firefox）读到的就是 none，
-   *  观感退回原来的纯模糊，不会坏。 */
-  --lg-bezel: 12px;
-  --lg-thickness: 20px;
-  --lg-refraction: 1.4;
-
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) var(--lg-filter, none);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) var(--lg-filter, none);
-  background-image: var(--lg-rim, none);
-  background-size: 100% 100%;
+  background: var(--glass-bg-strong);
 
   transition:
     box-shadow var(--dur-base) var(--ease-apple),
