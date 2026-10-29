@@ -153,7 +153,9 @@
    *  观感退回原来的纯模糊，不会坏。 */
   --lg-bezel: 12px;
   --lg-thickness: 20px;
-  --lg-refraction: 1.4;
+  /*  折射强度倍率：位移量 = 贴图最大位移 × 2 × 这个值。
+   *  1.4 时边框只"微微推一下"，1.9 开始能明显看到背后的形状被压出弧。 */
+  --lg-refraction: 1.9;
 
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
