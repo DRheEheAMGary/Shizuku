@@ -116,10 +116,10 @@ function profile(bezel: number, thickness: number): { samples: Float32Array; max
 function buildMap(width: number, height: number, radius: number, shape: Shape, density: number): Map {
   /*  折边带宽 / 玻璃厚度：这两个决定"折射那圈有多宽"。
    *  之前是短边的 12% / 20%（夹到 4–10 / 8–24），折射只在最边上一细条；
-   *  现在放到 22% / 34%（夹到 6–18 / 10–32），那圈明显宽出来。
+   *  22% / 34% 是第一档加宽；现在再放到 30% / 45%（夹到 8–26 / 12–40）。
    *  上限别越过短边的一半：bezel 超过短边一半，中间就没"平"的区域了，整块会像被融化。 */
-  const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.22, 6, 18)
-  const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.34, 10, 32)
+  const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.3, 8, 26)
+  const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.45, 12, 40)
   const { samples, maximum } = profile(bezel, thickness)
 
   const canvas = document.createElement('canvas')

@@ -151,8 +151,8 @@
    *    --lg-rim     一张 PNG，铺在玻璃表面当边缘高光
    *  不支持 backdrop SVG 滤镜的浏览器（Safari / Firefox）读到的就是 none，
    *  观感退回原来的纯模糊，不会坏。 */
-  --lg-bezel: 18px;
-  --lg-thickness: 30px;
+  --lg-bezel: 24px;
+  --lg-thickness: 40px;
   /*  折射强度倍率：位移量 = 贴图最大位移 × 2 × 这个值。
    *  1.4 时边框只"微微推一下"，1.9 开始能明显看到背后的形状被压出弧。 */
   --lg-refraction: 1.9;
