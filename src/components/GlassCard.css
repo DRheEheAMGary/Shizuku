@@ -36,11 +36,12 @@
 
 /*  卡片也走液态玻璃（折射由 useGlassCards 挂上），但保留两处差异：
  *    · 底色仍是卡片自己那档 --glass-bg-card（比顶栏更透，大块面积才不会发奶白）；
- *    · 折射之后留一道 8px 模糊 —— 卡片下面压着正文，只做折射会太"透"。
+ *    · 折射之后留一道 4px 模糊 —— 卡片下面压着正文，完全不做模糊会太"透"；
+ *      4px 是"还能看出边缘折射、正文又不飘"的位置。
  *  权重写成三个选择器，确保压过 glass.css 里那条通用规则。 */
 .glass-card[data-liquid][data-liquid] {
   background: var(--glass-bg-card);
-  --liquid-blur: 8px;
+  --liquid-blur: 4px;
   -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
   backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
 }

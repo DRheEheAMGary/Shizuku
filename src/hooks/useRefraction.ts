@@ -176,9 +176,23 @@ function buildMap(width: number, height: number, radius: number, shape: Shape, d
 
   context.putImageData(field, 0, 0)
   const displacement = canvas.toDataURL()
+
+  /*  高光图不需要跟着盒子高分辨率：它就是一道柔和边缘光，铺的时候也是拉伸到
+   *  100% 100%。大卡片按 2000×400 生成 PNG 再转 base64 会拖慢重烘，
+   *  这里统一把高光那一张缩到最长边 320px（浏览器缩放有插值，看不出来）。 */
   context.putImageData(shine, 0, 0)
-  const highlight = canvas.toDataURL()
-  return { displacement, highlight, maximum }
+  const side = Math.max(canvas.width, canvas.height)
+  const scale = Math.min(1, 320 / side)
+  if (scale < 1) {
+    const small = document.createElement('canvas')
+    small.width = Math.max(1, Math.round(canvas.width * scale))
+    small.height = Math.max(1, Math.round(canvas.height * scale))
+    const smallContext = small.getContext('2d')!
+    smallContext.imageSmoothingQuality = 'high'
+    smallContext.drawImage(canvas, 0, 0, small.width, small.height)
+    return { displacement, highlight: small.toDataURL(), maximum }
+  }
+  return { displacement, highlight: canvas.toDataURL(), maximum }
 }
 
 /** 缓存上限：动画里每帧都是一个新尺寸，留太多会把内存吃掉 */

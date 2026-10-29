@@ -53,7 +53,7 @@ export function GlassCard({
   } as CSSProperties
 
   return (
-    <article className={`glass-card glass ${className}`.trim()} style={style} data-card data-liquid-rim="off">
+    <article className={`glass-card glass ${className}`.trim()} style={style} data-card>
       {(title || icon || actions) && (
         <header className="glass-card__head">
           <div className="glass-card__title">
