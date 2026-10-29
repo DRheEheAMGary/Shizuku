@@ -43,7 +43,6 @@ interface Shape {
 /** 一张按某个尺寸烘好的位移贴图 */
 interface Map {
   displacement: string
-  highlight: string
   /** 位移量的理论上限（像素），用来换算 feDisplacementMap 的 scale */
   maximum: number
 }
@@ -124,7 +123,6 @@ function buildMap(width: number, height: number, radius: number, shape: Shape, d
   canvas.height = Math.ceil(height * density)
   const context = canvas.getContext('2d')!
   const field = context.createImageData(canvas.width, canvas.height)
-  const shine = context.createImageData(canvas.width, canvas.height)
 
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
@@ -159,40 +157,13 @@ function buildMap(width: number, height: number, radius: number, shape: Shape, d
       field.data[i + 2] = 128
       field.data[i + 3] = 255
 
-      //  高光：朝上的一侧最亮（光从上方来），朝下的一侧留一点反射
-      const light = -(nx + ny) * Math.SQRT1_2
-      const glint = Math.max(light, 0) ** 3
-      const reflected = Math.max(-light, 0) ** 3
-      let alpha = 0
-      if (distance >= 0) {
-        const rim = Math.exp(-(((distance - 0.4) / 0.38) ** 2))
-        const bloom = Math.exp(-((distance / (bezel * 0.22)) ** 2))
-        alpha = rim * (0.045 + 0.52 * glint + 0.2 * reflected) + bloom * 0.02 * glint
-      }
-      shine.data[i] = shine.data[i + 1] = shine.data[i + 2] = 255
-      shine.data[i + 3] = Math.round(clamp(alpha, 0, 1) * 255)
     }
   }
 
   context.putImageData(field, 0, 0)
   const displacement = canvas.toDataURL()
 
-  /*  高光图不需要跟着盒子高分辨率：它就是一道柔和边缘光，铺的时候也是拉伸到
-   *  100% 100%。大卡片按 2000×400 生成 PNG 再转 base64 会拖慢重烘，
-   *  这里统一把高光那一张缩到最长边 320px（浏览器缩放有插值，看不出来）。 */
-  context.putImageData(shine, 0, 0)
-  const side = Math.max(canvas.width, canvas.height)
-  const scale = Math.min(1, 320 / side)
-  if (scale < 1) {
-    const small = document.createElement('canvas')
-    small.width = Math.max(1, Math.round(canvas.width * scale))
-    small.height = Math.max(1, Math.round(canvas.height * scale))
-    const smallContext = small.getContext('2d')!
-    smallContext.imageSmoothingQuality = 'high'
-    smallContext.drawImage(canvas, 0, 0, small.width, small.height)
-    return { displacement, highlight: small.toDataURL(), maximum }
-  }
-  return { displacement, highlight: canvas.toDataURL(), maximum }
+  return { displacement, maximum }
 }
 
 /** 缓存上限：动画里每帧都是一个新尺寸，留太多会把内存吃掉 */
@@ -394,16 +365,6 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   if (element.style.getPropertyValue('--lg-filter') !== `url("#${lens.filter.id}")`) {
     element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
   }
-  /*  高光图只在"贴图与盒子严丝合缝"时才挂上。
-   *  尺寸还在变的时候，贴图是被拉伸着用的：每重烘一次，边缘高光就换个幅度，
-   *  面板展开／主题面板弹出时左上角那一下闪动就是它。
-   *  运动过程中干脆只留折射、不画高光，停稳那张精确贴图再挂上去。 */
-  const settled = !stretched && previous?.width === width && previous?.height === height
-  const rim =
-    element.dataset.liquidRim === 'off' || !settled ? 'none' : `url("${map.highlight}")`
-  if (element.style.getPropertyValue('--lg-rim') !== rim) {
-    element.style.setProperty('--lg-rim', rim)
-  }
 
   return stretched
 }
@@ -457,7 +418,6 @@ export function attachRefraction(element: HTMLElement): () => void {
       LASTMAP.delete(element)
       delete element.dataset.liquid
       element.style.removeProperty('--lg-filter')
-      element.style.removeProperty('--lg-rim')
     }
   }
 }
