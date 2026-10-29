@@ -187,8 +187,6 @@
   background-size: 100% 100%;
   /*  顺序很重要：先 url() 做位移（此时采到的是清晰画面），**再** blur 收一道边。
    *  反过来写（blur 在 url 之前）Chromium 会把 backdrop 降采样，位移就被抹平了。 */
-  /*  饱和度只给 1.15：全站的 --glass-sat 是 1.8，那是给"磨砂卡片"压噪声用的，
-   *  放在清透的液态玻璃上会把背后的插画放大成大色块，字反而读不清。 */
-  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--liquid-sat, 1.15));
-  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--liquid-sat, 1.15));
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 2px)) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 2px)) saturate(var(--glass-sat));
 }
