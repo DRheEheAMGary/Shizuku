@@ -65,6 +65,8 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const [hopeful, setHopeful] = useState<string | null>(null)
   const activeHref = hopeful ?? path
   const sliderRef = useRef<HTMLSpanElement>(null)
+  //  导航滑块本身也是一块玻璃：跟着弹簧走的同时做边缘折射
+  useRefraction(sliderRef)
 
   const measureRef = useRef<() => void>(() => {})
 

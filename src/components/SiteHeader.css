@@ -361,6 +361,17 @@
   transition: opacity 180ms var(--ease-fade);
 }
 
+/*  滑块自己的液态玻璃：主体色淡淡染一层，再叠全站共用的那档材质与折射。
+ *  （权重高于 glass.css 里那条通用规则，所以这里说了算。） */
+.site-nav__slider[data-liquid] {
+  background: color-mix(in srgb, var(--primary) 12%, var(--liquid-bg));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+    0 4px 14px color-mix(in srgb, var(--primary) 14%, transparent);
+  --lg-bezel: 5px;
+  --lg-thickness: 9px;
+}
+
 /*  拖动中：关掉过渡（逐帧直给才跟手），并把它"拎起来"一点 ——
  *  缩放 + 阴影加深，是 glisse 那种"手里有一块玻璃"的暗示。 */
 .site-nav.is-dragging .site-nav__slider {
