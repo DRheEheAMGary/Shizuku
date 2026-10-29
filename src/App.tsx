@@ -23,6 +23,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { SiteHeader } from '@/components/SiteHeader'
+import { useGlassCards } from '@/hooks/useRefraction'
 import { PageLoader } from '@/components/PageLoader'
 import { About } from '@/pages/About'
 import { Contact } from '@/pages/Contact'
@@ -217,6 +218,9 @@ function markExitCards(cards: HTMLElement[], kind: TransitionKind, to: string) {
 }
 
 export function App() {
+  //  所有卡片（data-card）都接上液态玻璃：路由切换后新冒出来的会自动补挂
+  useGlassCards()
+
   /** 地址栏当前的路径（点击后立即更新，用于顶栏高亮） */
   const [path, setPath] = useState(readPath)
   /** 当前实际渲染的页面路径（过渡到 morph 阶段才更新） */

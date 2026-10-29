@@ -209,6 +209,26 @@ const keyOf = (width: number, height: number, radius: number, shape: Shape) =>
  */
 const BAKE_AREA_LIMIT = 160_000
 
+/**
+ * 全局烘焙预算：两张卡同时变尺寸时，别把两张大贴图塞进同一帧。
+ * 卡片一张 1024×200 要 2–4ms，三张同帧就会丢帧（实测最差一帧 117ms）。
+ * 这里按时间错开：距上次烘焙不足 6ms 就先拿旧贴图拉伸顶着，下一帧再补。
+ */
+let lastBakeAt = 0
+const BAKE_GAP_MS = 6
+
+/**
+ * 烘焙密度：位移贴图是平滑渐变，1x 就够用；大块面（卡片）再按 dpr 烘会白烧
+ * 内存（一张 500×300@2x 就是 60 万像素 × 两张图）。这里按像素总额封顶。
+ */
+function densityFor(exact: boolean, width: number, height: number): number {
+  const base = Math.min(devicePixelRatio || 1, exact ? 2 : 1)
+  const area = width * height
+  const cap = exact ? 220_000 : 160_000
+  if (area * base * base <= cap) return base
+  return Math.max(0.5, Math.sqrt(cap / area))
+}
+
 /*  ---------- 3. 滤镜节点：建一次，之后只改属性 ---------- */
 function lensFor(element: HTMLElement): Lens {
   const existing = LENSES.get(element)
@@ -307,16 +327,22 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
     density = previous.density
     stretched = true
   } else {
-    //  动画中先按 dpr 1 烘，省一半以上的像素与纹理；停稳后再换全分辨率
-    density = mode === 'exact' ? Math.min(devicePixelRatio || 1, 2) : 1
+    //  动画中低分辨率、停稳后再换更细的；面积大的元素由 densityFor 自动降采样
+    density = densityFor(mode === 'exact', width, height)
     const big = width * height * density * density > BAKE_AREA_LIMIT
     if (mode === 'auto' && previous && big) {
+      map = previous.map
+      density = previous.density
+      stretched = true
+    } else if (mode === 'auto' && previous && now - lastBakeAt < BAKE_GAP_MS) {
+      //  这一帧的预算被别人用掉了：先拉伸旧图，paint 返回 stretched 让调用方稍后补
       map = previous.map
       density = previous.density
       stretched = true
     } else {
       map = mapFor(width, height, radius, shape, density)
       at = now
+      lastBakeAt = now
     }
   }
   LASTMAP.set(element, { map, width, height, density, at })
@@ -340,8 +366,11 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   if (element.style.getPropertyValue('--lg-filter') !== `url("#${lens.filter.id}")`) {
     element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
   }
-  if (element.style.getPropertyValue('--lg-rim') !== `url("${map.highlight}")`) {
-    element.style.setProperty('--lg-rim', `url("${map.highlight}")`)
+  //  大块面可以用 data-liquid-rim="off" 关掉高光图：它们自己已有描边与顶光，
+  //  而一张几百 px 的 PNG 每次重烘都要重新生成 + 上传纹理，不划算。
+  const rim = element.dataset.liquidRim === 'off' ? 'none' : `url("${map.highlight}")`
+  if (element.style.getPropertyValue('--lg-rim') !== rim) {
+    element.style.setProperty('--lg-rim', rim)
   }
 
   return stretched
@@ -356,11 +385,9 @@ const refractsBackdrop = () => /Chrom(?:e|ium)\//.test(navigator.userAgent)
  * 动画全程不摘滤镜：尺寸一变就按当前盒子把贴图拉伸着用，停稳 140ms 后再
  * 烘焙一张严丝合缝的。所以过渡过程中看到的也是折射，不会突然糊一下。
  */
-export function useRefraction(ref: RefObject<HTMLElement | null>): void {
-  useEffect(() => {
-    const element = ref.current
-    if (!element || !refractsBackdrop()) return
-
+/** 给单个元素挂折射，返回卸载函数。批量挂载（卡片）直接复用这个。 */
+export function attachRefraction(element: HTMLElement): () => void {
+  {
     let settle = 0
 
     const apply = (mode: 'auto' | 'exact' = 'auto') => {
@@ -400,9 +427,51 @@ export function useRefraction(ref: RefObject<HTMLElement | null>): void {
       window.clearTimeout(endTimer)
       LENSES.get(element)?.filter.remove()
       LENSES.delete(element)
+      LASTMAP.delete(element)
       delete element.dataset.liquid
       element.style.removeProperty('--lg-filter')
       element.style.removeProperty('--lg-rim')
     }
+  }
+}
+
+export function useRefraction(ref: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const element = ref.current
+    if (!element || !refractsBackdrop()) return
+    return attachRefraction(element)
   }, [ref])
+}
+
+/**
+ * 批量挂载：把所有带 data-card 的卡片都接上液态玻璃，路由切换后自动补挂。
+ * 卡片数量少（每页 2–6 张），MutationObserver 只做一次 querySelectorAll，开销可以忽略。
+ */
+export function useGlassCards(): void {
+  useEffect(() => {
+    if (!refractsBackdrop()) return
+    const attached = new Map<HTMLElement, () => void>()
+
+    const scan = () => {
+      for (const element of document.querySelectorAll<HTMLElement>('[data-card]')) {
+        if (!attached.has(element)) attached.set(element, attachRefraction(element))
+      }
+      for (const [element, detach] of attached) {
+        if (!element.isConnected) {
+          detach()
+          attached.delete(element)
+        }
+      }
+    }
+
+    scan()
+    const observer = new MutationObserver(scan)
+    observer.observe(document.body, { childList: true, subtree: true })
+
+    return () => {
+      observer.disconnect()
+      for (const detach of attached.values()) detach()
+      attached.clear()
+    }
+  }, [])
 }
