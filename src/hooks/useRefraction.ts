@@ -114,8 +114,12 @@ function profile(bezel: number, thickness: number): { samples: Float32Array; max
  *  位移图：R 通道 = x 偏移、G 通道 = y 偏移，128 表示不偏移（中性）。
  *  高光图：白色 + alpha，越靠近边框越亮，铺在玻璃表面当镜面反光。 */
 function buildMap(width: number, height: number, radius: number, shape: Shape, density: number): Map {
-  const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.12, 4, 10)
-  const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.2, 8, 24)
+  /*  折边带宽 / 玻璃厚度：这两个决定"折射那圈有多宽"。
+   *  之前是短边的 12% / 20%（夹到 4–10 / 8–24），折射只在最边上一细条；
+   *  现在放到 22% / 34%（夹到 6–18 / 10–32），那圈明显宽出来。
+   *  上限别越过短边的一半：bezel 超过短边一半，中间就没"平"的区域了，整块会像被融化。 */
+  const bezel = shape.bezel ?? clamp(Math.min(width, height) * 0.22, 6, 18)
+  const thickness = shape.thickness ?? clamp(Math.min(width, height) * 0.34, 10, 32)
   const { samples, maximum } = profile(bezel, thickness)
 
   const canvas = document.createElement('canvas')
