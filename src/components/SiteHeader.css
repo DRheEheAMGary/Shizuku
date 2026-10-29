@@ -372,7 +372,10 @@
 }
 
 .site-nav__link.is-active {
-  color: var(--primary);
+  /*  主题色在黄色/紫色这两套配色下对比度只有 2.3–2.8 : 1，12px 小字扛不住；
+   *  改成正文色 + 字重 600，选中态交给滑块那枚玻璃牌子表达。 */
+  color: var(--text);
+  font-weight: 600;
   /*  底色交给滑块，链接自身保持透明 */
   background: transparent;
 }
