@@ -52,15 +52,19 @@
 }
 
 /*  About / Github 共用同一套栅格：两页卡片位置一一对应，
- *  统一固定高度（240 / 240 / 200）后切换只换内容，几何不动。 */
+ *  统一固定高度（200 / 200 / 176）后切换只换内容，几何不动。
+ *
+ *  原来是 240 / 240 / 200：Github 页把「访问主页」挪进标题行、热力图格子收到
+ *  8px 之后，240 的高卡里空了一大块，整页显得过高。降到 200 后两页仍然一致，
+ *  About↔Github 的过渡照旧只换内容不动盒子。 */
 @media (min-width: 981px) {
   .subpage--paired .page-grid > .glass-card:nth-child(1),
   .subpage--paired .page-grid > .glass-card:nth-child(2) {
-    height: 240px;
+    height: 200px;
   }
 
   .subpage--paired .page-grid > .glass-card:nth-child(3) {
-    height: 200px;
+    height: 176px;
   }
 }
 
@@ -268,11 +272,10 @@
 
 /*  撑满卡片高度：底部 CTA 用 margin-top: auto 沉到卡底 */
 .github-profile {
+  /*  按钮挪到标题行右侧后，这里只剩"图标 + 账号"，横排更省高度 */
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  height: 100%;
+  align-items: center;
+  gap: 12px;
 }
 
 .github-mark {
@@ -310,8 +313,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: auto;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: var(--r-full);
   font-size: var(--fs-xs);
   font-weight: 500;

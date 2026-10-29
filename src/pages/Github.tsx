@@ -19,15 +19,13 @@ export function Github() {
     <PageShell marginText="コード" wide>
       <div className="subpage subpage--paired">
         <div className="page-grid">
-          <GlassCard span={4} title="GitHub" icon="github" className="span-4 github-card">
-            <div className="github-profile">
-              <span className="github-mark" aria-hidden="true">
-                <Icon name="github" size={28} />
-              </span>
-              <div className="github-id">
-                <strong>@{github.username}</strong>
-                <span>GitHub 首页 · 开源项目与贡献</span>
-              </div>
+          {/*  按钮放进标题行右侧：整张卡因此矮了一截，也和右侧热力图对齐 */}
+          <GlassCard
+            span={4}
+            title="GitHub"
+            icon="github"
+            className="span-4 github-card"
+            actions={
               <a
                 className="page-cta"
                 href={github.url}
@@ -37,6 +35,16 @@ export function Github() {
                 访问主页
                 <Icon name="arrow-up-right" size={13} />
               </a>
+            }
+          >
+            <div className="github-profile">
+              <span className="github-mark" aria-hidden="true">
+                <Icon name="github" size={28} />
+              </span>
+              <div className="github-id">
+                <strong>@{github.username}</strong>
+                <span>GitHub 首页 · 开源项目与贡献</span>
+              </div>
             </div>
           </GlassCard>
 

@@ -14,7 +14,7 @@
 
 .heat__grid {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   /*  一年 53 列在窄容器里会超出，横向滚动而不是压缩格子 */
   overflow-x: auto;
   padding-bottom: var(--sp-1);
@@ -24,12 +24,13 @@
 .heat__week {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .heat__day {
-  width: 10px;
-  height: 10px;
+  /*  格子从 10px 收到 8px：七行加上间隙正好矮了一截，页面上移 */
+  width: 8px;
+  height: 8px;
   border-radius: 2px;
   flex-shrink: 0;
   background: var(--hairline);
