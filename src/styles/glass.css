@@ -185,6 +185,8 @@
   background: var(--liquid-bg);
   background-image: var(--lg-rim, none);
   background-size: 100% 100%;
-  -webkit-backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
-  backdrop-filter: var(--lg-filter) saturate(var(--glass-sat));
+  /*  顺序很重要：先 url() 做位移（此时采到的是清晰画面），**再** blur 收一道边。
+   *  反过来写（blur 在 url 之前）Chromium 会把 backdrop 降采样，位移就被抹平了。 */
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 2px)) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 2px)) saturate(var(--glass-sat));
 }
