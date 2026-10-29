@@ -323,6 +323,10 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   const height = Math.round(element.offsetHeight)
   if (!width || !height) return false
 
+  //  先把标记挂上：下面 readShape 读的是 computed style，
+  //  而 --lg-bezel / --lg-refraction 这些参数就写在 [data-liquid] 规则里。
+  //  顺序颠倒的话首帧读到的是默认值，之后也不会再刷新。
+  element.dataset.liquid = ''
   const { radius, shape } = readShape(element, width, height)
   const previous = LASTMAP.get(element)
 
@@ -370,13 +374,16 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
       lens.filter.setAttribute(name, String(value))
       lens.image.setAttribute(name, String(value))
     }
-    lens.displace.setAttribute('scale', String(map.maximum * 2 * shape.level))
+  }
+  const scale = String(map.maximum * 2 * shape.level)
+  if (lens.filter.getAttribute('data-scale') !== scale) {
+    lens.filter.setAttribute('data-scale', scale)
+    lens.displace.setAttribute('scale', scale)
   }
   if (lens.image.getAttribute('href') !== map.displacement) {
     lens.image.setAttribute('href', map.displacement)
   }
 
-  element.dataset.liquid = ''
   if (element.style.getPropertyValue('--lg-filter') !== `url("#${lens.filter.id}")`) {
     element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
   }

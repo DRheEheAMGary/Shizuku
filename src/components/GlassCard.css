@@ -42,6 +42,9 @@
 .glass-card[data-liquid][data-liquid] {
   background: var(--glass-bg-card);
   --liquid-blur: 4px;
+  /*  卡片面积大，同样的倍率在它身上几乎看不出来：默认倍率是 1，
+   *  顶栏胶囊是 1.9，这里给到 2.2 才和顶栏视觉上差不多强。 */
+  --lg-refraction: 2.2;
   -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
   backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
 }
