@@ -30,7 +30,7 @@
  *    --lg-refraction  折射强度倍率，默认 1
  * ========================================================================== */
 
-import { useEffect, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, type RefObject } from 'react'
 
 const NS = 'http://www.w3.org/2000/svg'
 
@@ -333,7 +333,14 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   //  两帧之间不到 70ms 就继续用上一张（拉伸），不重新生成 PNG。
   //  收尾（mode='exact'）时无条件按最终尺寸烘一张全分辨率的。
   const now = performance.now()
-  const near = previous && now - previous.at < REBAKE_MS
+  /*  尺寸突变（面板从收起态展开、卡片换页变形）要跳过时间节流立刻重烘：
+   *  否则头一两帧会拿"收起时那张小贴图"拉伸顶着，玻璃边缘对不上，
+   *  看起来就是点开瞬间左上角闪一下。小元素（面板/按钮）面积小，补烘只要 1–2ms。 */
+  const jumped =
+    previous &&
+    (Math.abs(width - previous.width) > previous.width * 0.15 ||
+      Math.abs(height - previous.height) > previous.height * 0.15)
+  const near = previous && !jumped && now - previous.at < REBAKE_MS
 
   let map: Map
   let density: number
@@ -387,9 +394,13 @@ function paint(element: HTMLElement, mode: 'auto' | 'exact'): boolean {
   if (element.style.getPropertyValue('--lg-filter') !== `url("#${lens.filter.id}")`) {
     element.style.setProperty('--lg-filter', `url("#${lens.filter.id}")`)
   }
-  //  大块面可以用 data-liquid-rim="off" 关掉高光图：它们自己已有描边与顶光，
-  //  而一张几百 px 的 PNG 每次重烘都要重新生成 + 上传纹理，不划算。
-  const rim = element.dataset.liquidRim === 'off' ? 'none' : `url("${map.highlight}")`
+  /*  高光图只在"贴图与盒子严丝合缝"时才挂上。
+   *  尺寸还在变的时候，贴图是被拉伸着用的：每重烘一次，边缘高光就换个幅度，
+   *  面板展开／主题面板弹出时左上角那一下闪动就是它。
+   *  运动过程中干脆只留折射、不画高光，停稳那张精确贴图再挂上去。 */
+  const settled = !stretched && previous?.width === width && previous?.height === height
+  const rim =
+    element.dataset.liquidRim === 'off' || !settled ? 'none' : `url("${map.highlight}")`
   if (element.style.getPropertyValue('--lg-rim') !== rim) {
     element.style.setProperty('--lg-rim', rim)
   }
@@ -418,15 +429,11 @@ export function attachRefraction(element: HTMLElement): () => void {
       if (stretched) settle = window.setTimeout(() => paint(element, 'exact'), REGENERATE_MS)
     }
 
-    //  过渡期间每帧最多来一次：只改属性，不碰 canvas
-    let frame = 0
-    const observer = new ResizeObserver(() => {
-      if (frame) return
-      frame = requestAnimationFrame(() => {
-        frame = 0
-        apply('auto')
-      })
-    })
+    /*  同步执行，不要再包一层 requestAnimationFrame：
+     *  ResizeObserver 本身就是"布局完成、还没绘制"时回调，这时候读尺寸是最新的；
+     *  再推迟一帧的话，滤镜盒子永远比元素小一号（实测差整整一帧），
+     *  面板展开／主题面板弹出的瞬间，边缘就是拿旧盒子拉伸的结果 —— 左上角闪一下。 */
+    const observer = new ResizeObserver(() => apply('auto'))
     observer.observe(element)
 
     //  过渡结束后补一张精确的（有些尺寸变化不触发 ResizeObserver 也能兜住）
@@ -443,7 +450,6 @@ export function attachRefraction(element: HTMLElement): () => void {
     return () => {
       observer.disconnect()
       element.removeEventListener('transitionend', onTransitionEnd)
-      if (frame) cancelAnimationFrame(frame)
       window.clearTimeout(settle)
       window.clearTimeout(endTimer)
       LENSES.get(element)?.filter.remove()
@@ -457,7 +463,10 @@ export function attachRefraction(element: HTMLElement): () => void {
 }
 
 export function useRefraction(ref: RefObject<HTMLElement | null>): void {
-  useEffect(() => {
+  /*  必须是 useLayoutEffect：面板／胶囊是"点开才挂载"的，用 useEffect 的话
+   *  会先在浏览器里画一帧「没有滤镜、只有兜底模糊」的样子，下一帧才换成折射版；
+   *  面板从左上角展开，那一帧的差别正好落在左上角，看起来就是闪一下。 */
+  useLayoutEffect(() => {
     const element = ref.current
     if (!element || !refractsBackdrop()) return
     return attachRefraction(element)
