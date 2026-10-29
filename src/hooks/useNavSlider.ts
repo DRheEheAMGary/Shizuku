@@ -29,6 +29,9 @@ const LIFT: [number, number] = [520, 28]
 /** 抬起时放大多少 */
 const LIFT_SCALE = 0.06
 
+/** 滑块左右各比文字区宽出这么多：不动导航布局，只是滑块自己探出去一点 */
+const SLIDER_PAD = 5
+
 interface Options {
   navRef: RefObject<HTMLElement | null>
   sliderRef: RefObject<HTMLElement | null>
@@ -107,8 +110,8 @@ export function useNavSlider({ navRef, sliderRef, activeHref, onSelect }: Option
       }
       slider.style.opacity = '1'
       const now = jump || instant()
-      x.set(active.left, now)
-      w.set(active.width, now)
+      x.set(active.left - SLIDER_PAD, now)
+      w.set(active.width + SLIDER_PAD * 2, now)
       lift.set(0, true)
     }
     syncRef.current = sync
@@ -135,8 +138,9 @@ export function useNavSlider({ navRef, sliderRef, activeHref, onSelect }: Option
       const span = b.center - a.center
       const t = span > 0 ? Math.min(1, Math.max(0, (center - a.center) / span)) : 0
 
-      x.set(center - (a.width + (b.width - a.width) * t) / 2)
-      w.set(a.width + (b.width - a.width) * t)
+      const width = a.width + (b.width - a.width) * t + SLIDER_PAD * 2
+      x.set(center - width / 2)
+      w.set(width)
     }
 
     const stop = () => {
@@ -157,8 +161,8 @@ export function useNavSlider({ navRef, sliderRef, activeHref, onSelect }: Option
       }
       x.tune(REST_X[0], REST_X[1])
       w.tune(REST_W[0], REST_W[1])
-      x.set(best.left)
-      w.set(best.width)
+      x.set(best.left - SLIDER_PAD)
+      w.set(best.width + SLIDER_PAD * 2)
       lift.set(0)
       return best
     }

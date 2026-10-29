@@ -333,10 +333,12 @@
   /*  比导航文字那一条更高：上下各探出 2px，像 iOS 分段控件里被选中的那块，
    *  文字压在上面而不是被它包住。用 top + 固定高度做居中，
    *  因为 transform 已经被 JS 拿去写位移了。 */
-  --nav-slider-h: 28px;
+  --nav-slider-h: 34px;
   top: calc(50% - var(--nav-slider-h) / 2);
   left: 0;
-  z-index: 0;
+  /*  压在文字上面：文字在玻璃"底下"，被折射那层罩住。
+   *  滑块本身 pointer-events: none，所以点击照旧落到链接上。 */
+  z-index: 2;
   height: var(--nav-slider-h);
   width: var(--nav-w, 0px);
   border-radius: var(--r-full);
@@ -364,12 +366,18 @@
 /*  滑块自己的液态玻璃：主体色淡淡染一层，再叠全站共用的那档材质与折射。
  *  （权重高于 glass.css 里那条通用规则，所以这里说了算。） */
 .site-nav__slider[data-liquid] {
-  background: color-mix(in srgb, var(--primary) 12%, var(--liquid-bg));
+  /*  文字在玻璃下面，所以这里不能掺白底，否则字会被冲成灰的 ——
+   *  只留一层很淡的主题色 + 高光边，"透明玻璃罩"而不是"白色药片"。 */
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
     0 4px 14px color-mix(in srgb, var(--primary) 14%, transparent);
-  --lg-bezel: 5px;
-  --lg-thickness: 9px;
+  /*  文字压在滑块下面（被玻璃罩住）。位移会把字的笔画推开、出现重影，
+   *  所以这里把折射强度设为 0 —— 只保留液态玻璃的**高光边**与材质，
+   *  不做位移。顶栏胶囊/头像/圆钮那边照旧带位移。 */
+  --lg-bezel: 3px;
+  --lg-thickness: 5px;
+  --lg-refraction: 0;
 }
 
 /*  拖动中：关掉过渡（逐帧直给才跟手），并把它"拎起来"一点 ——
@@ -393,7 +401,7 @@
 
 .site-nav__link {
   position: relative;
-  z-index: 1;
+  z-index: 1;   /*  低于滑块：激活项的文字会被滑块的玻璃盖住 */
   padding: 6px 9px;
   border-radius: var(--r-full);
   font-family: var(--font-sans);
@@ -417,7 +425,10 @@
 }
 
 .site-nav__link.is-active {
-  color: var(--primary);
+  /*  激活项的字现在压在玻璃滑块下面，用主题色会被那层浅底冲淡；
+   *  改用正文色 + 稍重的字重，靠"玻璃罩"本身表达选中，可读性优先。 */
+  color: var(--text);
+  font-weight: 600;
   /*  底色交给滑块，链接自身保持透明 */
   background: transparent;
 }
