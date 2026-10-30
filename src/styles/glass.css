@@ -169,3 +169,31 @@
   background: var(--hairline);
   border: none;
 }
+
+/*  ============================================================================
+ *  液态玻璃（透镜折射）
+ * ----------------------------------------------------------------------------
+ *  由 useRefraction() 给元素打上 data-liquid，并把 --lg-filter / --lg-rim
+ *  写成内联变量。这里只负责把变量接进 backdrop-filter —— **不放模糊**：
+ *  Chromium 会按模糊半径给 backdrop 降采样，模糊排在 url() 前面会把位移抹平。
+ *
+ *  为什么用 [data-liquid][data-liquid]：组件自己的 .xxx { backdrop-filter: blur(...) }
+ *  特异性是 (0,1,0)，单一属性选择器同样是 (0,1,0)，靠书写顺序决定胜负太脆。
+ *  重复一次属性把权重抬到 (0,2,0)，无论导入顺序如何都能覆盖掉各自的模糊兜底。
+ * ========================================================================== */
+/*  所有带 data-card 的玻璃统一折射强度。
+ *  首页那块主卡（.home-hero）也是 data-card，之前只有内容页卡片设了 2.2、
+ *  它沿用默认的 1 —— Main ↔ 内容页 的变形过程中，同一块玻璃会从"弱一档"
+ *  突然变成"强一档"，看起来就是边缘（尤其左上角）收缩跳一下。
+ *  这里统一成同一档：变形的整个过程折射强度不变。 */
+[data-card][data-liquid] {
+  --lg-refraction: 2.2;
+}
+
+[data-liquid][data-liquid] {
+  background: var(--liquid-bg);
+  /*  顺序很重要：先 url() 做位移（此时采到的是清晰画面），**再** blur 收一道边。
+   *  反过来写（blur 在 url 之前）Chromium 会把 backdrop 降采样，位移就被抹平了。 */
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--glass-sat));
+}

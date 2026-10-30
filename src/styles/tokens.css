@@ -108,6 +108,18 @@ html,
   --loader-fade: 480ms;
   /*  常规玻璃底：.glass 与 .btn 的默认值 */
   --glass-bg: rgba(255, 255, 255, 0.68);
+  /*  液态玻璃的统一材质：比常规玻璃更透，折射才看得出来。
+   *  顶栏胶囊、头像圆、搜索钮、明暗钮、主题色钮、登录坞都用这一个值 —— 不要各写各的。
+   *
+   *  外边再压一层 40% 白（全局，顶栏胶囊/圆钮/登录坞/卡片都算）。
+   *  对照过几档：15% → 合成 56%，折射最明显但字偏虚；25% → 61.5%；
+   *  40% → 约 69%，字最稳，折射还在，只是被压淡一些。
+   *  暗色主题不叠白（见下面 --liquid-bg 的覆盖），否则会发灰。 */
+  --liquid-bg: color-mix(
+    in srgb,
+    #ffffff 40%,
+    color-mix(in srgb, var(--glass-bg-strong) 58%, transparent)
+  );
   /*  更实的玻璃：顶栏胶囊、浮层与 .glass--strong */
   --glass-bg-strong: rgba(255, 255, 255, 0.84);
   --glass-text-shadow: none;
@@ -188,6 +200,9 @@ html,
   /*  更实的这档取中间值：再透会被亮部（如白花瓣）洗掉文字，
    *  再实则失去磨砂感；文字靠 --glass-text-shadow 补一层保险。 */
   --glass-bg-strong: rgba(10, 15, 19, 0.66);
+  /*  暗色主题：白玻璃没意义，改为把同一档深色加深一点（58% → 72%），
+   *  目的同样是让顶栏文字在任何插画上都站得住。 */
+  --liquid-bg: color-mix(in srgb, var(--glass-bg-strong) 72%, transparent);
   /*  浅色文字补一道极淡暗影：背景里出现亮部时字不被吃掉 */
   --glass-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   /*  深色底本来就压得住：比 --glass-bg 略实一点，磨砂感更足 */

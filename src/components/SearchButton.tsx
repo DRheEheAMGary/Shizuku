@@ -7,7 +7,8 @@
  *  图标始终留在按钮内部，按钮位置固定，所以收起时回到原位即可。
  * ========================================================================== */
 
-import { forwardRef } from 'react'
+import { forwardRef, useRef } from 'react'
+import { useRefraction } from '@/hooks/useRefraction'
 import { modKeyLabel } from '@/lib/platform'
 
 interface SearchButtonProps {
@@ -22,6 +23,8 @@ interface SearchButtonProps {
  */
 export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
   function SearchButton({ searching, onToggle }, iconRef) {
+    const glassRef = useRef<HTMLSpanElement>(null)
+    useRefraction(glassRef)
     return (
       <button
         type="button"
@@ -31,7 +34,7 @@ export const SearchButton = forwardRef<SVGSVGElement, SearchButtonProps>(
         aria-label={searching ? '收起搜索' : `全域搜索（${modKeyLabel()}K）`}
         title={`搜索（${modKeyLabel()}K）`}
       >
-        <span className="search-btn__glass" aria-hidden="true" />
+        <span className="search-btn__glass" aria-hidden="true" ref={glassRef} />
         <svg
           ref={iconRef}
           className="search-btn__icon"

@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTheme } from '@/hooks/useTheme'
+import { useRefraction } from '@/hooks/useRefraction'
 import type { ThemeMode } from '@/hooks/useTheme'
 import './ThemeSwitch.css'
 
@@ -77,6 +78,8 @@ export function ThemeSwitch() {
   const { mode, chooseMode, transitioning } = useTheme()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useRefraction(panelRef)
 
   // 点外面 / Esc 收起
   useEffect(() => {
@@ -116,7 +119,7 @@ export function ThemeSwitch() {
       role="group"
       aria-label="明暗模式"
     >
-      <div className="theme-switch__panel">
+      <div className="theme-switch__panel" ref={panelRef}>
         {OPTIONS.map((o, index) => {
           const active = mode === o.id
           return (

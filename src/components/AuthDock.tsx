@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { useTheme } from '@/hooks/useTheme'
 import { GithubHeatmap } from './GithubHeatmap'
+import { useRefraction } from '@/hooks/useRefraction'
 import { useAuth } from '@/hooks/useAuth'
 import { useWeather } from '@/hooks/useWeather'
 import './AuthDock.css'
@@ -60,6 +61,9 @@ export function AuthDock() {
   /** 悬停预览：收起态下悬浮头像，圆往右撑开露出名字和邮箱 */
   const [peek, setPeek] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  /** 面板本体那块玻璃：和顶栏共用同一套液态玻璃材质 */
+  const panelRef = useRef<HTMLDivElement>(null)
+  useRefraction(panelRef)
   const { weather, locate, failed, blocked, request, address } = useWeather()
 
   // 本地时间：20 秒刷新一次，分钟数最多滞后 20 秒
@@ -108,7 +112,7 @@ export function AuthDock() {
       onMouseEnter={() => setPeek(true)}
       onMouseLeave={() => setPeek(false)}
     >
-      <div className="auth-dock__panel">
+      <div className="auth-dock__panel" ref={panelRef}>
         <div className="auth-dock__head">
           <button
             type="button"

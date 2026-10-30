@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { ACCENTS, useTheme } from '@/hooks/useTheme'
+import { useRefraction } from '@/hooks/useRefraction'
 import type { AccentId } from '@/hooks/useTheme'
 import './AccentPicker.css'
 
@@ -17,6 +18,8 @@ export function AccentPicker() {
   const { accent, setAccent, transitioning } = useTheme()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useRefraction(panelRef)
 
   // 点外面 / Esc 收起
   useEffect(() => {
@@ -56,7 +59,7 @@ export function AccentPicker() {
       role="group"
       aria-label="主题色"
     >
-      <div className="accent-picker__panel">
+      <div className="accent-picker__panel" ref={panelRef}>
         {ACCENTS.map((a, index) => {
           const active = accent === a.id
           return (

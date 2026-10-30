@@ -24,7 +24,7 @@
 
   border-radius: var(--r-lg);
   /*  卡片用自己那档浓度：比顶栏胶囊更透，底图能透上来，磨砂感更强 */
-  background: var(--glass-bg-card);
+  background: var(--liquid-bg);
   -webkit-backdrop-filter: blur(20px) saturate(175%);
   backdrop-filter: blur(20px) saturate(175%);
   border: 1px solid var(--hairline);
@@ -32,6 +32,21 @@
     0 8px 32px rgba(31, 45, 61, 0.1),
     0 2px 8px rgba(31, 45, 61, 0.06),
     var(--glass-topline);
+}
+
+/*  卡片也走液态玻璃（折射由 useGlassCards 挂上），但保留两处差异：
+ *    · 底色跟全局液态玻璃走（--liquid-bg），不再单独用 --glass-bg-card —— 
+ *      "所有玻璃用同一层白"才能保证顶栏、圆钮、登录坞、卡片看起来是一套材质；
+ *    · 折射之后只留 1px 模糊：卡片要的是"清透"，背景的纹理几乎原样透过来，
+ *      可读性靠 --glass-bg-card 那层底色撑。
+ *  权重写成三个选择器，确保压过 glass.css 里那条通用规则。 */
+.glass-card[data-liquid][data-liquid] {
+  background: var(--liquid-bg);
+  --liquid-blur: 1px;
+  /*  折射强度由 glass.css 里 [data-card][data-liquid] 统一定义（2.2），
+   *  这里不再单独写，免得同一档参数散落两处。 */
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
 }
 
 .glass-card__head {
