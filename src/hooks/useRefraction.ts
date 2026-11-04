@@ -38,6 +38,8 @@ interface Shape {
   bezel: number | undefined
   thickness: number | undefined
   level: number
+  /** 高光强度 0..1（--lg-sheen） */
+  sheen: number
 }
 
 /** 一张按某个尺寸烘好的位移贴图 */
@@ -158,6 +160,11 @@ function buildMap(width: number, height: number, radius: number, shape: Shape, d
       const i = (y * canvas.width + x) * 4
       field.data[i] = Math.round(127.5 - ((nx * shift) / maximum) * 127.5)
       field.data[i + 1] = Math.round(127.5 - ((ny * shift) / maximum) * 127.5)
+
+      /*  蓝通道留中性值。曾经试过把"高光遮罩"烘进这里、再在滤镜图里用
+       *  feColorMatrix + feComposite 叠上去（glisse/liquid-glass 的做法），
+       *  但在 backdrop-filter 下 Chromium 不渲染那段合成：实测开/关
+       *  像素完全一致。所以高光改由 CSS 的 inset 阴影承担（见 glass.css）。 */
       field.data[i + 2] = 128
       field.data[i + 3] = 255
 
@@ -253,12 +260,10 @@ function lensFor(element: HTMLElement): Lens {
     result: 'bent',
   }) as SVGFEDisplacementMapElement
 
-  filter.append(
-    image,
-    displace,
-    //  位移是取最近像素，边缘弯得最狠的地方会留台阶；0.4 的模糊正好抹掉
-    svg('feGaussianBlur', { in: 'bent', stdDeviation: 0.4 }),
-  )
+  //  位置是取最近像素，边缘弯得最狠的地方会留台阶；0.4 的模糊正好抹掉
+  const smooth = svg('feGaussianBlur', { in: 'bent', stdDeviation: 0.4, result: 'soft' })
+
+  filter.append(image, displace, smooth)
   container().append(filter)
 
   const lens: Lens = { filter, image, displace }
@@ -284,6 +289,7 @@ function readShape(element: HTMLElement, width: number, height: number) {
     bezel: length('--lg-bezel'),
     thickness: length('--lg-thickness'),
     level: length('--lg-refraction') ?? 1,
+    sheen: length('--lg-sheen') ?? 1,
   }
   return { radius, shape }
 }

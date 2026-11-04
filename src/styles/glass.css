@@ -190,10 +190,19 @@
   --lg-refraction: 2.2;
 }
 
+/*  边缘高光改用 inset 阴影：SVG 滤镜图里那段 specular 在 backdrop-filter 下
+ *  不参与渲染（实测开/关像素完全一致），所以高光换一条不依赖贴图的路：
+ *  inset 阴影天然跟随圆角，不产生第二张贴图，尺寸动画中也不会"跳"。
+ *  高光强度用 --lg-sheen 统一控制（0 关掉）。 */
 [data-liquid][data-liquid] {
   background: var(--liquid-bg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff calc(var(--lg-sheen, 1) * 70%), transparent),
+    inset 0 -1px 0 color-mix(in srgb, #fff calc(var(--lg-sheen, 1) * 22%), transparent),
+    inset 1px 0 0 color-mix(in srgb, #fff calc(var(--lg-sheen, 1) * 26%), transparent),
+    inset -1px 0 0 color-mix(in srgb, #fff calc(var(--lg-sheen, 1) * 26%), transparent);
   /*  顺序很重要：先 url() 做位移（此时采到的是清晰画面），**再** blur 收一道边。
    *  反过来写（blur 在 url 之前）Chromium 会把 backdrop 降采样，位移就被抹平了。 */
-  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--glass-sat));
-  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--liquid-sat, 1));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur, 1px)) saturate(var(--liquid-sat, 1));
 }

@@ -115,11 +115,17 @@ html,
    *  对照过几档：15% → 合成 56%，折射最明显但字偏虚；25% → 61.5%；
    *  40% → 约 69%，字最稳，折射还在，只是被压淡一些。
    *  暗色主题不叠白（见下面 --liquid-bg 的覆盖），否则会发灰。 */
+  /*  白纱浓度单独拎出来当变量，方便调"磨砂的厚薄"。
+   *  40% 时合成 69% 白，是"磨砂亚克力"；降到 12% 才是薄玻璃 ——
+   *  可读性改由贴图里的高光（--lg-sheen）+ 字重来撑。 */
+  --liquid-veil: 18%;
   --liquid-bg: color-mix(
     in srgb,
-    #ffffff 40%,
+    #ffffff var(--liquid-veil),
     color-mix(in srgb, var(--glass-bg-strong) 58%, transparent)
   );
+  /*  液态玻璃的饱和度：1 是原样、<1 是 Apple 那种偏奶的去饱和 */
+  --liquid-sat: 1;
   /*  更实的玻璃：顶栏胶囊、浮层与 .glass--strong */
   --glass-bg-strong: rgba(255, 255, 255, 0.84);
   --glass-text-shadow: none;

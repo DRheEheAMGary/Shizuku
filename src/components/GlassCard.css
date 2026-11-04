@@ -45,8 +45,8 @@
   --liquid-blur: 1px;
   /*  折射强度由 glass.css 里 [data-card][data-liquid] 统一定义（2.2），
    *  这里不再单独写，免得同一档参数散落两处。 */
-  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
-  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--liquid-sat, 1));
+  backdrop-filter: var(--lg-filter) blur(var(--liquid-blur)) saturate(var(--liquid-sat, 1));
 }
 
 .glass-card__head {
