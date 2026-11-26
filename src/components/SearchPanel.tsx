@@ -2,18 +2,17 @@
  *  Shizuku · 搜索结果面板
  * ----------------------------------------------------------------------------
  *  从顶栏胶囊底下拉出的一块玻璃。输入框本身在顶栏里，这里只负责列结果。
- *  结果按站点分组，组标题带命中条数；每条结果含标题、类型、日期、
- *  标签/作者等 facet 命中与正文摘要。
+ *  开启 ✦ AI 后：已登录 SSO 用户可按 Enter 或点击按钮结合站内索引向 AI 提问。
  * ========================================================================== */
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { SSO_ISSUER } from '@/auth/config'
+import { useAuth } from '@/hooks/useAuth'
 import { useSearchIndex } from '@/hooks/useSearchIndex'
 import { SITE_NAMES, SITE_TYPES, searchItems } from '@/lib/search'
 import type { Highlight } from '@/lib/search'
 import './SearchPanel.css'
 
-// 把命中的片段切出来，命中部分包一层 <mark>。
-// hits 可能乱序，先按 start 排序再顺序拼接，避免重叠切片错位。
 function highlight(text: string, hits: Highlight[]) {
   if (!hits.length) return text
   const sorted = [...hits].sort((a, b) => a.start - b.start)
@@ -32,17 +31,66 @@ function highlight(text: string, hits: Highlight[]) {
   return out
 }
 
+/** 将 AI 回复里的 [标题](https://...) 与裸 https:// 链接安全渲染为 React 节点 */
+function renderAiText(text: string) {
+  const re = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|(https:\/\/[^\s<>()]+)/g
+  const nodes: React.ReactNode[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  let key = 0
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) nodes.push(text.slice(last, m.index))
+    const label = m[1] ?? m[3]
+    const href = m[2] ?? m[3]
+    nodes.push(
+      <a
+        key={key++}
+        className="search-ai-box__link"
+        href={href}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {label}
+      </a>,
+    )
+    last = re.lastIndex
+  }
+  if (last < text.length) nodes.push(text.slice(last))
+  return nodes
+}
+
+interface AiState {
+  status: 'idle' | 'loading' | 'done' | 'error'
+  askedQuery: string
+  answer: string
+  error: string
+  remaining?: number
+  limit?: number
+}
+
+const INITIAL_AI: AiState = {
+  status: 'idle',
+  askedQuery: '',
+  answer: '',
+  error: '',
+}
+
 export function SearchPanel({
   query,
   aiGlow = false,
+  aiSubmitCount = 0,
   onClose,
 }: {
   query: string
   aiGlow?: boolean
+  aiSubmitCount?: number
   onClose: () => void
 }) {
+  const { user, login } = useAuth()
   const { index, failed } = useSearchIndex()
   const listRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const [aiState, setAiState] = useState<AiState>(INITIAL_AI)
 
   const results = useMemo(
     () => (index ? searchItems(index.items, query) : []),
@@ -59,7 +107,88 @@ export function SearchPanel({
     return [...map.entries()]
   }, [results])
 
-  // 查询词变化时把面板滚回顶部，避免停留在上一次的滚动位置
+  const askAi = useCallback(async () => {
+    const q = query.trim()
+    if (!q || !user) return
+
+    abortRef.current?.abort()
+    const ac = new AbortController()
+    abortRef.current = ac
+
+    setAiState({
+      status: 'loading',
+      askedQuery: q,
+      answer: '',
+      error: '',
+    })
+
+    const contexts = results.slice(0, 6).map((r) => ({
+      title: r.item.title,
+      site: SITE_NAMES[r.item.site] ?? r.item.site,
+      url: r.item.url,
+      snippet: r.snippet || r.item.text.slice(0, 200),
+    }))
+
+    try {
+      const res = await fetch(`${SSO_ISSUER}/api/ai-search.php`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, contexts }),
+        signal: ac.signal,
+      })
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean
+        answer?: string
+        remaining?: number
+        limit?: number
+        message?: string
+      } | null
+
+      if (!res.ok || !data?.ok || !data.answer) {
+        setAiState({
+          status: 'error',
+          askedQuery: q,
+          answer: '',
+          error: data?.message || `请求失败（${res.status}）`,
+        })
+        return
+      }
+
+      setAiState({
+        status: 'done',
+        askedQuery: q,
+        answer: data.answer,
+        error: '',
+        remaining: data.remaining,
+        limit: data.limit,
+      })
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+      setAiState({
+        status: 'error',
+        askedQuery: q,
+        answer: '',
+        error: '网络异常，暂时无法连接 AI 服务',
+      })
+    }
+  }, [query, results, user])
+
+  useEffect(() => {
+    if (!aiGlow) {
+      abortRef.current?.abort()
+      setAiState(INITIAL_AI)
+    }
+  }, [aiGlow])
+
+  useEffect(() => () => abortRef.current?.abort(), [])
+
+  useEffect(() => {
+    if (aiGlow && aiSubmitCount > 0) {
+      void askAi()
+    }
+  }, [aiGlow, aiSubmitCount, askAi])
+
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0
   }, [query])
@@ -72,7 +201,9 @@ export function SearchPanel({
   } else if (!query.trim()) {
     content = (
       <>
-        <p className="search-panel__note">全域搜索 (可能存在 30 min 延迟)</p>
+        <p className="search-panel__note">
+          {aiGlow ? 'AI 搜索模式 · 输入问题后按 Enter 提问' : '全域搜索 (可能存在 30 min 延迟)'}
+        </p>
         {index && (
           <p className="search-panel__note search-panel__note--dim">
             共 {index.items.length} 条索引
@@ -81,7 +212,9 @@ export function SearchPanel({
       </>
     )
   } else if (!results.length) {
-    content = <p className="search-panel__note">没有找到「{query.trim()}」</p>
+    content = aiGlow ? null : (
+      <p className="search-panel__note">没有找到「{query.trim()}」</p>
+    )
   } else {
     isListbox = true
     content = groups.map(([site, list]) => (
@@ -111,7 +244,6 @@ export function SearchPanel({
                   <span className="search-hit-row__date">{r.item.date}</span>
                 )}
               </span>
-              {/* 作者 / 标签 / 分类命中：正文也命中时这一行不显示（内容优先） */}
               {!r.textHits.length && r.facets.length > 0 && (
                 <span className="search-hit-row__facets">
                   {r.facets.map((f, fi) => (
@@ -142,6 +274,53 @@ export function SearchPanel({
       aria-label={isListbox ? '搜索结果' : undefined}
     >
       <div className="search-panel__scroll" ref={listRef}>
+        {aiGlow && (
+          <div className="search-ai-box">
+            {!user ? (
+              <div className="search-ai-box__row">
+                <span className="search-ai-box__tip">
+                  开启 AI 搜索需要登录 DRheEheAM SSO（将结合站内内容作答）
+                </span>
+                <button type="button" className="search-ai-box__btn" onClick={login}>
+                  登录 SSO
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="search-ai-box__row">
+                  <span className="search-ai-box__tip">
+                    {aiState.status === 'loading'
+                      ? `正在思考「${aiState.askedQuery}」…`
+                      : '按 Enter 或点击右侧按钮向 AI 提问'}
+                  </span>
+                  <button
+                    type="button"
+                    className="search-ai-box__btn"
+                    disabled={!query.trim() || aiState.status === 'loading'}
+                    onClick={() => void askAi()}
+                  >
+                    {aiState.status === 'loading' ? '思考中…' : '向 AI 提问'}
+                  </button>
+                </div>
+
+                {aiState.status === 'error' && (
+                  <p className="search-ai-box__error">{aiState.error}</p>
+                )}
+
+                {aiState.status === 'done' && (
+                  <div className="search-ai-box__answer">
+                    <div className="search-ai-box__text">{renderAiText(aiState.answer)}</div>
+                    {typeof aiState.remaining === 'number' && typeof aiState.limit === 'number' && (
+                      <div className="search-ai-box__quota">
+                        今日剩余 {aiState.remaining} / {aiState.limit} 次
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
         {content}
       </div>
       <span className="search-panel__ai-aura" aria-hidden="true" />
