@@ -2,7 +2,7 @@
 
 DRheEheAM_Gary 的个人主页：磨砂玻璃材质、Apple 式过渡动效、日式排印的留白。
 
-- 站点域名：<https://dreamgary.cn>
+- 站点域名：<https://www.dreamgary.cn>
 - 预览站：<https://shizuku.dreamgary.cn>
 
 ## 关于本站

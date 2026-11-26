@@ -535,6 +535,18 @@ export function App() {
     }
   }, [path])
 
+  // 未知路径统一回退到首页，避免地址栏残留无效路径与 Soft 404
+  useEffect(() => {
+    if (path in PAGE_TITLES) return
+    const params = new URLSearchParams(window.location.search)
+    if (path === '/auth/callback' && (params.has('code') || params.has('error'))) return
+    window.history.replaceState(null, '', '/')
+    setPath('/')
+    pathRef.current = '/'
+    shownPathRef.current = '/'
+    setShownPath('/')
+  }, [path])
+
   const page =
     shownPath === '/about' ? (
       <About />
