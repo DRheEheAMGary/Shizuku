@@ -174,20 +174,22 @@ export function SearchPanel({
     }
   }, [query, results, user])
 
+  const lastSubmitRef = useRef(0)
+
   useEffect(() => {
     if (!aiGlow) {
+      lastSubmitRef.current = aiSubmitCount
       abortRef.current?.abort()
       setAiState(INITIAL_AI)
+      return
     }
-  }, [aiGlow])
-
-  useEffect(() => () => abortRef.current?.abort(), [])
-
-  useEffect(() => {
-    if (aiGlow && aiSubmitCount > 0) {
+    if (aiSubmitCount > lastSubmitRef.current) {
+      lastSubmitRef.current = aiSubmitCount
       void askAi()
     }
   }, [aiGlow, aiSubmitCount, askAi])
+
+  useEffect(() => () => abortRef.current?.abort(), [])
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0
