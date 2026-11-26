@@ -42,10 +42,13 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const [searching, setSearching] = useState(false)
   const [aiGlow, setAiGlow] = useState(false)
   const [aiSubmitCount, setAiSubmitCount] = useState(0)
+  const [aiLoading, setAiLoading] = useState(false)
   const [query, setQuery] = useState('')
   // 搜索状态的同步镜像：ref 不受闭包快照影响，异步回调里读到的是最新值
   const searchingRef = useRef(false)
   searchingRef.current = searching
+  const aiLoadingRef = useRef(false)
+  aiLoadingRef.current = aiLoading
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const iconRef = useRef<SVGSVGElement>(null)
@@ -96,6 +99,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   }, [])
 
   const close = useCallback(() => {
+    if (aiLoadingRef.current) return
     setSearching(false)
     setAiGlow(false)
     setAiSubmitCount(0)
@@ -442,8 +446,11 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
               aria-pressed={aiGlow}
               aria-label={aiGlow ? '关闭 AI 搜索' : '开启 AI 搜索'}
               title={aiGlow ? '关闭 AI 搜索' : '开启 AI 搜索'}
+              disabled={aiLoading}
               tabIndex={searching ? 0 : -1}
-              onClick={() => setAiGlow((v) => !v)}
+              onClick={() => {
+                if (!aiLoading) setAiGlow((v) => !v)
+              }}
             >
               <Icon name="sparkle" size={14} filled={aiGlow} />
               <span className="search-ai-toggle__label">AI</span>
@@ -485,6 +492,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
           query={query}
           aiGlow={aiGlow}
           aiSubmitCount={aiSubmitCount}
+          onAiLoadingChange={setAiLoading}
           onClose={close}
         />
       )}

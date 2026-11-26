@@ -30,6 +30,17 @@
   box-shadow: 0 24px 64px rgba(16, 24, 32, 0.22);
 
   animation: search-drop 300ms var(--ease-apple);
+  transition:
+    opacity 260ms var(--ease-apple),
+    transform 260ms var(--ease-apple),
+    visibility 260ms;
+}
+
+.search-panel.is-hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .search-panel__scroll {
@@ -258,6 +269,11 @@
 .search-panel.is-ai-glow .search-panel__ai-aura {
   opacity: 0.58;
   animation: ai-glow-spin 3.6s linear infinite;
+}
+
+.search-panel.is-hidden::after,
+.search-panel.is-hidden .search-panel__ai-aura {
+  opacity: 0;
 }
 
 [data-theme='dark'] .search-panel.is-ai-glow .search-panel__ai-aura {
