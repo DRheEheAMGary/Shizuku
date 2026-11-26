@@ -273,11 +273,7 @@
 
 /* ---------- AI 问答卡片 ---------- */
 .search-ai-box {
-  margin: 4px 4px 10px;
-  padding: 12px 14px;
-  border-radius: var(--r-md);
-  border: 1px solid color-mix(in srgb, #9b72cb 28%, var(--hairline));
-  background: color-mix(in srgb, #9b72cb 7%, var(--glass-bg));
+  padding: 16px 18px;
 }
 
 .search-ai-box__row {
@@ -314,15 +310,9 @@
 }
 
 .search-ai-box__error {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: var(--fs-xs);
   color: #e05252;
-}
-
-.search-ai-box__answer {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--hairline);
 }
 
 .search-ai-box__text {
@@ -331,6 +321,14 @@
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.search-ai-box__code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--hairline);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.88em;
 }
 
 .search-ai-box__link {

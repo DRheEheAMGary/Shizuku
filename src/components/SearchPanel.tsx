@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SSO_ISSUER } from '@/auth/config'
 import { useAuth } from '@/hooks/useAuth'
 import { useSearchIndex } from '@/hooks/useSearchIndex'
-import { SITE_NAMES, SITE_TYPES, searchItems } from '@/lib/search'
+import { SITE_NAMES, SITE_TYPES, recallAiContexts, searchItems } from '@/lib/search'
 import type { Highlight } from '@/lib/search'
 import './SearchPanel.css'
 
@@ -31,31 +31,65 @@ function highlight(text: string, hits: Highlight[]) {
   return out
 }
 
-/** 将 AI 回复里的 [标题](https://...) 与裸 https:// 链接安全渲染为 React 节点 */
+/** 将 AI 回复里的链接、加粗、行内代码与标题安全渲染为 React 节点 */
 function renderAiText(text: string) {
-  const re = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|(https:\/\/[^\s<>()]+)/g
+  const cleaned = text.replace(/^#{1,3}\s+/gm, '')
+  const re =
+    /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|(https:\/\/[^\s<>()[\]{}，。！？、；：“”‘’（）【】《》]+)|\*\*([^*]+)\*\*|`([^`]+)`/g
   const nodes: React.ReactNode[] = []
   let last = 0
   let m: RegExpExecArray | null
   let key = 0
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) nodes.push(text.slice(last, m.index))
-    const label = m[1] ?? m[3]
-    const href = m[2] ?? m[3]
-    nodes.push(
-      <a
-        key={key++}
-        className="search-ai-box__link"
-        href={href}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        {label}
-      </a>,
-    )
+  while ((m = re.exec(cleaned)) !== null) {
+    if (m.index > last) nodes.push(cleaned.slice(last, m.index))
+    if (m[1] !== undefined && m[2] !== undefined) {
+      nodes.push(
+        <a
+          key={key++}
+          className="search-ai-box__link"
+          href={m[2]}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {m[1]}
+        </a>,
+      )
+    } else if (m[3] !== undefined) {
+      let href = m[3]
+      let trail = ''
+      const punct = href.match(/[.,;:!?]+$/)
+      if (punct) {
+        trail = punct[0]
+        href = href.slice(0, -trail.length)
+      }
+      if (href.length > 'https://'.length) {
+        nodes.push(
+          <a
+            key={key++}
+            className="search-ai-box__link"
+            href={href}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            {href}
+          </a>,
+        )
+      } else {
+        nodes.push(href)
+      }
+      if (trail) nodes.push(trail)
+    } else if (m[4] !== undefined) {
+      nodes.push(<strong key={key++}>{m[4]}</strong>)
+    } else if (m[5] !== undefined) {
+      nodes.push(
+        <code key={key++} className="search-ai-box__code">
+          {m[5]}
+        </code>,
+      )
+    }
     last = re.lastIndex
   }
-  if (last < text.length) nodes.push(text.slice(last))
+  if (last < cleaned.length) nodes.push(cleaned.slice(last))
   return nodes
 }
 
@@ -64,6 +98,7 @@ interface AiState {
   askedQuery: string
   answer: string
   error: string
+  needLogin?: boolean
   remaining?: number
   limit?: number
 }
@@ -90,6 +125,7 @@ export function SearchPanel({
   const { index, failed } = useSearchIndex()
   const listRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const loadingRef = useRef(false)
   const [aiState, setAiState] = useState<AiState>(INITIAL_AI)
 
   const results = useMemo(
@@ -109,13 +145,14 @@ export function SearchPanel({
 
   const askAi = useCallback(async () => {
     const q = query.trim()
-    if (!q) return
+    if (!q || loadingRef.current) return
     if (!user) {
       setAiState({
         status: 'error',
         askedQuery: q,
         answer: '',
         error: '开启 AI 搜索需要登录 DRheEheAM SSO（将结合站内内容作答）',
+        needLogin: true,
       })
       return
     }
@@ -123,6 +160,7 @@ export function SearchPanel({
     abortRef.current?.abort()
     const ac = new AbortController()
     abortRef.current = ac
+    loadingRef.current = true
 
     setAiState({
       status: 'loading',
@@ -131,11 +169,12 @@ export function SearchPanel({
       error: '',
     })
 
-    const contexts = results.slice(0, 6).map((r) => ({
-      title: r.item.title,
-      site: SITE_NAMES[r.item.site] ?? r.item.site,
-      url: r.item.url,
-      snippet: r.snippet || r.item.text.slice(0, 200),
+    const matched = index ? recallAiContexts(index.items, q, 6) : []
+    const contexts = matched.map((item) => ({
+      title: item.title,
+      site: SITE_NAMES[item.site] ?? item.site,
+      url: item.url,
+      snippet: item.text.slice(0, 240),
     }))
 
     try {
@@ -148,6 +187,7 @@ export function SearchPanel({
       })
       const data = (await res.json().catch(() => null)) as {
         ok?: boolean
+        code?: string
         answer?: string
         remaining?: number
         limit?: number
@@ -155,11 +195,13 @@ export function SearchPanel({
       } | null
 
       if (!res.ok || !data?.ok || !data.answer) {
+        const needLogin = res.status === 401 || data?.code === 'unauthorized'
         setAiState({
           status: 'error',
           askedQuery: q,
           answer: '',
           error: data?.message || `请求失败（${res.status}）`,
+          needLogin,
         })
         return
       }
@@ -180,14 +222,17 @@ export function SearchPanel({
         answer: '',
         error: '网络异常，暂时无法连接 AI 服务',
       })
+    } finally {
+      loadingRef.current = false
     }
-  }, [query, results, user])
+  }, [index, query, user])
 
   const lastSubmitRef = useRef(0)
 
   useEffect(() => {
     if (!aiGlow) {
       lastSubmitRef.current = aiSubmitCount
+      loadingRef.current = false
       abortRef.current?.abort()
       setAiState(INITIAL_AI)
       return
@@ -197,6 +242,12 @@ export function SearchPanel({
       void askAi()
     }
   }, [aiGlow, aiSubmitCount, askAi])
+
+  useEffect(() => {
+    if (aiGlow && !query.trim() && aiState.status !== 'loading' && aiState.status !== 'idle') {
+      setAiState(INITIAL_AI)
+    }
+  }, [aiGlow, query, aiState.status])
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -289,12 +340,12 @@ export function SearchPanel({
       aria-label={isListbox ? '搜索结果' : undefined}
     >
       <div className="search-panel__scroll" ref={listRef}>
-        {aiGlow && (
+        {aiGlow ? (
           <div className="search-ai-box">
-            {!user ? (
+            {!user || aiState.needLogin ? (
               <div className="search-ai-box__row">
                 <span className="search-ai-box__tip">
-                  开启 AI 搜索需要登录 DRheEheAM SSO（将结合站内内容作答）
+                  {aiState.error || '开启 AI 搜索需要登录 DRheEheAM SSO（将结合站内内容作答）'}
                 </span>
                 <button type="button" className="search-ai-box__btn" onClick={login}>
                   登录 SSO
@@ -327,8 +378,9 @@ export function SearchPanel({
               </>
             )}
           </div>
+        ) : (
+          content
         )}
-        {content}
       </div>
       <span className="search-panel__ai-aura" aria-hidden="true" />
     </div>
