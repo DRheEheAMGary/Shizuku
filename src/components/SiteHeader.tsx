@@ -14,6 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { profile, site } from '@/content/site'
 import { AuthDock } from './AuthDock'
 import { AccentPicker } from './AccentPicker'
+import { Icon } from './Icon'
 import { SearchButton } from './SearchButton'
 import { SearchPanel } from './SearchPanel'
 import { ThemeSwitch } from './ThemeSwitch'
@@ -39,6 +40,7 @@ interface SiteHeaderProps {
 export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const collapsed = useScrollCollapse()
   const [searching, setSearching] = useState(false)
+  const [aiGlow, setAiGlow] = useState(false)
   const [query, setQuery] = useState('')
   // 搜索状态的同步镜像：ref 不受闭包快照影响，异步回调里读到的是最新值
   const searchingRef = useRef(false)
@@ -94,6 +96,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
 
   const close = useCallback(() => {
     setSearching(false)
+    setAiGlow(false)
     setQuery('')
   }, [])
 
@@ -340,6 +343,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       ref={wrapRef}
       className={`site-header-wrap${collapsed ? ' is-collapsed' : ''}`}
       data-search={searching}
+      data-ai-glow={searching && aiGlow}
     >
       {/* 左上角：圆形登录坞（绝对定位，不参与居中布局） */}
       <AuthDock />
@@ -418,6 +422,19 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
               tabIndex={searching ? 0 : -1}
             />
 
+            <button
+              type="button"
+              className={`search-ai-toggle${aiGlow ? ' is-active' : ''}`}
+              aria-pressed={aiGlow}
+              aria-label={aiGlow ? '关闭 AI 流光' : '开启 AI 流光'}
+              title={aiGlow ? '关闭 AI 流光' : '开启 AI 流光'}
+              tabIndex={searching ? 0 : -1}
+              onClick={() => setAiGlow((v) => !v)}
+            >
+              <Icon name="sparkle" size={14} filled={aiGlow} />
+              <span className="search-ai-toggle__label">AI</span>
+            </button>
+
             {/* 占位文字：一个字一个 i，逐个上浮登场 */}
             {!query && (
               <span className="site-header__search-ph" aria-hidden="true">
@@ -430,6 +447,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
             )}
           </div>
         </div>
+        <span className="site-header__ai-aura" aria-hidden="true" />
       </header>
 
       {/* 右侧透明平衡块：微调两侧配重，中间的头像 + 胶囊保持居中 */}
@@ -444,7 +462,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       <div className="search-backdrop" onMouseDown={close} role="presentation" />
 
       {/* 从胶囊底下拉出来的结果面板 */}
-      {searching && <SearchPanel query={query} onClose={close} />}
+      {searching && <SearchPanel query={query} aiGlow={aiGlow} onClose={close} />}
     </div>
   )
 }

@@ -628,10 +628,10 @@
 }
 
 .site-header__search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding-left: var(--search-text-pad);
-  /*  右边给搜索钮让出位置，点那里是收起搜索 */
-  padding-right: 46px;
+  padding-right: 10px;
   border: 0;
   outline: none;
   background: none;
@@ -741,6 +741,152 @@
   .site-nav {
     left: 0;
     translate: 0 0;
+  }
+}
+
+/* ============================================================================
+ *  AI 多彩流光（Gemini / Apple Intelligence 风格）
+ * ========================================================================== */
+@property --ai-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes ai-glow-spin {
+  to {
+    --ai-angle: 360deg;
+  }
+}
+
+/* 搜索框右侧的 AI 流光开关按钮（预留右侧 28px 给收起搜索按钮） */
+.search-ai-toggle {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  margin-right: 28px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong);
+  background: color-mix(in srgb, var(--glass-bg-strong) 72%, transparent);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    background-color var(--dur-fast) var(--ease-apple),
+    box-shadow var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple);
+}
+
+.search-ai-toggle:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, #9b72cb 45%, var(--hairline-strong));
+}
+
+.search-ai-toggle:active {
+  transform: scale(0.95);
+}
+
+.search-ai-toggle.is-active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #4285f4, #9b72cb 50%, #d96570);
+  box-shadow: 0 2px 12px rgba(155, 114, 203, 0.42);
+}
+
+@media (max-width: 480px) {
+  .search-ai-toggle {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .search-ai-toggle__label {
+    display: none;
+  }
+}
+
+/* 胶囊外圈旋转流光描边 */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--ai-angle),
+    #4285f4 0deg,
+    #9b72cb 72deg,
+    #d96570 144deg,
+    #f59e0b 216deg,
+    #38bdf8 288deg,
+    #4285f4 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 320ms var(--ease-apple);
+}
+
+/* 胶囊外围柔和弥散光晕 */
+.site-header__ai-aura {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  padding: 6px;
+  background: conic-gradient(
+    from var(--ai-angle),
+    #4285f4 0deg,
+    #9b72cb 72deg,
+    #d96570 144deg,
+    #f59e0b 216deg,
+    #38bdf8 288deg,
+    #4285f4 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 380ms var(--ease-apple);
+}
+
+.site-header-wrap[data-ai-glow='true'] .site-header::after {
+  opacity: 1;
+  animation: ai-glow-spin 3.6s linear infinite;
+}
+
+.site-header-wrap[data-ai-glow='true'] .site-header__ai-aura {
+  opacity: 0.72;
+  animation: ai-glow-spin 3.6s linear infinite;
+}
+
+[data-theme='dark'] .site-header-wrap[data-ai-glow='true'] .site-header__ai-aura {
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header-wrap[data-ai-glow='true'] .site-header::after,
+  .site-header-wrap[data-ai-glow='true'] .site-header__ai-aura {
+    animation: none;
   }
 }
 
