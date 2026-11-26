@@ -1,0 +1,18 @@
+# Shizuku · DRheEheAM_Gary
+
+> DRheEheAM_Gary 的个人主页（雫 · Shizuku）：高一生 | OIer | 二次元，现居 JX-NC。
+
+## 站内页面
+
+- [首页](https://www.dreamgary.cn/): 个人简介、MBTI（ESFJ）、所在地（JX-NC）与签名
+- [关于](https://www.dreamgary.cn/about): 在玩的游戏、游戏账号与站外链接
+- [GitHub](https://www.dreamgary.cn/github): GitHub 主页入口（DRheEheAMGary）、贡献热力图与代表仓库
+- [联系](https://www.dreamgary.cn/contact): QQ、哔哩哔哩与电子邮箱联系方式
+
+## 关联站点
+
+- [博客](https://blog.dreamgary.cn): 个人博客
+- [服务器介绍站](https://mc.dreamgary.cn): Minecraft 服务器介绍站
+- [SSO 统一认证系统](https://sso.dreamgary.cn): 站点统一身份认证服务
+- [资源站](https://r.dreamgary.cn): 静态资源与图片托管
+- [Shizuku 预览站](https://shizuku.dreamgary.cn): 主页预览环境
