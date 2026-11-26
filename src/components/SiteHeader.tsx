@@ -440,8 +440,8 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
               type="button"
               className={`search-ai-toggle${aiGlow ? ' is-active' : ''}`}
               aria-pressed={aiGlow}
-              aria-label={aiGlow ? '关闭 AI 流光' : '开启 AI 流光'}
-              title={aiGlow ? '关闭 AI 流光' : '开启 AI 流光'}
+              aria-label={aiGlow ? '关闭 AI 搜索' : '开启 AI 搜索'}
+              title={aiGlow ? '关闭 AI 搜索' : '开启 AI 搜索'}
               tabIndex={searching ? 0 : -1}
               onClick={() => setAiGlow((v) => !v)}
             >
@@ -451,8 +451,12 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
 
             {/* 占位文字：一个字一个 i，逐个上浮登场 */}
             {!query && (
-              <span className="site-header__search-ph" aria-hidden="true">
-                {[...PLACEHOLDER].map((ch, i) => (
+              <span
+                key={aiGlow ? 'ai' : 'normal'}
+                className="site-header__search-ph"
+                aria-hidden="true"
+              >
+                {[...(aiGlow ? '输入问题，按 Enter 向 AI 提问…' : PLACEHOLDER)].map((ch, i) => (
                   <i key={i} style={{ '--i': i } as React.CSSProperties}>
                     {ch}
                   </i>

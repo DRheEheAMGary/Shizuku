@@ -211,3 +211,89 @@ export function searchItems(items: SearchItem[], rawQuery: string): SearchResult
 
   return results
 }
+
+const AI_STOP_BIGRAMS = new Set([
+  '怎么', '如何', '什么', '哪些', '可以', '请问', '一下', '介绍',
+  '有关', '关于', '以及', '这个', '那个', '是否', '这里', '网站', '站内',
+])
+
+/**
+ * 为 AI 问答召回站内上下文：
+ * 先走精确子串搜索，不足时按英文词 + 中文 2-gram 打分补齐，再不足则回退到最新条目。
+ */
+export function recallAiContexts(
+  items: SearchItem[],
+  query: string,
+  limit = 6,
+): SearchItem[] {
+  const picked: SearchItem[] = []
+  const seen = new Set<string>()
+
+  for (const r of searchItems(items, query)) {
+    if (picked.length >= limit) break
+    if (!seen.has(r.item.url)) {
+      seen.add(r.item.url)
+      picked.push(r.item)
+    }
+  }
+  if (picked.length >= limit) return picked
+
+  const tokens = new Set<string>()
+  const asciiMatches = query.toLowerCase().match(/[a-z0-9._-]{2,}/g) ?? []
+  for (const w of asciiMatches) tokens.add(w)
+
+  const cjkRuns = query.match(/[\u4e00-\u9fff]+/g) ?? []
+  for (const run of cjkRuns) {
+    if (run.length >= 2 && run.length <= 4 && !AI_STOP_BIGRAMS.has(run)) {
+      tokens.add(run)
+    }
+    for (let i = 0; i < run.length - 1; i++) {
+      const bg = run.slice(i, i + 2)
+      if (!AI_STOP_BIGRAMS.has(bg)) tokens.add(bg)
+    }
+  }
+
+  if (tokens.size > 0) {
+    const scored: { item: SearchItem; score: number }[] = []
+    for (const item of items) {
+      if (seen.has(item.url)) continue
+      const titleLower = item.title.toLowerCase()
+      const metaLower = [item.author ?? '', ...(item.tags ?? []), ...(item.cats ?? [])]
+        .join(' ')
+        .toLowerCase()
+      const textLower = item.text.toLowerCase()
+
+      let score = 0
+      for (const tok of tokens) {
+        if (titleLower.includes(tok)) score += 4
+        else if (metaLower.includes(tok)) score += 3
+        else if (textLower.includes(tok)) score += 1
+      }
+      if (score > 0) scored.push({ item, score })
+    }
+
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score
+      const da = a.item.date ?? ''
+      const db = b.item.date ?? ''
+      return da === db ? 0 : db < da ? -1 : 1
+    })
+
+    for (const s of scored) {
+      if (picked.length >= limit) break
+      seen.add(s.item.url)
+      picked.push(s.item)
+    }
+  }
+
+  if (picked.length === 0 && items.length > 0) {
+    const fallback = [...items].sort((a, b) => {
+      const da = a.date ?? ''
+      const db = b.date ?? ''
+      return da === db ? 0 : db < da ? -1 : 1
+    })
+    return fallback.slice(0, Math.min(4, limit))
+  }
+
+  return picked
+}
