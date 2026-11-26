@@ -109,7 +109,16 @@ export function SearchPanel({
 
   const askAi = useCallback(async () => {
     const q = query.trim()
-    if (!q || !user) return
+    if (!q) return
+    if (!user) {
+      setAiState({
+        status: 'error',
+        askedQuery: q,
+        answer: '',
+        error: '开启 AI 搜索需要登录 DRheEheAM SSO（将结合站内内容作答）',
+      })
+      return
+    }
 
     abortRef.current?.abort()
     const ac = new AbortController()
@@ -269,6 +278,10 @@ export function SearchPanel({
     ))
   }
 
+  if (aiGlow && aiState.status === 'idle') {
+    return null
+  }
+
   return (
     <div
       className={`search-panel${aiGlow ? ' is-ai-glow' : ''}`}
@@ -276,7 +289,7 @@ export function SearchPanel({
       aria-label={isListbox ? '搜索结果' : undefined}
     >
       <div className="search-panel__scroll" ref={listRef}>
-        {aiGlow && (!user || aiState.status !== 'idle') && (
+        {aiGlow && (
           <div className="search-ai-box">
             {!user ? (
               <div className="search-ai-box__row">
