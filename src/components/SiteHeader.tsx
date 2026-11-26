@@ -41,6 +41,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const collapsed = useScrollCollapse()
   const [searching, setSearching] = useState(false)
   const [aiGlow, setAiGlow] = useState(false)
+  const [aiSubmitCount, setAiSubmitCount] = useState(0)
   const [query, setQuery] = useState('')
   // 搜索状态的同步镜像：ref 不受闭包快照影响，异步回调里读到的是最新值
   const searchingRef = useRef(false)
@@ -97,6 +98,7 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
   const close = useCallback(() => {
     setSearching(false)
     setAiGlow(false)
+    setAiSubmitCount(0)
     setQuery('')
   }, [])
 
@@ -416,6 +418,12 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
               className="site-header__search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (aiGlow && e.key === 'Enter' && query.trim()) {
+                  e.preventDefault()
+                  setAiSubmitCount((c) => c + 1)
+                }
+              }}
               spellCheck={false}
               autoComplete="off"
               aria-label="搜索博客与文档"
@@ -462,7 +470,14 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
       <div className="search-backdrop" onMouseDown={close} role="presentation" />
 
       {/* 从胶囊底下拉出来的结果面板 */}
-      {searching && <SearchPanel query={query} aiGlow={aiGlow} onClose={close} />}
+      {searching && (
+        <SearchPanel
+          query={query}
+          aiGlow={aiGlow}
+          aiSubmitCount={aiSubmitCount}
+          onClose={close}
+        />
+      )}
     </div>
   )
 }
