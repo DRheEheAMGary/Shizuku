@@ -274,7 +274,7 @@ export function SearchPanel({
       aria-label={isListbox ? '搜索结果' : undefined}
     >
       <div className="search-panel__scroll" ref={listRef}>
-        {aiGlow && (
+        {aiGlow && (!user || aiState.status !== 'idle') && (
           <div className="search-ai-box">
             {!user ? (
               <div className="search-ai-box__row">
@@ -287,21 +287,13 @@ export function SearchPanel({
               </div>
             ) : (
               <>
-                <div className="search-ai-box__row">
-                  <span className="search-ai-box__tip">
-                    {aiState.status === 'loading'
-                      ? `正在思考「${aiState.askedQuery}」…`
-                      : '按 Enter 或点击右侧按钮向 AI 提问'}
-                  </span>
-                  <button
-                    type="button"
-                    className="search-ai-box__btn"
-                    disabled={!query.trim() || aiState.status === 'loading'}
-                    onClick={() => void askAi()}
-                  >
-                    {aiState.status === 'loading' ? '思考中…' : '向 AI 提问'}
-                  </button>
-                </div>
+                {aiState.status === 'loading' && (
+                  <div className="search-ai-box__row">
+                    <span className="search-ai-box__tip">
+                      正在思考「{aiState.askedQuery}」…
+                    </span>
+                  </div>
+                )}
 
                 {aiState.status === 'error' && (
                   <p className="search-ai-box__error">{aiState.error}</p>
