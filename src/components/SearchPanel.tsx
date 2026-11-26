@@ -114,11 +114,13 @@ export function SearchPanel({
   query,
   aiGlow = false,
   aiSubmitCount = 0,
+  onAiLoadingChange,
   onClose,
 }: {
   query: string
   aiGlow?: boolean
   aiSubmitCount?: number
+  onAiLoadingChange?: (loading: boolean) => void
   onClose: () => void
 }) {
   const { user, login } = useAuth()
@@ -249,7 +251,14 @@ export function SearchPanel({
     }
   }, [aiGlow, query, aiState.status])
 
-  useEffect(() => () => abortRef.current?.abort(), [])
+  useEffect(() => {
+    onAiLoadingChange?.(aiState.status === 'loading')
+  }, [aiState.status, onAiLoadingChange])
+
+  useEffect(() => () => {
+    onAiLoadingChange?.(false)
+    abortRef.current?.abort()
+  }, [onAiLoadingChange])
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = 0
@@ -329,18 +338,17 @@ export function SearchPanel({
     ))
   }
 
-  if (aiGlow && aiState.status === 'idle') {
-    return null
-  }
+  const hidden = aiGlow && aiState.status === 'idle'
 
   return (
     <div
-      className={`search-panel${aiGlow ? ' is-ai-glow' : ''}`}
-      role={isListbox ? 'listbox' : undefined}
-      aria-label={isListbox ? '搜索结果' : undefined}
+      className={`search-panel${aiGlow ? ' is-ai-glow' : ''}${hidden ? ' is-hidden' : ''}`}
+      role={isListbox && !aiGlow ? 'listbox' : undefined}
+      aria-label={isListbox && !aiGlow ? '搜索结果' : undefined}
+      aria-hidden={hidden || undefined}
     >
       <div className="search-panel__scroll" ref={listRef}>
-        {aiGlow ? (
+        {aiGlow && !hidden ? (
           <div className="search-ai-box">
             {!user || aiState.needLogin ? (
               <div className="search-ai-box__row">
@@ -355,9 +363,7 @@ export function SearchPanel({
               <>
                 {aiState.status === 'loading' && (
                   <div className="search-ai-box__row">
-                    <span className="search-ai-box__tip">
-                      正在思考「{aiState.askedQuery}」…
-                    </span>
+                    <span className="search-ai-box__tip">正在思考</span>
                   </div>
                 )}
 
@@ -378,9 +384,9 @@ export function SearchPanel({
               </>
             )}
           </div>
-        ) : (
+        ) : !aiGlow ? (
           content
-        )}
+        ) : null}
       </div>
       <span className="search-panel__ai-aura" aria-hidden="true" />
     </div>
