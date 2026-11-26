@@ -419,7 +419,13 @@ export function SiteHeader({ path, onNavigate }: SiteHeaderProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (aiGlow && e.key === 'Enter' && query.trim()) {
+                if (
+                  aiGlow &&
+                  e.key === 'Enter' &&
+                  !e.nativeEvent.isComposing &&
+                  e.keyCode !== 229 &&
+                  query.trim()
+                ) {
                   e.preventDefault()
                   setAiSubmitCount((c) => c + 1)
                 }
