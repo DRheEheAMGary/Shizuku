@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /search-index.json
+
+Sitemap: https://www.dreamgary.cn/sitemap.xml

@@ -12,6 +12,7 @@
     <meta name="description" content="高一生 | OIer | 二次元 — DRheEheAM_Gary 的个人主页" />
     <meta name="keywords" content="DRheEheAM,DRheEheAM_Gary,个人主页,Shizuku,dreamgary,dreamgary.cn" />
     <meta name="author" content="DRheEheAM_Gary" />
+    <link rel="canonical" href="https://www.dreamgary.cn/" />
     <!-- 地址栏 / 移动端状态栏配色，按系统深浅色切换；与站内 data-theme 设置相互独立 -->
     <meta name="theme-color" content="#f7f9fa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1418" media="(prefers-color-scheme: dark)" />
@@ -19,14 +20,45 @@
     <!-- 分享预览：QQ / 微信 / Discord / Telegram 的抓取程序都不执行 JS，
          这些卡片信息必须固定在静态 HTML 里，交给 React 运行时写入是抓不到的 -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Shizuku · DRheEheAM_Gary" />
+    <meta property="og:locale" content="zh_CN" />
     <meta property="og:title" content="Shizuku · DRheEheAM_Gary" />
     <meta property="og:description" content="高一生 | OIer | 二次元" />
-    <meta property="og:url" content="https://dreamgary.cn" />
+    <meta property="og:url" content="https://www.dreamgary.cn/" />
     <meta property="og:image" content="https://r.dreamgary.cn/images/headround.jpg" />
     <!-- twitter:card 走 X / 部分聚合器的卡片协议，与上面的 og:* 各自独立 -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Shizuku · DRheEheAM_Gary" />
     <meta name="twitter:description" content="高一生 | OIer | 二次元" />
+    <meta name="twitter:image" content="https://r.dreamgary.cn/images/headround.jpg" />
+
+    <!-- 结构化数据：帮助搜索引擎识别站点与作者信息 -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://www.dreamgary.cn/#website",
+            "url": "https://www.dreamgary.cn/",
+            "name": "Shizuku · DRheEheAM_Gary",
+            "inLanguage": "zh-CN"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://www.dreamgary.cn/#person",
+            "name": "DRheEheAM_Gary",
+            "url": "https://www.dreamgary.cn/",
+            "image": "https://r.dreamgary.cn/images/headround.jpg",
+            "sameAs": [
+              "https://github.com/DRheEheAMGary",
+              "https://space.bilibili.com/3493283116353785",
+              "https://blog.dreamgary.cn"
+            ]
+          }
+        ]
+      }
+    </script>
 
     <!-- favicon 用图床绝对地址，浏览器与阅读器都直接请求这个 URL -->
     <link rel="icon" href="https://r.dreamgary.cn/images/headround.png" />

@@ -24,7 +24,7 @@ export const site = {
   keywords: '',
   /** 版权署名，页脚使用 */
   author: 'DRheEheAM_Gary',
-  url: 'https://example.com',
+  url: 'https://www.dreamgary.cn',
   lang: 'zh-CN',
   /** 顶栏头像，同时参与加载页的关键图预加载 */
   avatar: 'https://r.dreamgary.cn/images/headround.jpg',

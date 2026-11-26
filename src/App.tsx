@@ -25,6 +25,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { SiteHeader } from '@/components/SiteHeader'
 import { useGlassCards } from '@/hooks/useRefraction'
 import { PageLoader } from '@/components/PageLoader'
+import { site } from '@/content/site'
 import { About } from '@/pages/About'
 import { Contact } from '@/pages/Contact'
 import { Github } from '@/pages/Github'
@@ -64,6 +65,14 @@ const CARD_COUNTS: Record<string, number> = {
   '/about': 3,
   '/github': 3,
   '/contact': 2,
+}
+
+/** 各路由的页面标题，切页时同步到 document.title */
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Shizuku · DRheEheAM_Gary',
+  '/about': '关于 · Shizuku',
+  '/github': 'GitHub · Shizuku',
+  '/contact': '联系 · Shizuku',
 }
 
 /* 各阶段的时长（ms）。拆成几个常量是为了让「立即退场」和「完整形变」分开调：
@@ -516,6 +525,15 @@ export function App() {
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
+
+  // 路由切换时同步更新页面标题与 canonical 链接
+  useEffect(() => {
+    document.title = PAGE_TITLES[path] ?? PAGE_TITLES['/']
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+    if (canonical) {
+      canonical.href = `${site.url}${path in PAGE_TITLES && path !== '/' ? path : '/'}`
+    }
+  }, [path])
 
   const page =
     shownPath === '/about' ? (
