@@ -21,8 +21,6 @@
    *  不加这条会直接顶出屏幕、把整页撑宽。 */
   max-width: calc(100% - var(--field-left, 0px) - var(--page-gutter));
   max-height: min(60vh, 520px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
 
   border: 1px solid var(--hairline-strong);
   border-radius: var(--r-lg);
@@ -32,6 +30,15 @@
   box-shadow: 0 24px 64px rgba(16, 24, 32, 0.22);
 
   animation: search-drop 300ms var(--ease-apple);
+}
+
+.search-panel__scroll {
+  position: relative;
+  z-index: 1;
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: inherit;
 }
 
 @keyframes search-drop {
@@ -187,5 +194,79 @@
     right: var(--page-gutter);
     width: auto;
     max-width: none;
+  }
+}
+
+/* ---------- 搜索结果面板 AI 多彩流光边框 ---------- */
+.search-panel::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--ai-angle),
+    #4285f4 0deg,
+    #9b72cb 72deg,
+    #d96570 144deg,
+    #f59e0b 216deg,
+    #38bdf8 288deg,
+    #4285f4 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 320ms var(--ease-apple);
+}
+
+.search-panel__ai-aura {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  padding: 6px;
+  background: conic-gradient(
+    from var(--ai-angle),
+    #4285f4 0deg,
+    #9b72cb 72deg,
+    #d96570 144deg,
+    #f59e0b 216deg,
+    #38bdf8 288deg,
+    #4285f4 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: blur(14px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 380ms var(--ease-apple);
+}
+
+.search-panel.is-ai-glow::after {
+  opacity: 1;
+  animation: ai-glow-spin 3.6s linear infinite;
+}
+
+.search-panel.is-ai-glow .search-panel__ai-aura {
+  opacity: 0.58;
+  animation: ai-glow-spin 3.6s linear infinite;
+}
+
+[data-theme='dark'] .search-panel.is-ai-glow .search-panel__ai-aura {
+  opacity: 0.78;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-panel.is-ai-glow::after,
+  .search-panel.is-ai-glow .search-panel__ai-aura {
+    animation: none;
   }
 }

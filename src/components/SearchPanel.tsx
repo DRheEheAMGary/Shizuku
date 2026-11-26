@@ -34,9 +34,11 @@ function highlight(text: string, hits: Highlight[]) {
 
 export function SearchPanel({
   query,
+  aiGlow = false,
   onClose,
 }: {
   query: string
+  aiGlow?: boolean
   onClose: () => void
 }) {
   const { index, failed } = useSearchIndex()
@@ -62,86 +64,87 @@ export function SearchPanel({
     if (listRef.current) listRef.current.scrollTop = 0
   }, [query])
 
-  if (failed) {
-    return (
-      <div className="search-panel" ref={listRef}>
-        <p className="search-panel__note">搜索索引还没生成，稍后再来。</p>
-      </div>
-    )
-  }
+  let content: React.ReactNode
+  let isListbox = false
 
-  if (!query.trim()) {
-    return (
-      <div className="search-panel" ref={listRef}>
+  if (failed) {
+    content = <p className="search-panel__note">搜索索引还没生成，稍后再来。</p>
+  } else if (!query.trim()) {
+    content = (
+      <>
         <p className="search-panel__note">全域搜索 (可能存在 30 min 延迟)</p>
         {index && (
           <p className="search-panel__note search-panel__note--dim">
             共 {index.items.length} 条索引
           </p>
         )}
-      </div>
+      </>
     )
-  }
+  } else if (!results.length) {
+    content = <p className="search-panel__note">没有找到「{query.trim()}」</p>
+  } else {
+    isListbox = true
+    content = groups.map(([site, list]) => (
+      <section className="search-group" key={site}>
+        <h3 className="search-group__title">
+          {SITE_NAMES[site] ?? site}
+          <span className="search-group__count">{list.length}</span>
+        </h3>
+        <div className="search-group__rows">
+          {list.map((r) => (
+            <a
+              key={r.item.url}
+              className="search-hit-row"
+              href={r.item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+            >
+              <span className="search-hit-row__title">
+                {highlight(r.item.title, r.titleHits)}
+              </span>
+              <span className="search-hit-row__meta">
+                <span className="search-hit-row__type">
+                  {SITE_TYPES[r.item.type] ?? r.item.type}
+                </span>
+                {r.item.date && (
+                  <span className="search-hit-row__date">{r.item.date}</span>
+                )}
+              </span>
+              {/* 作者 / 标签 / 分类命中：正文也命中时这一行不显示（内容优先） */}
+              {!r.textHits.length && r.facets.length > 0 && (
+                <span className="search-hit-row__facets">
+                  {r.facets.map((f, fi) => (
+                    <span className="search-facet" data-kind={f.kind} key={fi}>
+                      <span className="search-facet__label">{f.label}：</span>
+                      {highlight(f.value, f.hits)}
+                    </span>
+                  ))}
+                </span>
+              )}
 
-  if (!results.length) {
-    return (
-      <div className="search-panel" ref={listRef}>
-        <p className="search-panel__note">没有找到「{query.trim()}」</p>
-      </div>
-    )
+              {r.snippet && (
+                <span className="search-hit-row__snippet">
+                  {highlight(r.snippet, r.snippetHits)}
+                </span>
+              )}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))
   }
 
   return (
-    <div className="search-panel" ref={listRef} role="listbox" aria-label="搜索结果">
-      {groups.map(([site, list]) => (
-        <section className="search-group" key={site}>
-          <h3 className="search-group__title">
-            {SITE_NAMES[site] ?? site}
-            <span className="search-group__count">{list.length}</span>
-          </h3>
-          <div className="search-group__rows">
-            {list.map((r) => (
-              <a
-                key={r.item.url}
-                className="search-hit-row"
-                href={r.item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onClose}
-              >
-                <span className="search-hit-row__title">
-                  {highlight(r.item.title, r.titleHits)}
-                </span>
-                <span className="search-hit-row__meta">
-                  <span className="search-hit-row__type">
-                    {SITE_TYPES[r.item.type] ?? r.item.type}
-                  </span>
-                  {r.item.date && (
-                    <span className="search-hit-row__date">{r.item.date}</span>
-                  )}
-                </span>
-                {/* 作者 / 标签 / 分类命中：正文也命中时这一行不显示（内容优先） */}
-                {!r.textHits.length && r.facets.length > 0 && (
-                  <span className="search-hit-row__facets">
-                    {r.facets.map((f, fi) => (
-                      <span className="search-facet" data-kind={f.kind} key={fi}>
-                        <span className="search-facet__label">{f.label}：</span>
-                        {highlight(f.value, f.hits)}
-                      </span>
-                    ))}
-                  </span>
-                )}
-
-                {r.snippet && (
-                  <span className="search-hit-row__snippet">
-                    {highlight(r.snippet, r.snippetHits)}
-                  </span>
-                )}
-              </a>
-            ))}
-          </div>
-        </section>
-      ))}
+    <div
+      className={`search-panel${aiGlow ? ' is-ai-glow' : ''}`}
+      role={isListbox ? 'listbox' : undefined}
+      aria-label={isListbox ? '搜索结果' : undefined}
+    >
+      <div className="search-panel__scroll" ref={listRef}>
+        {content}
+      </div>
+      <span className="search-panel__ai-aura" aria-hidden="true" />
     </div>
   )
 }

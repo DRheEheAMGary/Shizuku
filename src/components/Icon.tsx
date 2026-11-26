@@ -38,6 +38,7 @@ export type IconName =
   | 'settings'
   | 'chevron'
   | 'search'
+  | 'sparkle'
 
 /** 需要实心渲染的标志类图标（描边版在小尺寸下会糊成一团） */
 const SOLID_PATHS: Partial<Record<IconName, string>> = {
@@ -48,6 +49,8 @@ const SOLID_PATHS: Partial<Record<IconName, string>> = {
 /** 24×24 视框，统一 stroke 风格（1.6px），与极简线条感一致 */
 const PATHS: Partial<Record<IconName, string>> = {
   search: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M15.4 15.4 20 20',
+  sparkle:
+    'M12 2.5C12.9 7.8 16.2 11.1 21.5 12c-5.3.9-8.6 4.2-9.5 9.5-.9-5.3-4.2-8.6-9.5-9.5 5.3-.9 8.6-4.2 9.5-9.5z',
   blog: 'M4 5h16v14H4zM4 9h16M8 5v14',
   folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   chess: 'M8 21h8M12 17v4M7 4h10l-2 5 2 4H7l2-4z',
